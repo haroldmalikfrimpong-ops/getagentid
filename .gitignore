@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.log
+coverage/
+.next/
+out/
+
+# Keys — NEVER commit
+*.pem
+*.key
+*.p12

@@ -1,0 +1,12 @@
+{
+  "name": "agentid",
+  "version": "0.1.0",
+  "description": "AgentID SDK — Identity & verification for AI agents",
+  "main": "src/index.js",
+  "homepage": "https://getagentid.dev",
+  "license": "MIT",
+  "dependencies": {
+    "jose": "^5.2.0",
+    "node-fetch": "^3.3.0"
+  }
+}
