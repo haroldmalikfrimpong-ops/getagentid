@@ -15,30 +15,51 @@ If this email contains a financial transaction (purchase, payment, subscription,
 {{
     "is_financial": true,
     "type": "expense" or "income" or "refund",
-    "amount": number (always positive),
-    "currency": "GBP" or "USD" or "EUR",
+    "amount": number (always positive, in the ORIGINAL currency as stated in the email),
+    "currency": the currency symbol/code from the email — "GBP", "USD", "EUR", "NGN", "CAD", "AUD", "JPY", "CHF", "SEK", "INR", "BRL", "ZAR", "GHS", etc. Use whatever the email says.,
     "vendor": "company name",
-    "category": one of ["food", "transport", "entertainment", "shopping", "subscriptions", "bills", "health", "education", "travel", "transfers", "salary", "freelance", "other"],
+    "category": one of:
+      - "technology" — software, apps, SaaS, domains, hosting, hardware, gadgets, dev tools, AI subscriptions
+      - "housing" — rent, mortgage, home insurance, repairs, furniture, utilities (gas, electric, water, council tax)
+      - "food" — groceries, restaurants, takeaway, delivery, coffee
+      - "transport" — fuel, Uber, bus, train, car insurance, car maintenance, parking
+      - "entertainment" — Netflix, Spotify, gaming, cinema, events, concerts, streaming
+      - "shopping" — clothes, Amazon orders, general retail, personal items
+      - "subscriptions" — recurring payments that don't fit other categories
+      - "bills" — phone bill, broadband, credit card payments, loan repayments
+      - "health" — gym, dentist, medical, pharmacy, supplements
+      - "education" — courses, books, certifications, tuition
+      - "holidays" — flights, hotels, Airbnb, travel bookings, travel insurance
+      - "investments" — crypto deposits, stock purchases, trading platform fees
+      - "banking" — bank transfers between own accounts, fees, charges
+      - "salary" — wages, freelance payments received
+      - "freelance" — income from freelance/contract work
+      - "gifts" — money sent to others, donations, birthday gifts
+      - "other" — anything that doesn't fit above
     "description": "brief description of what was bought/paid",
     "is_subscription": true/false,
     "subscription_frequency": "monthly" or "yearly" or "weekly" or null
 }}
 
-If this email is NOT about a financial transaction (marketing, newsletters, social media, etc):
+If this email is NOT about a financial transaction (marketing, newsletters, social, promotions, notifications with no money amount):
 {{
     "is_financial": false
 }}
 
 Rules:
-- Extract the EXACT amount paid, not shipping or tax separately
-- If multiple items, use the total amount
-- "Order confirmed" = expense
+- Extract the EXACT amount paid in the original currency — don't convert
+- £ = GBP, $ = USD (unless context says AUD/CAD etc), € = EUR, ₦ = NGN
+- If multiple items, use the total/grand total amount
+- "Order confirmed" with a price = expense
 - "Payment received" or "You've been paid" = income
-- "Refund" or "credit" = refund
+- "Refund" or "credit back" = refund
 - Subscription renewals = expense with is_subscription=true
-- Bank statements or balance alerts = NOT a transaction (is_financial: false)
-- Delivery updates with no price = NOT a transaction
-- If you can't determine the amount, set is_financial to false
+- Bank statements or balance alerts with no specific transaction = NOT financial
+- Delivery/shipping updates with no price = NOT financial
+- Marketing emails saying "save 20%" = NOT financial (no actual purchase)
+- If you can't determine the exact amount, set is_financial to false
+- Crypto deposits/withdrawals TO an exchange = investments
+- Wise/Revolut/PayPal transfers = banking
 
 Email from: {sender}
 Subject: {subject}
@@ -62,6 +83,9 @@ def parse_email(email):
         return None
 
     try:
+        import time
+        time.sleep(0.5)
+
         prompt = PARSE_PROMPT.format(
             sender=email["from"],
             subject=email["subject"],

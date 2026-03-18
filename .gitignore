@@ -33,3 +33,6 @@ out/
 *.pem
 *.key
 *.p12
+credentials.json
+token.json
+*.db

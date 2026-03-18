@@ -10,9 +10,12 @@ load_dotenv()
 from src import db, gmail, parser
 
 
-def scan_emails(days=7):
-    """Scan Gmail for money-related emails and log transactions."""
-    print(f"Scanning emails from last {days} days...")
+def scan_emails(days=None):
+    """Scan Gmail for money-related emails and log transactions. days=None scans all time."""
+    if days:
+        print(f"Scanning emails from last {days} days...")
+    else:
+        print("Scanning ALL emails for financial transactions...")
 
     service = gmail.get_service()
     emails = gmail.get_money_emails(service, days=days)
@@ -106,8 +109,12 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "report":
         report()
     elif len(sys.argv) > 1 and sys.argv[1] == "scan":
-        days = int(sys.argv[2]) if len(sys.argv) > 2 else 7
+        days = int(sys.argv[2]) if len(sys.argv) > 2 else None
         scan_emails(days=days)
+        report()
+    elif len(sys.argv) > 1 and sys.argv[1] == "all":
+        scan_emails(days=None)
+        report()
     else:
-        scan_emails()
+        scan_emails(days=30)
         report()
