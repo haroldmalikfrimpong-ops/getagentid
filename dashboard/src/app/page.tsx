@@ -41,7 +41,7 @@ export default function LandingPage() {
             </p>
             <div className="flex gap-4 justify-center pointer-events-auto">
               <motion.a
-                href="/dashboard"
+                href="/signup"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white font-bold text-sm tracking-wider"
@@ -263,7 +263,7 @@ if result.verified:
           </p>
           <div className="flex gap-4 justify-center">
             <motion.a
-              href="/dashboard"
+              href="/signup"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-10 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white font-bold tracking-wider"
@@ -281,7 +281,7 @@ if result.verified:
         <p className="text-gray-600 text-xs mb-4">The Identity & Discovery Layer for AI Agents</p>
         <div className="flex gap-6 justify-center text-xs text-gray-500">
           <a href="/docs" className="hover:text-cyan-400">Documentation</a>
-          <a href="/dashboard" className="hover:text-cyan-400">Dashboard</a>
+          <a href="/signup" className="hover:text-cyan-400">Dashboard</a>
           <a href="https://github.com/haroldmalikfrimpong-ops/getagentid" className="hover:text-cyan-400">GitHub</a>
         </div>
         <p className="text-gray-700 text-xs mt-6">getagentid.dev</p>
