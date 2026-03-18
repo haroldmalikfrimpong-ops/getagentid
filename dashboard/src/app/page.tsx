@@ -1,11 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
+import dynamic from 'next/dynamic'
 import AgentPassport from '@/components/AgentPassport'
 import StatsPanel from '@/components/StatsPanel'
 import ActivityFeed from '@/components/ActivityFeed'
+
+const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false })
 
 export default function Dashboard() {
   const [agents, setAgents] = useState<any[]>([])
@@ -16,7 +19,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData()
-    const interval = setInterval(loadData, 30000) // Refresh every 30s
+    const interval = setInterval(loadData, 30000)
     const clock = setInterval(() => setTime(new Date()), 1000)
     return () => { clearInterval(interval); clearInterval(clock) }
   }, [])
@@ -38,134 +41,164 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen p-6 md:p-10">
-      {/* Header */}
+    <div className="min-h-screen">
+      {/* Hero Header */}
       <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative"
       >
-        <div>
-          <h1 className="text-3xl font-bold">
+        {/* 3D Scene */}
+        <Scene3D agents={agents} />
+
+        {/* Floating header overlay */}
+        <div className="absolute top-6 left-6 z-10">
+          <motion.h1
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-4xl font-black"
+          >
             <span className="holo-gradient">AgentID</span>
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">Command Center — getagentid.dev</p>
+          </motion.h1>
+          <motion.p
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-gray-500 text-sm mt-1"
+          >
+            Command Center
+          </motion.p>
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-mono text-cyan-400">
+
+        {/* Clock */}
+        <div className="absolute top-6 right-6 z-10 text-right">
+          <motion.div
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-3xl font-mono text-cyan-400 tracking-wider"
+          >
             {time.toLocaleTimeString('en-GB', { hour12: false })}
-          </div>
-          <div className="text-xs text-gray-600">
+          </motion.div>
+          <motion.div
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-xs text-gray-600"
+          >
             {time.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-          </div>
+          </motion.div>
         </div>
       </motion.header>
 
-      {loading ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center justify-center h-64"
-        >
-          <div className="text-center">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              className="w-12 h-12 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full mx-auto mb-4"
-            />
-            <p className="text-gray-500">Initializing systems...</p>
-          </div>
-        </motion.div>
-      ) : (
-        <>
-          {/* Stats */}
-          <motion.section
+      {/* Main Content */}
+      <div className="px-6 md:px-10 pb-10">
+        {loading ? (
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mb-8"
+            className="flex items-center justify-center h-32"
           >
-            <StatsPanel agents={agents} events={events} />
-          </motion.section>
-
-          {/* Agent Passports */}
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mb-8"
-          >
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
-              Registered Agents
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {agents.map((agent, i) => (
-                <AgentPassport key={agent.agent_id} agent={agent} index={i} />
-              ))}
+            <div className="text-center">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                className="w-10 h-10 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full mx-auto mb-3"
+              />
+              <p className="text-gray-500 text-sm">Initializing systems...</p>
             </div>
-          </motion.section>
-
-          {/* Activity Feed + Transactions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          </motion.div>
+        ) : (
+          <>
+            {/* Stats */}
             <motion.section
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="mb-8"
             >
-              <ActivityFeed events={events} agents={agents} />
+              <StatsPanel agents={agents} events={events} />
             </motion.section>
 
+            {/* Agent Passports */}
             <motion.section
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 }}
-              className="glow-border rounded-xl p-5 bg-[#111118]"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1 }}
+              className="mb-8"
             >
-              <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
-                Recent Transactions
-              </h2>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {transactions.length === 0 && (
-                  <p className="text-gray-600 text-sm">No transactions yet</p>
-                )}
-                {transactions.map((tx, i) => (
-                  <motion.div
-                    key={tx.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex items-center justify-between py-2 border-b border-white/5 text-sm"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className={tx.type === 'entry' ? 'text-green-400' : 'text-red-400'}>
-                        {tx.type === 'entry' ? '📈' : tx.type === 'close' ? '📉' : '💰'}
-                      </span>
-                      <div>
-                        <div className="text-white">{tx.vendor || tx.description || tx.type}</div>
-                        <div className="text-xs text-gray-600">{tx.category}</div>
-                      </div>
-                    </div>
-                    <div className={`font-mono ${tx.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {tx.currency} {tx.amount > 0 ? '+' : ''}{tx.amount?.toFixed(2)}
-                    </div>
-                  </motion.div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+                <h2 className="text-sm font-bold text-gray-400 uppercase tracking-[0.3em]">
+                  Registered Agents
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {agents.map((agent, i) => (
+                  <AgentPassport key={agent.agent_id} agent={agent} index={i} />
                 ))}
               </div>
             </motion.section>
-          </div>
 
-          {/* Footer */}
-          <motion.footer
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="mt-10 text-center text-gray-600 text-xs"
-          >
-            <p>AgentID — The Identity & Discovery Layer for AI Agents</p>
-            <p className="mt-1">getagentid.dev | All systems operational</p>
-          </motion.footer>
-        </>
-      )}
+            {/* Activity + Transactions */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
+            >
+              <ActivityFeed events={events} agents={agents} />
+
+              <div className="glow-border rounded-xl p-5 bg-[#111118]">
+                <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
+                  Agent Transactions
+                </h2>
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {transactions.length === 0 && (
+                    <p className="text-gray-600 text-sm">No transactions yet</p>
+                  )}
+                  {transactions.map((tx, i) => (
+                    <motion.div
+                      key={tx.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="flex items-center justify-between py-2 border-b border-white/5 text-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={tx.type === 'entry' ? 'text-green-400' : 'text-red-400'}>
+                          {tx.type === 'entry' ? '📈' : tx.type === 'close' ? '📉' : '💰'}
+                        </span>
+                        <div>
+                          <div className="text-white">{tx.vendor || tx.description || tx.type}</div>
+                          <div className="text-xs text-gray-600">{tx.category}</div>
+                        </div>
+                      </div>
+                      <div className={`font-mono ${tx.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {tx.currency} {tx.amount?.toFixed(2)}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Footer */}
+            <motion.footer
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5 }}
+              className="text-center py-8 border-t border-white/5"
+            >
+              <p className="holo-gradient text-lg font-bold mb-1">AgentID</p>
+              <p className="text-gray-600 text-xs">The Identity & Discovery Layer for AI Agents</p>
+              <p className="text-gray-700 text-xs mt-1">getagentid.dev — All systems operational</p>
+            </motion.footer>
+          </>
+        )}
+      </div>
     </div>
   )
 }
