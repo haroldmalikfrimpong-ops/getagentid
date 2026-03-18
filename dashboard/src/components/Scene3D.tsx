@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, Text, MeshDistortMaterial, Stars, Trail } from '@react-three/drei'
+import { Float, Text, MeshDistortMaterial, Stars } from '@react-three/drei'
 import * as THREE from 'three'
 
 function DataParticles({ count = 200 }) {
@@ -80,7 +80,6 @@ function HolographicOrb({ position, color, label }: { position: [number, number,
           color={color}
           anchorX="center"
           anchorY="middle"
-          font="/fonts/mono.woff"
         >
           {label}
         </Text>

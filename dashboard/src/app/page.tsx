@@ -8,7 +8,14 @@ import AgentPassport from '@/components/AgentPassport'
 import StatsPanel from '@/components/StatsPanel'
 import ActivityFeed from '@/components/ActivityFeed'
 
-const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false })
+const Scene3D = dynamic(() => import('@/components/Scene3D'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[500px] bg-[#0a0a0f] flex items-center justify-center">
+      <p className="text-cyan-500/50 font-mono text-sm">Loading 3D scene...</p>
+    </div>
+  ),
+})
 
 export default function Dashboard() {
   const [agents, setAgents] = useState<any[]>([])
