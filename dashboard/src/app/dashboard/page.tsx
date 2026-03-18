@@ -9,53 +9,38 @@ import StatsPanel from '@/components/StatsPanel'
 import ActivityFeed from '@/components/ActivityFeed'
 
 export default function DashboardPage() {
-  const [state, setState] = useState<'loading' | 'welcome' | 'dashboard' | 'unauthorized'>('loading')
   const [user, setUser] = useState<any>(null)
+  const [isNew, setIsNew] = useState(false)
   const [agents, setAgents] = useState<any[]>([])
   const [events, setEvents] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
   const [time, setTime] = useState('')
+  const [ready, setReady] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     const clock = setInterval(() => setTime(new Date().toLocaleTimeString('en-GB', { hour12: false })), 1000)
 
-    // Listen for auth state changes — handles OAuth redirect tokens
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // This handles EVERYTHING — initial load, OAuth redirects, existing sessions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUser(session.user)
-        if (event === 'SIGNED_IN') {
-          setState('welcome')
-          setTimeout(() => setState('dashboard'), 2000)
-        } else {
-          setState('dashboard')
-        }
+        setIsNew(event === 'SIGNED_IN')
+        setReady(true)
         loadData()
-      } else {
-        setState('unauthorized')
       }
-    })
-
-    // Also check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user)
-        setState('dashboard')
-        loadData()
-      } else {
-        // Give OAuth redirect a moment to process
-        setTimeout(() => {
-          if (state === 'loading') setState('unauthorized')
-        }, 3000)
+      // Only redirect if we get INITIAL_SESSION with no user (meaning no session at all)
+      // Don't redirect on SIGNED_OUT during page load
+      if (event === 'INITIAL_SESSION' && !session) {
+        router.push('/login')
+      }
+      if (event === 'SIGNED_OUT') {
+        router.push('/')
       }
     })
 
     return () => { clearInterval(clock); subscription.unsubscribe() }
   }, [])
-
-  useEffect(() => {
-    if (state === 'unauthorized') router.push('/login')
-  }, [state])
 
   async function loadData() {
     try {
@@ -72,14 +57,14 @@ export default function DashboardPage() {
 
   async function handleSignOut() {
     await supabase.auth.signOut()
-    router.push('/')
   }
 
   const userName = user?.user_metadata?.user_name || user?.user_metadata?.full_name || user?.email || 'Agent'
+  const avatarUrl = user?.user_metadata?.avatar_url
   const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
-  // Loading
-  if (state === 'loading') {
+  // Not ready yet — show loading
+  if (!ready) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -91,33 +76,22 @@ export default function DashboardPage() {
     )
   }
 
-  // Welcome screen after first login
-  if (state === 'welcome') {
+  // Welcome screen — only shows once on first sign in
+  if (isNew) {
+    setTimeout(() => setIsNew(false), 2500)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', duration: 0.5 }}
-            className="text-6xl mb-6"
-          >
-            ✓
+        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', duration: 0.5 }} className="mb-6">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="w-20 h-20 rounded-full border-2 border-cyan-500/30 mx-auto" />
+            ) : (
+              <div className="text-6xl">✓</div>
+            )}
           </motion.div>
-          <h1 className="text-3xl font-black mb-2">
-            <span className="holo-gradient">Welcome, {userName}!</span>
-          </h1>
+          <h1 className="text-3xl font-black mb-2"><span className="holo-gradient">Welcome, {userName}!</span></h1>
           <p className="text-gray-500">Your AgentID command center is ready.</p>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="mt-4 text-xs text-cyan-500/50 font-mono"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="mt-4 text-xs text-cyan-500/50 font-mono">
             Loading dashboard...
           </motion.div>
         </motion.div>
@@ -125,13 +99,9 @@ export default function DashboardPage() {
     )
   }
 
-  // Unauthorized — redirect handled in useEffect
-  if (state === 'unauthorized') return null
-
   // Dashboard
   return (
     <div className="min-h-screen p-6 md:p-10">
-      {/* Header */}
       <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-10">
         <div>
           <a href="/"><h1 className="text-3xl font-bold"><span className="holo-gradient">AgentID</span></h1></a>
@@ -143,9 +113,7 @@ export default function DashboardPage() {
             <div className="text-xs text-gray-600">{dateStr}</div>
           </div>
           <div className="flex items-center gap-3">
-            {user?.user_metadata?.avatar_url && (
-              <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full border border-cyan-500/30" />
-            )}
+            {avatarUrl && <img src={avatarUrl} alt="" className="w-8 h-8 rounded-full border border-cyan-500/30" />}
             <div className="text-right">
               <div className="text-sm text-white">{userName}</div>
               <button onClick={handleSignOut} className="text-xs text-gray-500 hover:text-red-400 transition-colors">Sign out</button>
@@ -154,12 +122,10 @@ export default function DashboardPage() {
         </div>
       </motion.header>
 
-      {/* Stats */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <StatsPanel agents={agents} events={events} />
       </motion.div>
 
-      {/* Agents */}
       <div className="flex items-center gap-3 my-8">
         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
         <h2 className="text-sm font-bold text-gray-400 uppercase tracking-[0.3em]">Your Agents</h2>
@@ -181,9 +147,7 @@ export default function DashboardPage() {
     capabilities=["trading"]
 )`}</pre>
           </div>
-          <div className="mt-6">
-            <a href="/docs" className="text-cyan-500 text-sm hover:underline">Read the docs →</a>
-          </div>
+          <div className="mt-6"><a href="/docs" className="text-cyan-500 text-sm hover:underline">Read the docs →</a></div>
         </motion.div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
@@ -192,7 +156,6 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* Activity + Transactions */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
         className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <ActivityFeed events={events} agents={agents} />
@@ -218,7 +181,6 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Footer */}
       <div className="text-center py-8 mt-8 border-t border-white/5">
         <p className="text-gray-700 text-xs">AgentID — getagentid.dev</p>
       </div>
