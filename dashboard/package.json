@@ -8,15 +8,15 @@
     "start": "next start"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.5.0",
+    "@react-three/drei": "^9.108.0",
+    "@react-three/fiber": "^8.16.8",
     "@supabase/supabase-js": "^2.43.0",
-    "@types/three": "^0.183.1",
+    "@types/three": "^0.168.0",
     "framer-motion": "^11.0.0",
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "three": "^0.183.2"
+    "three": "^0.168.0"
   },
   "devDependencies": {
     "@types/node": "^20",
