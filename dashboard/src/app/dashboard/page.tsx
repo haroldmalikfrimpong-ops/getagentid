@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { supabase, getUser, signOut } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import AgentPassport from '@/components/AgentPassport'
 import StatsPanel from '@/components/StatsPanel'
 import ActivityFeed from '@/components/ActivityFeed'
 
 export default function DashboardPage() {
+  const [state, setState] = useState<'loading' | 'welcome' | 'dashboard' | 'unauthorized'>('loading')
   const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
   const [agents, setAgents] = useState<any[]>([])
   const [events, setEvents] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
@@ -18,33 +18,44 @@ export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
-    checkAuth()
     const clock = setInterval(() => setTime(new Date().toLocaleTimeString('en-GB', { hour12: false })), 1000)
 
-    // Listen for auth changes (handles OAuth redirect)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+    // Listen for auth state changes — handles OAuth redirect tokens
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
         setUser(session.user)
+        if (event === 'SIGNED_IN') {
+          setState('welcome')
+          setTimeout(() => setState('dashboard'), 2000)
+        } else {
+          setState('dashboard')
+        }
         loadData()
+      } else {
+        setState('unauthorized')
       }
-      if (event === 'SIGNED_OUT') {
-        router.push('/login')
+    })
+
+    // Also check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user)
+        setState('dashboard')
+        loadData()
+      } else {
+        // Give OAuth redirect a moment to process
+        setTimeout(() => {
+          if (state === 'loading') setState('unauthorized')
+        }, 3000)
       }
     })
 
     return () => { clearInterval(clock); subscription.unsubscribe() }
   }, [])
 
-  async function checkAuth() {
-    const u = await getUser()
-    if (!u) {
-      router.push('/login')
-      return
-    }
-    setUser(u)
-    await loadData()
-    setLoading(false)
-  }
+  useEffect(() => {
+    if (state === 'unauthorized') router.push('/login')
+  }, [state])
 
   async function loadData() {
     try {
@@ -60,43 +71,93 @@ export default function DashboardPage() {
   }
 
   async function handleSignOut() {
-    await signOut()
+    await supabase.auth.signOut()
     router.push('/')
   }
 
-  if (loading) {
+  const userName = user?.user_metadata?.user_name || user?.user_metadata?.full_name || user?.email || 'Agent'
+  const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+  // Loading
+  if (state === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-          className="w-10 h-10 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full" />
+        <div className="text-center">
+          <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            className="w-12 h-12 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Authenticating...</p>
+        </div>
       </div>
     )
   }
 
-  const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  // Welcome screen after first login
+  if (state === 'welcome') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', duration: 0.5 }}
+            className="text-6xl mb-6"
+          >
+            ✓
+          </motion.div>
+          <h1 className="text-3xl font-black mb-2">
+            <span className="holo-gradient">Welcome, {userName}!</span>
+          </h1>
+          <p className="text-gray-500">Your AgentID command center is ready.</p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="mt-4 text-xs text-cyan-500/50 font-mono"
+          >
+            Loading dashboard...
+          </motion.div>
+        </motion.div>
+      </div>
+    )
+  }
 
+  // Unauthorized — redirect handled in useEffect
+  if (state === 'unauthorized') return null
+
+  // Dashboard
   return (
     <div className="min-h-screen p-6 md:p-10">
       {/* Header */}
       <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-3xl font-bold"><span className="holo-gradient">AgentID</span></h1>
+          <a href="/"><h1 className="text-3xl font-bold"><span className="holo-gradient">AgentID</span></h1></a>
           <p className="text-gray-500 text-sm mt-1">Command Center</p>
         </div>
         <div className="flex items-center gap-6">
-          <div className="text-right">
+          <div className="text-right hidden md:block">
             <div className="text-xl font-mono text-cyan-400">{time}</div>
             <div className="text-xs text-gray-600">{dateStr}</div>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-white">{user?.email || user?.user_metadata?.user_name}</div>
-            <button onClick={handleSignOut} className="text-xs text-gray-500 hover:text-red-400">Sign out</button>
+          <div className="flex items-center gap-3">
+            {user?.user_metadata?.avatar_url && (
+              <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full border border-cyan-500/30" />
+            )}
+            <div className="text-right">
+              <div className="text-sm text-white">{userName}</div>
+              <button onClick={handleSignOut} className="text-xs text-gray-500 hover:text-red-400 transition-colors">Sign out</button>
+            </div>
           </div>
         </div>
       </motion.header>
 
       {/* Stats */}
-      <StatsPanel agents={agents} events={events} />
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <StatsPanel agents={agents} events={events} />
+      </motion.div>
 
       {/* Agents */}
       <div className="flex items-center gap-3 my-8">
@@ -106,22 +167,34 @@ export default function DashboardPage() {
       </div>
 
       {agents.length === 0 ? (
-        <div className="glow-border rounded-xl p-12 bg-[#111118] text-center">
-          <div className="text-4xl mb-4">🤖</div>
-          <h3 className="text-xl font-bold text-white mb-2">No agents yet</h3>
-          <p className="text-gray-500 text-sm mb-6">Register your first agent to get started</p>
-          <code className="text-cyan-400 font-mono text-sm bg-black/40 px-4 py-2 rounded-lg">
-            pip install agentid
-          </code>
-        </div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+          className="glow-border rounded-xl p-12 bg-[#111118] text-center">
+          <div className="text-5xl mb-4">🛂</div>
+          <h3 className="text-xl font-bold text-white mb-2">No agents registered</h3>
+          <p className="text-gray-500 text-sm mb-6">Register your first agent to get its identity passport</p>
+          <div className="bg-black/40 rounded-lg p-4 inline-block text-left">
+            <div className="text-xs text-gray-500 mb-2">Install the SDK:</div>
+            <code className="text-cyan-400 font-mono text-sm">pip install agentid</code>
+            <div className="text-xs text-gray-500 mt-3 mb-2">Then register:</div>
+            <pre className="text-cyan-300 font-mono text-xs">{`agent = agentid.register(
+    name="My Agent",
+    capabilities=["trading"]
+)`}</pre>
+          </div>
+          <div className="mt-6">
+            <a href="/docs" className="text-cyan-500 text-sm hover:underline">Read the docs →</a>
+          </div>
+        </motion.div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {agents.map((agent, i) => <AgentPassport key={agent.agent_id} agent={agent} index={i} />)}
-        </div>
+        </motion.div>
       )}
 
       {/* Activity + Transactions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <ActivityFeed events={events} agents={agents} />
         <div className="glow-border rounded-xl p-5 bg-[#111118]">
           <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Transactions</h2>
@@ -143,6 +216,11 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+      </motion.div>
+
+      {/* Footer */}
+      <div className="text-center py-8 mt-8 border-t border-white/5">
+        <p className="text-gray-700 text-xs">AgentID — getagentid.dev</p>
       </div>
     </div>
   )
