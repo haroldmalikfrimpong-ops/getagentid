@@ -58,6 +58,14 @@ def scan_emails(days=None):
             icon = "+" if result["type"] == "income" else "-"
             print(f"  {icon}£{result['amount']:.2f} | {result.get('vendor', 'Unknown')} | {result.get('category', '')}")
 
+            # Log to AgentID hub
+            try:
+                from hub import log_transaction
+                log_transaction(result["type"], result["amount"], result.get("currency", "GBP"),
+                                result.get("vendor"), result.get("category"), result.get("description"))
+            except Exception:
+                pass
+
             # Track subscription
             if result.get("is_subscription"):
                 db.add_subscription(
