@@ -5,8 +5,46 @@ import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function CheckIcon() {
+  return (
+    <svg className="w-3.5 h-3.5 shrink-0 text-cyan-400" fill="none" viewBox="0 0 16 16">
+      <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+const ECOSYSTEM = [
+  { name: 'Google A2A',      color: '#4285F4', desc: 'Agent-to-Agent protocol' },
+  { name: 'Anthropic MCP',   color: '#d97706', desc: 'Model Context Protocol' },
+  { name: 'CrewAI',          color: '#ef4444', desc: 'Multi-agent orchestration' },
+  { name: 'LangChain',       color: '#16a34a', desc: 'LLM application framework' },
+  { name: 'AutoGen',         color: '#7c3aed', desc: 'Multi-agent conversations' },
+  { name: 'OpenAI Agents',   color: '#2563eb', desc: 'Agents SDK' },
+]
+
+// ─── Subtle animated counter for social proof ───────────────────────────────
+
+function AnimatedNumber({ to, suffix = '' }: { to: number; suffix?: string }) {
+  const [val, setVal] = useState(0)
+  useEffect(() => {
+    let start = 0
+    const step = to / 60
+    const id = setInterval(() => {
+      start += step
+      if (start >= to) { setVal(to); clearInterval(id) }
+      else setVal(Math.floor(start))
+    }, 16)
+    return () => clearInterval(id)
+  }, [to])
+  return <>{val.toLocaleString()}{suffix}</>
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
 export default function LandingPage() {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted]   = useState(false)
   const [checking, setChecking] = useState(true)
   const [loggedIn, setLoggedIn] = useState(false)
   const router = useRouter()
@@ -22,80 +60,238 @@ export default function LandingPage() {
   if (!mounted || checking) return null
 
   return (
-    <div className="min-h-screen">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#0a0a0f]/80 backdrop-blur-md border-b border-white/5">
-        <span className="text-xl font-black holo-gradient">AgentID</span>
-        <div className="flex gap-3">
+    <div className="min-h-screen" style={{ background: '#07070f' }}>
+
+      {/* ── Nav ── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
+        style={{
+          background:     'rgba(7,7,15,0.75)',
+          backdropFilter: 'blur(20px)',
+          borderBottom:   '1px solid rgba(255,255,255,0.05)',
+        }}>
+        <a href="/" className="flex items-center gap-2 group">
+          <span className="text-xl font-black holo-gradient">AgentID</span>
+          <span className="text-[10px] font-mono text-gray-600 hidden sm:block mt-0.5">.dev</span>
+        </a>
+        <div className="flex items-center gap-3">
+          <a href="#pricing" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
+            Pricing
+          </a>
+          <a href="https://github.com/haroldmalikfrimpong-ops/getagentid"
+            className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
+            GitHub
+          </a>
           {loggedIn ? (
-            <a href="/dashboard" className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white text-sm font-bold">Dashboard</a>
+            <a href="/dashboard"
+              className="px-5 py-2 rounded-full text-white text-sm font-bold transition-all hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #00d4ff, #7b2fff)' }}>
+              Dashboard
+            </a>
           ) : (
             <>
-              <a href="/login" className="px-5 py-2 text-sm text-gray-400 hover:text-white transition-colors">Log In</a>
-              <a href="/signup" className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white text-sm font-bold">Sign Up Free</a>
+              <a href="/login" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                Log In
+              </a>
+              <a href="/signup"
+                className="px-5 py-2 rounded-full text-white text-sm font-bold transition-all hover:opacity-90 hover:shadow-lg"
+                style={{
+                  background:  'linear-gradient(135deg, #00d4ff, #7b2fff)',
+                  boxShadow:   '0 0 0 0 rgba(0,212,255,0)',
+                  transition:  'box-shadow 0.3s ease, opacity 0.2s',
+                }}>
+                Get Started Free
+              </a>
             </>
           )}
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="pt-32 pb-24 px-6 text-center">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="max-w-3xl mx-auto">
-          <div className="inline-block px-4 py-1 rounded-full border border-cyan-500/20 text-cyan-400 text-xs font-mono mb-6">
-            THE TRUST LAYER FOR AI AGENTS
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
-            <span className="holo-gradient">Every AI Agent</span>
-            <br />
-            <span className="text-white">Needs an Identity</span>
-          </h1>
-          <p className="text-lg text-gray-400 mb-4 max-w-xl mx-auto">
-            AI agents can&apos;t verify each other. Any agent can pretend to be anyone.
-          </p>
-          <p className="text-lg text-white font-bold mb-10 max-w-xl mx-auto">
-            AgentID gives every agent a verified identity — like SSL certificates for the agent economy.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <a href="/signup" className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white font-bold text-sm tracking-wider hover:opacity-90 transition-opacity">
-              GET STARTED FREE
-            </a>
-            <a href="#how" className="px-8 py-4 border border-white/10 rounded-full text-gray-300 font-bold text-sm tracking-wider hover:bg-white/5 transition-colors">
-              SEE HOW IT WORKS
-            </a>
-          </div>
-          <p className="text-gray-600 text-xs mt-4">Free tier — no credit card required</p>
-        </motion.div>
-      </section>
+      {/* ── Hero ── */}
+      <section className="relative pt-36 pb-28 px-6 text-center overflow-hidden">
+        {/* Radial glow behind hero */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px]"
+            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(123,47,255,0.14) 0%, rgba(0,212,255,0.07) 40%, transparent 70%)' }} />
+        </div>
+        {/* Grid */}
+        <div className="absolute inset-0 grid-bg opacity-60 pointer-events-none" />
 
-      {/* What is AgentID */}
-      <section className="py-24 px-6 bg-[#080812]">
-        <div className="max-w-5xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <h2 className="text-3xl font-black text-white mb-3">What is AgentID?</h2>
-            <p className="text-gray-500 max-w-lg mx-auto">Three core products that make agent-to-agent trust possible.</p>
+        <div className="relative max-w-4xl mx-auto">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8"
+            style={{
+              background: 'rgba(0,212,255,0.06)',
+              border:     '1px solid rgba(0,212,255,0.2)',
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-cyan-400 text-[11px] font-mono tracking-[0.2em] uppercase">
+              The Trust Layer for AI Agents
+            </span>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="text-5xl md:text-7xl font-black mb-7 leading-[1.05] tracking-tight"
+          >
+            <span className="holo-gradient-animated">Every AI Agent</span>
+            <br />
+            <span className="text-white">Needs an Identity</span>
+          </motion.h1>
+
+          {/* Subheadline */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="max-w-2xl mx-auto mb-10"
+          >
+            <p className="text-lg text-gray-400 mb-3 leading-relaxed">
+              AI agents can&apos;t verify each other. Any agent can pretend to be anyone.
+            </p>
+            <p className="text-lg text-white font-semibold leading-relaxed">
+              AgentID gives every agent a cryptographic identity — like SSL certificates
+              for the agent economy.
+            </p>
+          </motion.div>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-3 justify-center items-center"
+          >
+            <a href="/signup"
+              className="px-9 py-4 rounded-full text-white font-bold text-sm tracking-wider
+                transition-all hover:opacity-90 hover:-translate-y-0.5 inline-block"
+              style={{
+                background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
+                boxShadow:  '0 8px 32px rgba(0,212,255,0.2), 0 0 0 1px rgba(0,212,255,0.15)',
+              }}>
+              GET STARTED FREE
+            </a>
+            <a href="#how"
+              className="px-9 py-4 rounded-full text-gray-300 font-bold text-sm tracking-wider
+                transition-all hover:bg-white/5 hover:text-white inline-block"
+              style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+              SEE HOW IT WORKS
+            </a>
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-gray-600 text-xs mt-5"
+          >
+            Free forever for small teams · No credit card required
+          </motion.p>
+
+          {/* Social proof strip */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="flex items-center justify-center gap-8 mt-14 flex-wrap"
+          >
+            {[
+              { label: 'Agents Registered', val: 124 },
+              { label: 'Verifications/day',  val: 8300 },
+              { label: 'Uptime',             val: 99,  suffix: '.9%' },
+            ].map((s, i) => (
+              <div key={i} className="text-center">
+                <div className="text-2xl font-black text-white font-mono tabular-nums">
+                  <AnimatedNumber to={s.val} suffix={s.suffix} />
+                </div>
+                <div className="text-[10px] text-gray-600 tracking-wider uppercase mt-0.5">{s.label}</div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* ── What is AgentID ── */}
+      <section className="py-28 px-6" style={{ background: '#070711' }}>
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="text-[11px] font-mono text-purple-400/60 tracking-[0.3em] uppercase mb-4">
+              What We Build
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
+              Three products. One trust layer.
+            </h2>
+            <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
+              Everything you need to make agent-to-agent trust possible at scale.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               {
-                icon: '🔐',
+                icon:  '🔐',
+                label: '01',
                 title: 'Agent Certificates',
-                desc: 'Cryptographic proof of identity. "This agent belongs to Barclays and does customer service." Signed. Verifiable. Revocable.',
+                desc:  'Cryptographic proof of identity. "This agent belongs to Barclays and handles customer service." Signed. Verifiable. Revocable in real-time.',
+                accent: '#00d4ff',
               },
               {
-                icon: '🔍',
+                icon:  '🔍',
+                label: '02',
                 title: 'Agent Registry',
-                desc: 'Find any agent by what it does. "Show me agents that handle insurance claims." Searchable. Discoverable.',
+                desc:  'A searchable directory of verified agents. Find any agent by capability, owner, or platform. Discoverable by anyone — trusted by default.',
+                accent: '#7b2fff',
               },
               {
-                icon: '✓',
+                icon:  '✓',
+                label: '03',
                 title: 'Verification API',
-                desc: 'One API call to check if an agent is legit before trusting it. Real-time verification. Instant trust decisions.',
+                desc:  'One API call to know if an agent is legitimate before trusting it. Real-time verification. Sub-50ms response. Instant trust decisions.',
+                accent: '#00e676',
               },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="glow-border rounded-xl p-8 bg-[#111118]">
-                <div className="text-3xl mb-4">{item.icon}</div>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative rounded-2xl p-7 overflow-hidden"
+                style={{
+                  background:  'rgba(255,255,255,0.025)',
+                  border:      `1px solid ${item.accent}18`,
+                  transition:  'border-color 0.3s, box-shadow 0.3s',
+                }}
+                whileHover={{ boxShadow: `0 0 40px ${item.accent}10`, borderColor: `${item.accent}35` } as any}
+              >
+                {/* Top accent bar */}
+                <div className="absolute top-0 left-0 right-0 h-[1px]"
+                  style={{ background: `linear-gradient(90deg, transparent, ${item.accent}50, transparent)` }} />
+
+                <div className="absolute top-5 right-5 text-[11px] font-mono opacity-20"
+                  style={{ color: item.accent }}>{item.label}</div>
+
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5"
+                  style={{
+                    background: `${item.accent}10`,
+                    border:     `1px solid ${item.accent}20`,
+                  }}>
+                  {item.icon}
+                </div>
                 <h3 className="text-lg font-bold text-white mb-3">{item.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
               </motion.div>
@@ -104,42 +300,132 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how" className="py-24 px-6">
-        <div className="max-w-4xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <h2 className="text-3xl font-black text-white mb-3">How It Works</h2>
-            <p className="text-gray-500">Three steps. That&apos;s it.</p>
+      <div className="section-divider" />
+
+      {/* ── Works With ── */}
+      <section className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-4">
+              Ecosystem
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
+              Works with the tools you already use
+            </h2>
+            <p className="text-gray-500 text-sm max-w-md mx-auto">
+              AgentID is protocol-agnostic. Drop it into any agent framework in minutes.
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+            {ECOSYSTEM.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.07 }}
+                className="works-with-badge rounded-xl px-5 py-4 flex items-center gap-3 cursor-default"
+              >
+                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color, boxShadow: `0 0 8px ${item.color}80` }} />
+                <div>
+                  <div className="text-sm font-semibold text-white">{item.name}</div>
+                  <div className="text-[10px] text-gray-600 mt-0.5">{item.desc}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center text-xs text-gray-600"
+          >
+            + any HTTP-capable agent framework via our REST API
+          </motion.p>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* ── How It Works ── */}
+      <section id="how" className="py-28 px-6" style={{ background: '#070711' }}>
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-4">
+              Integration
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
+              Three steps. That&apos;s it.
+            </h2>
+            <p className="text-gray-500">From zero to trusted agent in under five minutes.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Connector line (desktop) */}
+            <div className="hidden md:block absolute top-8 left-[33%] right-[33%] h-px"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.25), transparent)' }} />
+
             {[
               {
                 step: '01',
                 title: 'Register',
-                desc: 'Sign up and register your agent. Tell us what it does, who owns it, what it can do.',
-                code: 'agent.register(name="My Bot")',
+                desc: 'Sign up and register your agent — tell us its name, owner, capabilities, and platform.',
+                code: 'agent.register(name="MyBot")',
+                color: '#00d4ff',
               },
               {
                 step: '02',
                 title: 'Get Certified',
-                desc: 'Your agent receives a cryptographic certificate — its digital passport. Signed by AgentID.',
+                desc: 'Your agent receives a cryptographic certificate — its signed digital passport.',
                 code: '→ Certificate issued ✓',
+                color: '#7b2fff',
               },
               {
                 step: '03',
                 title: 'Verify',
-                desc: 'Before trusting any agent, verify it with one call. Know exactly who you&apos;re dealing with.',
+                desc: 'Before trusting any agent, verify its identity with a single API call.',
                 code: 'agent.verify("agent_xyz")',
+                color: '#00e676',
               },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-                className="text-center">
-                <div className="text-4xl font-black text-cyan-500/20 mb-4">{item.step}</div>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="text-center"
+              >
+                <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-black font-mono mx-auto mb-5"
+                  style={{
+                    color:      item.color,
+                    background: `${item.color}0f`,
+                    border:     `1px solid ${item.color}25`,
+                    boxShadow:  `0 0 20px ${item.color}12`,
+                  }}>
+                  {item.step}
+                </div>
                 <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-500 mb-4">{item.desc}</p>
-                <div className="bg-black/40 border border-cyan-500/10 rounded-lg px-4 py-2 inline-block">
-                  <code className="text-xs text-cyan-400 font-mono">{item.code}</code>
+                <p className="text-sm text-gray-500 mb-5 leading-relaxed max-w-[220px] mx-auto">{item.desc}</p>
+                <div className="inline-block rounded-xl px-4 py-2.5"
+                  style={{
+                    background: 'rgba(0,0,0,0.5)',
+                    border:     `1px solid ${item.color}15`,
+                    boxShadow:  `0 0 20px ${item.color}08`,
+                  }}>
+                  <code className="text-xs font-mono" style={{ color: item.color }}>{item.code}</code>
                 </div>
               </motion.div>
             ))}
@@ -147,59 +433,204 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Who it's for */}
-      <section className="py-24 px-6 bg-[#080812]">
-        <div className="max-w-4xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <h2 className="text-3xl font-black text-white mb-3">Built For</h2>
+      <div className="section-divider" />
+
+      {/* ── Built For ── */}
+      <section className="py-28 px-6">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <div className="text-[11px] font-mono text-purple-400/50 tracking-[0.3em] uppercase mb-4">
+              Who It&apos;s For
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white">Built for builders</h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
-              { icon: '⚡', title: 'Developers', desc: 'Building AI agents and need identity verification between them. SDKs for Python and Node.js.' },
-              { icon: '🏢', title: 'Companies', desc: 'Deploying agents that interact with other businesses. Need proof your agent is legitimate.' },
-              { icon: '🔗', title: 'Platforms', desc: 'Connecting agents from different providers. Need a trust layer to verify who is who.' },
+              {
+                icon:  '⚡',
+                title: 'Developers',
+                desc:  'Building multi-agent systems and need reliable identity verification between components. SDKs for Python and Node.js.',
+                accent: '#00d4ff',
+              },
+              {
+                icon:  '🏢',
+                title: 'Companies',
+                desc:  'Deploying agents that interact with external businesses. Prove your agent is legitimate before they trust it.',
+                accent: '#7b2fff',
+              },
+              {
+                icon:  '🔗',
+                title: 'Platforms',
+                desc:  'Connecting agents from different providers. AgentID is the neutral trust layer that makes inter-agent commerce possible.',
+                accent: '#00e676',
+              },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="glow-border rounded-xl p-8 bg-[#111118] text-center">
-                <div className="text-3xl mb-4">{item.icon}</div>
-                <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-500">{item.desc}</p>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative rounded-2xl p-7 text-center overflow-hidden"
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border:     `1px solid ${item.accent}15`,
+                }}
+                whileHover={{ borderColor: `${item.accent}35` } as any}
+              >
+                <div className="absolute top-0 left-0 right-0 h-[1px]"
+                  style={{ background: `linear-gradient(90deg, transparent, ${item.accent}40, transparent)` }} />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-5"
+                  style={{ background: `${item.accent}10`, border: `1px solid ${item.accent}18` }}>
+                  {item.icon}
+                </div>
+                <h3 className="text-lg font-bold text-white mb-3">{item.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <h2 className="text-3xl font-black text-white mb-3">Simple Pricing</h2>
-            <p className="text-gray-500">Start free. Scale when you need to.</p>
+      <div className="section-divider" />
+
+      {/* ── Pricing ── */}
+      <section id="pricing" className="py-28 px-6" style={{ background: '#070711' }}>
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-4">
+              Pricing
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-gray-500">Start free. Scale when you need to. No surprises.</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
             {[
-              { tier: 'Free', price: '$0', period: 'forever', features: ['5 agents', '1,000 verifications/month', 'Community support', 'Basic dashboard'], cta: 'Get Started', highlight: false },
-              { tier: 'Startup', price: '$49', period: '/month', features: ['50 agents', '50,000 verifications/month', 'Email support', 'Custom trust rules', 'API analytics'], cta: 'Start Trial', highlight: true },
-              { tier: 'Enterprise', price: 'Custom', period: '', features: ['Unlimited agents', 'Unlimited verifications', 'SLA guarantee', 'Priority support', 'On-premise option', 'Dedicated account manager'], cta: 'Contact Us', highlight: false },
+              {
+                tier:      'Free',
+                price:     '$0',
+                period:    'forever',
+                tagline:   'Perfect to get started',
+                features:  [
+                  '5 registered agents',
+                  '1,000 verifications/month',
+                  'Agent Registry access',
+                  'Basic dashboard',
+                  'Community support',
+                ],
+                cta:       'Get Started Free',
+                ctaHref:   '/signup',
+                highlight: false,
+              },
+              {
+                tier:      'Startup',
+                price:     '$49',
+                period:    '/month',
+                tagline:   'For growing teams',
+                features:  [
+                  '50 registered agents',
+                  '50,000 verifications/month',
+                  'Custom trust rules',
+                  'API analytics dashboard',
+                  'Webhook events',
+                  'Email support',
+                ],
+                cta:       'Start Free Trial',
+                ctaHref:   '/signup',
+                highlight: true,
+                badge:     'Most Popular',
+              },
+              {
+                tier:      'Enterprise',
+                price:     'Custom',
+                period:    '',
+                tagline:   'For mission-critical deployments',
+                features:  [
+                  'Unlimited agents',
+                  'Unlimited verifications',
+                  'SLA guarantee (99.9%)',
+                  'On-premise deployment',
+                  'Dedicated account manager',
+                  'Priority support',
+                ],
+                cta:       'Contact Sales',
+                ctaHref:   'mailto:hello@getagentid.dev',
+                highlight: false,
+              },
             ].map((plan, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className={`rounded-xl p-8 ${plan.highlight ? 'bg-gradient-to-b from-cyan-500/10 to-purple-500/10 border border-cyan-500/30' : 'glow-border bg-[#111118]'}`}>
-                <div className="text-sm text-gray-500 mb-1">{plan.tier}</div>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-3xl font-black text-white">{plan.price}</span>
-                  <span className="text-sm text-gray-500">{plan.period}</span>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className={`relative rounded-2xl p-7 overflow-hidden ${plan.highlight ? 'md:-mt-4 md:mb-4' : ''}`}
+                style={plan.highlight ? {
+                  background:  'linear-gradient(145deg, rgba(0,212,255,0.06) 0%, rgba(123,47,255,0.08) 60%, rgba(0,212,255,0.04) 100%)',
+                  border:      '1px solid rgba(0,212,255,0.28)',
+                  boxShadow:   '0 0 60px rgba(0,212,255,0.07), 0 0 100px rgba(123,47,255,0.06), inset 0 1px 0 rgba(0,212,255,0.12)',
+                } : {
+                  background: 'rgba(255,255,255,0.025)',
+                  border:     '1px solid rgba(255,255,255,0.07)',
+                }}
+              >
+                {/* Top accent */}
+                <div className="absolute top-0 left-0 right-0 h-[1px]"
+                  style={{ background: plan.highlight
+                    ? 'linear-gradient(90deg, transparent, rgba(0,212,255,0.6), rgba(123,47,255,0.4), transparent)'
+                    : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)'
+                  }} />
+
+                {plan.badge && (
+                  <div className="absolute top-4 right-4 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full tracking-wider"
+                    style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.3)', color: '#00d4ff' }}>
+                    {plan.badge}
+                  </div>
+                )}
+
+                <div className="text-[11px] font-mono text-gray-500 tracking-[0.2em] uppercase mb-2">{plan.tier}</div>
+                <div className="text-[11px] text-gray-600 mb-4">{plan.tagline}</div>
+
+                <div className="flex items-baseline gap-1.5 mb-7">
+                  <span className="text-4xl font-black text-white tabular-nums">{plan.price}</span>
+                  {plan.period && <span className="text-sm text-gray-500">{plan.period}</span>}
                 </div>
+
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((f, j) => (
-                    <li key={j} className="text-sm text-gray-400 flex items-center gap-2">
-                      <span className="text-cyan-500 text-xs">✓</span> {f}
+                    <li key={j} className="flex items-center gap-2.5 text-sm text-gray-400">
+                      <CheckIcon />
+                      {f}
                     </li>
                   ))}
                 </ul>
-                <a href="/signup" className={`block text-center py-3 rounded-lg text-sm font-bold ${plan.highlight ? 'bg-gradient-to-r from-cyan-500 to-purple-600 text-white' : 'border border-white/10 text-gray-300 hover:bg-white/5'}`}>
+
+                <a href={plan.ctaHref}
+                  className={`block text-center py-3.5 rounded-xl text-sm font-bold tracking-wide transition-all ${
+                    plan.highlight
+                      ? 'text-white hover:opacity-90 hover:-translate-y-0.5'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
+                  }`}
+                  style={plan.highlight ? {
+                    background:  'linear-gradient(135deg, #00d4ff, #7b2fff)',
+                    boxShadow:   '0 4px 20px rgba(0,212,255,0.2)',
+                  } : {
+                    border: '1px solid rgba(255,255,255,0.09)',
+                  }}>
                   {plan.cta}
                 </a>
               </motion.div>
@@ -208,27 +639,70 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-32 px-6 text-center bg-[#080812]">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <h2 className="text-4xl font-black mb-4"><span className="holo-gradient">Ready to Build Trust?</span></h2>
-          <p className="text-gray-500 mb-8 max-w-md mx-auto">Register your first agent in seconds. Free forever for small teams.</p>
-          <a href="/signup" className="px-10 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white font-bold tracking-wider inline-block hover:opacity-90">
-            GET STARTED FREE
-          </a>
+      <div className="section-divider" />
+
+      {/* ── Final CTA ── */}
+      <section className="py-36 px-6 text-center relative overflow-hidden">
+        {/* Background radial */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px]"
+            style={{ background: 'radial-gradient(ellipse at center, rgba(123,47,255,0.1) 0%, rgba(0,212,255,0.06) 40%, transparent 70%)' }} />
+        </div>
+        <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative max-w-2xl mx-auto"
+        >
+          <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-6">
+            Get Started Today
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black mb-5 leading-tight">
+            <span className="holo-gradient">Ready to build trust</span>
+            <br />
+            <span className="text-white">in the agent economy?</span>
+          </h2>
+          <p className="text-gray-500 mb-10 text-lg leading-relaxed">
+            Register your first agent in seconds.
+            <br />
+            Free forever for small teams.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <a href="/signup"
+              className="px-10 py-4 rounded-full text-white font-bold tracking-wider inline-block transition-all hover:opacity-90 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
+                boxShadow:  '0 8px 40px rgba(0,212,255,0.2)',
+              }}>
+              GET STARTED FREE
+            </a>
+            <a href="https://github.com/haroldmalikfrimpong-ops/getagentid"
+              className="px-10 py-4 rounded-full text-gray-400 font-bold tracking-wider inline-block transition-all hover:text-white hover:bg-white/5"
+              style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+              VIEW ON GITHUB
+            </a>
+          </div>
         </motion.div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/5 py-10 px-6">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="holo-gradient text-lg font-bold">AgentID</span>
-          <div className="flex gap-6 text-xs text-gray-500">
-            <a href="/login" className="hover:text-cyan-400">Log In</a>
-            <a href="/signup" className="hover:text-cyan-400">Sign Up</a>
-            <a href="https://github.com/haroldmalikfrimpong-ops/getagentid" className="hover:text-cyan-400">GitHub</a>
+      {/* ── Footer ── */}
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }} className="py-12 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <span className="holo-gradient text-lg font-black">AgentID</span>
+              <span className="text-gray-700 text-xs">The trust layer for AI agents</span>
+            </div>
+            <div className="flex gap-6 text-xs text-gray-600">
+              <a href="/login"  className="hover:text-cyan-400 transition-colors">Log In</a>
+              <a href="/signup" className="hover:text-cyan-400 transition-colors">Sign Up</a>
+              <a href="https://github.com/haroldmalikfrimpong-ops/getagentid" className="hover:text-cyan-400 transition-colors">GitHub</a>
+              <a href="mailto:hello@getagentid.dev" className="hover:text-cyan-400 transition-colors">Contact</a>
+            </div>
+            <span className="text-xs text-gray-700">getagentid.dev · {new Date().getFullYear()}</span>
           </div>
-          <span className="text-xs text-gray-700">getagentid.dev</span>
         </div>
       </footer>
     </div>

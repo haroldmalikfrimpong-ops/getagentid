@@ -8,23 +8,217 @@ import AgentPassport from '@/components/AgentPassport'
 import StatsPanel from '@/components/StatsPanel'
 import ActivityFeed from '@/components/ActivityFeed'
 
+// ─── Sign-out icon ───────────────────────────────────────────────────────────
+function SignOutIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round"
+        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+    </svg>
+  )
+}
+
+// ─── Nav ─────────────────────────────────────────────────────────────────────
+function Navbar({ userName, avatarUrl, onSignOut }: { userName: string; avatarUrl?: string; onSignOut: () => void }) {
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3"
+      style={{
+        background:     'rgba(7,7,15,0.85)',
+        backdropFilter: 'blur(20px)',
+        borderBottom:   '1px solid rgba(255,255,255,0.05)',
+      }}>
+      <a href="/" className="text-lg font-black holo-gradient">AgentID</a>
+      <div className="flex items-center gap-3">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full border border-white/10" />
+        ) : (
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
+            style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.4), rgba(123,47,255,0.4))', border: '1px solid rgba(0,212,255,0.2)' }}>
+            {userName.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <span className="text-sm text-gray-400 hidden sm:block max-w-[140px] truncate">{userName}</span>
+        <button onClick={onSignOut}
+          className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5 ml-1">
+          <SignOutIcon />
+          <span className="hidden sm:block">Sign out</span>
+        </button>
+      </div>
+    </nav>
+  )
+}
+
+// ─── Empty state ─────────────────────────────────────────────────────────────
+function EmptyAgents() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 }}
+      className="rounded-2xl p-12 text-center"
+      style={{
+        background: 'rgba(255,255,255,0.02)',
+        border:     '1px solid rgba(255,255,255,0.07)',
+      }}
+    >
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5"
+        style={{ background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)' }}>
+        🛂
+      </div>
+      <h3 className="text-xl font-bold text-white mb-2">No agents registered</h3>
+      <p className="text-gray-500 text-sm mb-8 max-w-xs mx-auto leading-relaxed">
+        Register your first agent to get a cryptographic identity passport
+      </p>
+      <div className="max-w-sm mx-auto rounded-xl overflow-hidden text-left"
+        style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,212,255,0.1)' }}>
+        <div className="px-4 pt-4 pb-2 text-[10px] font-mono text-gray-600 uppercase tracking-wider border-b"
+          style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+          Quick start
+        </div>
+        <div className="p-4 space-y-3">
+          <div>
+            <div className="text-[10px] text-gray-600 mb-1">1. Install the SDK</div>
+            <code className="text-cyan-400 font-mono text-sm block">pip install agentid</code>
+          </div>
+          <div>
+            <div className="text-[10px] text-gray-600 mb-1">2. Register your agent</div>
+            <pre className="text-cyan-300 font-mono text-xs leading-relaxed">{`agent = agentid.register(
+    name="My Agent",
+    capabilities=["trading"]
+)`}</pre>
+          </div>
+        </div>
+      </div>
+      <div className="mt-6">
+        <a href="/docs" className="text-cyan-500 text-sm hover:text-cyan-300 transition-colors font-medium">
+          Read the documentation →
+        </a>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Upgrade banner ───────────────────────────────────────────────────────────
+function PlanBar({
+  plan, agents, agentLimit, upgrading, onUpgrade,
+}: {
+  plan: string; agents: any[]; agentLimit: number; upgrading: boolean; onUpgrade: (p: string) => void;
+}) {
+  const pct = agentLimit > 0 ? (agents.length / agentLimit) * 100 : 0
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="rounded-2xl p-4 mb-6 flex items-center justify-between gap-4 flex-wrap"
+      style={{
+        background: 'rgba(255,255,255,0.025)',
+        border:     '1px solid rgba(255,255,255,0.07)',
+      }}
+    >
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2.5">
+          <span className="text-[10px] font-mono font-bold px-3 py-1 rounded-full tracking-wider"
+            style={plan === 'free'
+              ? { background: 'rgba(255,255,255,0.05)', color: '#888', border: '1px solid rgba(255,255,255,0.08)' }
+              : { background: 'rgba(0,212,255,0.08)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.2)' }
+            }>
+            {plan.toUpperCase()}
+          </span>
+        </div>
+        <div className="hidden sm:block">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs text-gray-500">{agents.length} / {agentLimit} agents</span>
+          </div>
+          <div className="w-32 h-1 rounded-full bg-white/5 overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-700"
+              style={{
+                width:      `${Math.min(pct, 100)}%`,
+                background: pct > 80
+                  ? 'linear-gradient(90deg, #ff9500, #ff5252)'
+                  : 'linear-gradient(90deg, #00d4ff, #7b2fff)',
+              }} />
+          </div>
+        </div>
+      </div>
+
+      {plan === 'free' && (
+        <motion.button
+          onClick={() => onUpgrade('startup')}
+          disabled={upgrading}
+          whileHover={upgrading ? {} : { scale: 1.02 }}
+          whileTap={upgrading ? {} : { scale: 0.98 }}
+          className="px-5 py-2 rounded-full text-white text-xs font-bold tracking-wide disabled:opacity-50 transition-all"
+          style={{ background: 'linear-gradient(135deg, #00d4ff, #7b2fff)', boxShadow: '0 4px 16px rgba(0,212,255,0.2)' }}
+        >
+          {upgrading ? 'Redirecting...' : 'Upgrade to Startup — $49/mo'}
+        </motion.button>
+      )}
+    </motion.div>
+  )
+}
+
+// ─── Transaction list ─────────────────────────────────────────────────────────
+function TransactionList({ transactions }: { transactions: any[] }) {
+  return (
+    <div className="rounded-2xl overflow-hidden"
+      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* Top accent */}
+      <div className="h-[1px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.2), transparent)' }} />
+
+      <div className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[11px] font-mono text-gray-500 uppercase tracking-[0.2em]">
+            Transactions
+          </h2>
+          <span className="text-[10px] text-gray-700 font-mono">{transactions.length} total</span>
+        </div>
+        <div className="space-y-1 max-h-[380px] overflow-y-auto pr-1">
+          {transactions.length === 0 && (
+            <p className="text-gray-700 text-sm py-8 text-center">No transactions yet</p>
+          )}
+          {transactions.map((tx) => (
+            <div key={tx.id}
+              className="flex items-center justify-between py-2.5 px-3 rounded-xl text-sm transition-colors hover:bg-white/5"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+              <div className="flex items-center gap-3">
+                <div className="text-base">{tx.type === 'entry' ? '📈' : '📉'}</div>
+                <div>
+                  <div className="text-gray-300 text-xs font-medium">{tx.vendor || tx.type}</div>
+                  <div className="text-[10px] text-gray-600 mt-0.5">{tx.category}</div>
+                </div>
+              </div>
+              <div className={`font-mono text-xs font-bold ${tx.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {tx.amount > 0 ? '+' : ''}{tx.currency} {tx.amount?.toFixed(2)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
-  const [isNew, setIsNew] = useState(false)
-  const [agents, setAgents] = useState<any[]>([])
-  const [events, setEvents] = useState<any[]>([])
+  const [user, setUser]               = useState<any>(null)
+  const [isNew, setIsNew]             = useState(false)
+  const [agents, setAgents]           = useState<any[]>([])
+  const [events, setEvents]           = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
-  const [time, setTime] = useState('')
-  const [ready, setReady] = useState(false)
-  const [plan, setPlan] = useState('free')
-  const [agentLimit, setAgentLimit] = useState(5)
-  const [upgrading, setUpgrading] = useState(false)
+  const [time, setTime]               = useState('')
+  const [ready, setReady]             = useState(false)
+  const [plan, setPlan]               = useState('free')
+  const [agentLimit, setAgentLimit]   = useState(5)
+  const [upgrading, setUpgrading]     = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    const clock = setInterval(() => setTime(new Date().toLocaleTimeString('en-GB', { hour12: false })), 1000)
+    const clock = setInterval(() => setTime(
+      new Date().toLocaleTimeString('en-GB', { hour12: false })
+    ), 1000)
 
-    // This handles EVERYTHING — initial load, OAuth redirects, existing sessions
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUser(session.user)
@@ -33,8 +227,6 @@ export default function DashboardPage() {
         loadData()
         loadProfile()
       }
-      // Only redirect if we get INITIAL_SESSION with no user (meaning no session at all)
-      // Don't redirect on SIGNED_OUT during page load
       if (event === 'INITIAL_SESSION' && !session) {
         router.push('/login')
       }
@@ -73,9 +265,9 @@ export default function DashboardPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
       const res = await fetch('/api/v1/checkout', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planName }),
+        body:    JSON.stringify({ plan: planName }),
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
@@ -87,39 +279,70 @@ export default function DashboardPage() {
     await supabase.auth.signOut()
   }
 
-  const userName = user?.user_metadata?.user_name || user?.user_metadata?.full_name || user?.email || 'Agent'
+  const userName  = user?.user_metadata?.user_name || user?.user_metadata?.full_name || user?.email || 'Agent'
   const avatarUrl = user?.user_metadata?.avatar_url
-  const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const dateStr   = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
 
-  // Not ready yet — show loading
+  // ── Loading ──
   if (!ready) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-            className="w-12 h-12 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Authenticating...</p>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+            className="w-10 h-10 mx-auto mb-4 rounded-full"
+            style={{
+              border:      '2px solid rgba(0,212,255,0.12)',
+              borderTop:   '2px solid #00d4ff',
+              boxShadow:   '0 0 20px rgba(0,212,255,0.2)',
+            }}
+          />
+          <p className="text-gray-600 text-sm font-mono">Authenticating...</p>
         </div>
       </div>
     )
   }
 
-  // Welcome screen — only shows once on first sign in
+  // ── Welcome flash ──
   if (isNew) {
     setTimeout(() => setIsNew(false), 2500)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', duration: 0.5 }} className="mb-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center px-8"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.1 }}
+            className="mb-6"
+          >
             {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-20 h-20 rounded-full border-2 border-cyan-500/30 mx-auto" />
+              <img src={avatarUrl} alt=""
+                className="w-20 h-20 rounded-full mx-auto"
+                style={{ border: '2px solid rgba(0,212,255,0.3)', boxShadow: '0 0 30px rgba(0,212,255,0.15)' }} />
             ) : (
-              <div className="text-6xl">✓</div>
+              <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-3xl font-black text-white"
+                style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.2), rgba(123,47,255,0.2))', border: '1px solid rgba(0,212,255,0.2)' }}>
+                {userName.charAt(0).toUpperCase()}
+              </div>
             )}
           </motion.div>
-          <h1 className="text-3xl font-black mb-2"><span className="holo-gradient">Welcome, {userName}!</span></h1>
-          <p className="text-gray-500">Your AgentID command center is ready.</p>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="mt-4 text-xs text-cyan-500/50 font-mono">
+          <h1 className="text-3xl font-black mb-2">
+            <span className="holo-gradient">Welcome, {userName}!</span>
+          </h1>
+          <p className="text-gray-500 text-sm">Your AgentID command center is ready.</p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="mt-6 text-xs text-cyan-500/40 font-mono"
+          >
             Loading dashboard...
           </motion.div>
         </motion.div>
@@ -127,98 +350,101 @@ export default function DashboardPage() {
     )
   }
 
-  // Dashboard
+  // ── Dashboard ──
   return (
-    <div className="min-h-screen p-6 md:p-10">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-8 pt-14">
-        <h2 className="text-2xl font-bold text-white">Command Center</h2>
-        <div className="text-right">
-          <div className="text-xl font-mono text-cyan-400">{time}</div>
-          <div className="text-xs text-gray-600">{dateStr}</div>
-        </div>
-      </motion.div>
+    <div className="min-h-screen grid-bg" style={{ background: '#07070f' }}>
+      <Navbar userName={userName} avatarUrl={avatarUrl} onSignOut={handleSignOut} />
 
-      {/* Plan bar */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="flex items-center justify-between glow-border rounded-xl p-4 bg-[#111118] mb-8">
-        <div className="flex items-center gap-4">
-          <span className={`text-xs font-mono px-3 py-1 rounded-full ${plan === 'free' ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'}`}>
-            {plan.toUpperCase()}
-          </span>
-          <span className="text-sm text-gray-400">
-            {agents.length}/{agentLimit} agents
-          </span>
-        </div>
-        {plan === 'free' && (
-          <button onClick={() => handleUpgrade('startup')} disabled={upgrading}
-            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white text-xs font-bold disabled:opacity-50">
-            {upgrading ? 'Loading...' : 'Upgrade to Startup — $49/mo'}
-          </button>
-        )}
-      </motion.div>
+      <div className="max-w-7xl mx-auto px-5 md:px-8 pt-24 pb-16">
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <StatsPanel agents={agents} events={events} />
-      </motion.div>
-
-      <div className="flex items-center gap-3 my-8">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
-        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-[0.3em]">Your Agents</h2>
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
-      </div>
-
-      {agents.length === 0 ? (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="glow-border rounded-xl p-12 bg-[#111118] text-center">
-          <div className="text-5xl mb-4">🛂</div>
-          <h3 className="text-xl font-bold text-white mb-2">No agents registered</h3>
-          <p className="text-gray-500 text-sm mb-6">Register your first agent to get its identity passport</p>
-          <div className="bg-black/40 rounded-lg p-4 inline-block text-left">
-            <div className="text-xs text-gray-500 mb-2">Install the SDK:</div>
-            <code className="text-cyan-400 font-mono text-sm">pip install agentid</code>
-            <div className="text-xs text-gray-500 mt-3 mb-2">Then register:</div>
-            <pre className="text-cyan-300 font-mono text-xs">{`agent = agentid.register(
-    name="My Agent",
-    capabilities=["trading"]
-)`}</pre>
+        {/* ── Header ── */}
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8"
+        >
+          <div>
+            <h1 className="text-2xl font-black text-white">Command Center</h1>
+            <p className="text-xs text-gray-600 mt-1">{dateStr}</p>
           </div>
-          <div className="mt-6"><a href="/docs" className="text-cyan-500 text-sm hover:underline">Read the docs →</a></div>
+          <div className="text-right">
+            <div className="text-2xl font-mono font-bold text-cyan-400 tabular-nums"
+              style={{ textShadow: '0 0 20px rgba(0,212,255,0.3)' }}>
+              {time}
+            </div>
+            <div className="flex items-center gap-1.5 justify-end mt-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-[10px] text-gray-600 font-mono">LIVE</span>
+            </div>
+          </div>
         </motion.div>
-      ) : (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {agents.map((agent, i) => <AgentPassport key={agent.agent_id} agent={agent} index={i} />)}
-        </motion.div>
-      )}
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-        <ActivityFeed events={events} agents={agents} />
-        <div className="glow-border rounded-xl p-5 bg-[#111118]">
-          <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Transactions</h2>
-          <div className="space-y-2 max-h-[400px] overflow-y-auto">
-            {transactions.length === 0 && <p className="text-gray-600 text-sm">No transactions yet</p>}
-            {transactions.map((tx) => (
-              <div key={tx.id} className="flex items-center justify-between py-2 border-b border-white/5 text-sm">
-                <div className="flex items-center gap-3">
-                  <span>{tx.type === 'entry' ? '📈' : '📉'}</span>
-                  <div>
-                    <div className="text-white">{tx.vendor || tx.type}</div>
-                    <div className="text-xs text-gray-600">{tx.category}</div>
-                  </div>
-                </div>
-                <div className={`font-mono ${tx.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {tx.currency} {tx.amount?.toFixed(2)}
-                </div>
-              </div>
+        {/* ── Plan bar ── */}
+        <PlanBar
+          plan={plan}
+          agents={agents}
+          agentLimit={agentLimit}
+          upgrading={upgrading}
+          onUpgrade={handleUpgrade}
+        />
+
+        {/* ── Stats ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <StatsPanel agents={agents} events={events} />
+        </motion.div>
+
+        {/* ── Agents divider ── */}
+        <div className="flex items-center gap-4 mb-6 mt-10">
+          <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.15))' }} />
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono text-gray-500 uppercase tracking-[0.25em]">Your Agents</span>
+            {agents.length > 0 && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-mono"
+                style={{ background: 'rgba(0,212,255,0.08)', color: 'rgba(0,212,255,0.7)', border: '1px solid rgba(0,212,255,0.15)' }}>
+                {agents.length}
+              </span>
+            )}
+          </div>
+          <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(0,212,255,0.15), transparent)' }} />
+        </div>
+
+        {/* ── Agents grid or empty ── */}
+        {agents.length === 0 ? (
+          <EmptyAgents />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-10"
+          >
+            {agents.map((agent, i) => (
+              <AgentPassport key={agent.agent_id} agent={agent} index={i} />
             ))}
-          </div>
-        </div>
-      </motion.div>
+          </motion.div>
+        )}
 
-      <div className="text-center py-8 mt-8 border-t border-white/5">
-        <p className="text-gray-700 text-xs">AgentID — getagentid.dev</p>
+        {/* ── Activity + Transactions ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6"
+        >
+          <ActivityFeed events={events} agents={agents} />
+          <TransactionList transactions={transactions} />
+        </motion.div>
+
+        {/* Footer */}
+        <div className="text-center py-10 mt-8"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <p className="text-gray-700 text-xs font-mono">AgentID · getagentid.dev</p>
+        </div>
       </div>
     </div>
   )

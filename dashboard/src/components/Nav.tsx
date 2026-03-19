@@ -18,31 +18,41 @@ export default function Nav() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const isActive = (path: string) => pathname === path
-
-  // Don't show nav on landing page
+  // Don't render on the landing page — it has its own nav
   if (pathname === '/') return null
 
-  const userName = user?.user_metadata?.user_name || user?.user_metadata?.full_name || user?.email || ''
-  const avatarUrl = user?.user_metadata?.avatar_url
+  const isActive   = (path: string) => pathname === path
+  const userName   = user?.user_metadata?.user_name || user?.user_metadata?.full_name || user?.email || ''
+  const avatarUrl  = user?.user_metadata?.avatar_url
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-[#0a0a0f]/90 backdrop-blur-md border-b border-white/5">
-      <div className="flex items-center gap-8">
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3"
+      style={{
+        background:     'rgba(7,7,15,0.85)',
+        backdropFilter: 'blur(20px)',
+        borderBottom:   '1px solid rgba(255,255,255,0.05)',
+      }}
+    >
+      <div className="flex items-center gap-6">
         <a href="/" className="text-lg font-black holo-gradient">AgentID</a>
+
         {user && (
           <div className="flex gap-1">
             {[
-              { href: '/dashboard', label: 'Dashboard' },
+              { href: '/dashboard',      label: 'Dashboard' },
               { href: '/dashboard/keys', label: 'API Keys' },
-              { href: '/docs', label: 'Docs' },
+              { href: '/docs',           label: 'Docs' },
             ].map((link) => (
-              <a key={link.href} href={link.href}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  isActive(link.href)
-                    ? 'bg-cyan-500/10 text-cyan-400'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-                }`}>
+              <a
+                key={link.href}
+                href={link.href}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                style={isActive(link.href)
+                  ? { background: 'rgba(0,212,255,0.08)', color: '#00d4ff' }
+                  : { color: '#6b7280' }
+                }
+              >
                 {link.label}
               </a>
             ))}
@@ -53,17 +63,42 @@ export default function Nav() {
       <div className="flex items-center gap-3">
         {user ? (
           <>
-            {avatarUrl && <img src={avatarUrl} alt="" className="w-6 h-6 rounded-full border border-cyan-500/20" />}
-            <span className="text-xs text-gray-400 hidden md:block">{userName}</span>
-            <button onClick={() => supabase.auth.signOut()}
-              className="text-xs text-gray-600 hover:text-red-400 transition-colors">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt=""
+                className="w-7 h-7 rounded-full"
+                style={{ border: '1px solid rgba(0,212,255,0.2)' }}
+              />
+            ) : (
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0,212,255,0.3), rgba(123,47,255,0.3))',
+                  border: '1px solid rgba(0,212,255,0.2)',
+                }}
+              >
+                {userName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span className="text-xs text-gray-400 hidden md:block max-w-[140px] truncate">{userName}</span>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="text-xs text-gray-600 hover:text-red-400 transition-colors px-2 py-1 rounded hover:bg-red-400/5"
+            >
               Sign Out
             </button>
           </>
         ) : (
           <>
             <a href="/login" className="text-xs text-gray-400 hover:text-white transition-colors">Log In</a>
-            <a href="/signup" className="px-4 py-1.5 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white text-xs font-bold">Sign Up</a>
+            <a
+              href="/signup"
+              className="px-4 py-1.5 rounded-full text-white text-xs font-bold"
+              style={{ background: 'linear-gradient(135deg, #00d4ff, #7b2fff)' }}
+            >
+              Sign Up
+            </a>
           </>
         )}
       </div>
