@@ -74,6 +74,9 @@ export default function LandingPage() {
           <span className="text-[10px] font-mono text-gray-600 hidden sm:block mt-0.5">.dev</span>
         </a>
         <div className="flex items-center gap-3">
+          <a href="/registry" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
+            Registry
+          </a>
           <a href="#pricing" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
             Pricing
           </a>

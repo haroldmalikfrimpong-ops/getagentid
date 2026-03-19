@@ -42,6 +42,7 @@ export default function Nav() {
             {[
               { href: '/dashboard',      label: 'Dashboard' },
               { href: '/dashboard/keys', label: 'API Keys' },
+              { href: '/registry',       label: 'Registry' },
               { href: '/docs',           label: 'Docs' },
             ].map((link) => (
               <a
