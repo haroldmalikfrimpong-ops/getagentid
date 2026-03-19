@@ -23,7 +23,7 @@ export async function authenticateRequest(req: NextRequest) {
   const db = getServiceClient()
   const { data, error } = await db
     .from('api_keys')
-    .select('*, profiles(*)')
+    .select('*')
     .eq('key_hash', keyHash)
     .eq('active', true)
     .single()
@@ -32,10 +32,17 @@ export async function authenticateRequest(req: NextRequest) {
     return { error: 'Invalid API key', status: 401 }
   }
 
+  // Get profile separately
+  const { data: profile } = await db
+    .from('profiles')
+    .select('*')
+    .eq('id', data.user_id)
+    .single()
+
   // Update last used
   await db.from('api_keys').update({ last_used: new Date().toISOString() }).eq('id', data.id)
 
-  return { user_id: data.user_id, api_key_id: data.id, profile: data.profiles }
+  return { user_id: data.user_id, api_key_id: data.id, profile: profile || { agent_limit: 5, verification_limit: 1000, plan: 'free' } }
 }
 
 // Generate a new API key for a user
