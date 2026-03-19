@@ -52,6 +52,21 @@ export default function AdminPage() {
     setUsers(Array.from(userIds).map(id => ({ id })))
   }
 
+  async function adminAction(action: string, agent_id?: string, user_id?: string) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const res = await fetch('/api/v1/admin', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, agent_id, user_id }),
+    })
+    const data = await res.json()
+    if (data.success) {
+      loadAllData() // Refresh
+    }
+    return data
+  }
+
   if (!ready) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#07070f' }}>
@@ -263,15 +278,31 @@ export default function AdminPage() {
                             <div className="text-[10px] text-gray-600 font-mono">{a.agent_id}</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                           <span className="text-[10px] text-gray-500">{a.owner}</span>
-                          <span className="text-[10px] text-gray-600">{a.platform || 'API'}</span>
-                          <div className="flex gap-1">
-                            {a.capabilities?.slice(0, 2).map((c: string, j: number) => (
-                              <span key={j} className="text-[9px] px-1.5 py-0.5 rounded-full font-mono"
-                                style={{ background: 'rgba(123,47,255,0.08)', color: 'rgba(123,47,255,0.6)' }}>{c}</span>
-                            ))}
-                          </div>
+                          {a.verified ? (
+                            <span className="text-[9px] px-2 py-0.5 rounded-full font-mono"
+                              style={{ background: 'rgba(0,230,118,0.1)', color: '#00e676', border: '1px solid rgba(0,230,118,0.2)' }}>
+                              VERIFIED ✓
+                            </span>
+                          ) : (
+                            <span className="text-[9px] px-2 py-0.5 rounded-full font-mono"
+                              style={{ background: 'rgba(255,255,255,0.05)', color: '#666' }}>
+                              UNVERIFIED
+                            </span>
+                          )}
+                          <button onClick={(e) => { e.preventDefault(); adminAction(a.verified ? 'unverify_agent' : 'verify_agent', a.agent_id) }}
+                            className="text-[10px] px-2 py-1 rounded-lg font-mono transition-colors"
+                            style={a.verified
+                              ? { background: 'rgba(255,82,82,0.1)', color: '#ff5252', border: '1px solid rgba(255,82,82,0.2)' }
+                              : { background: 'rgba(0,230,118,0.1)', color: '#00e676', border: '1px solid rgba(0,230,118,0.2)' }}>
+                            {a.verified ? 'Revoke' : 'Verify'}
+                          </button>
+                          <button onClick={(e) => { e.preventDefault(); if(confirm(`Delete ${a.name}?`)) adminAction('delete_agent', a.agent_id) }}
+                            className="text-[10px] px-2 py-1 rounded-lg font-mono text-gray-600 hover:text-red-400 transition-colors"
+                            style={{ border: '1px solid rgba(255,255,255,0.05)' }}>
+                            Delete
+                          </button>
                         </div>
                       </a>
                     )
