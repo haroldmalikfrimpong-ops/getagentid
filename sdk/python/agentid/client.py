@@ -4,7 +4,7 @@ import httpx
 from typing import Optional
 
 
-BASE_URL = "https://getagentid.dev/api/v1"
+BASE_URL = "https://www.getagentid.dev/api/v1"
 
 
 class AgentResult:
@@ -35,8 +35,12 @@ class Agents:
 
     def verify(self, agent_id: str) -> AgentResult:
         """Verify an agent's identity. No API key needed."""
-        res = httpx.post(f"{self._client._base_url}/agents/verify",
-                         json={"agent_id": agent_id}, timeout=10).json()
+        res = httpx.post(
+            f"{self._client._base_url}/agents/verify",
+            json={"agent_id": agent_id},
+            timeout=10,
+            follow_redirects=True,
+        ).json()
         return AgentResult(res)
 
     def discover(self, capability: str = None, owner: str = None, limit: int = 20) -> list:
@@ -46,8 +50,12 @@ class Agents:
             params["capability"] = capability
         if owner:
             params["owner"] = owner
-        res = httpx.get(f"{self._client._base_url}/agents/discover",
-                        params=params, timeout=10).json()
+        res = httpx.get(
+            f"{self._client._base_url}/agents/discover",
+            params=params,
+            timeout=10,
+            follow_redirects=True,
+        ).json()
         return [AgentResult(a) for a in res.get("agents", [])]
 
 
@@ -69,7 +77,7 @@ class Client:
         headers = {}
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"
-        res = httpx.post(f"{self._base_url}{path}", json=data, headers=headers, timeout=10)
+        res = httpx.post(f"{self._base_url}{path}", json=data, headers=headers, timeout=10, follow_redirects=True)
         if res.status_code >= 400:
             error = res.json().get("error", "Unknown error")
             raise Exception(f"AgentID API error: {error}")
@@ -79,7 +87,7 @@ class Client:
         headers = {}
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"
-        res = httpx.get(f"{self._base_url}{path}", params=params, headers=headers, timeout=10)
+        res = httpx.get(f"{self._base_url}{path}", params=params, headers=headers, timeout=10, follow_redirects=True)
         if res.status_code >= 400:
             error = res.json().get("error", "Unknown error")
             raise Exception(f"AgentID API error: {error}")
