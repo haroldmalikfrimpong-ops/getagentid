@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, generateAgentId, issueCertificate, getServiceClient } from '@/lib/api-auth'
+import { trackUsage } from '@/lib/usage'
 import crypto from 'crypto'
 
 export async function POST(req: NextRequest) {
@@ -71,6 +72,9 @@ export async function POST(req: NextRequest) {
       event_type: 'registered',
       data: { name, owner, capabilities },
     })
+
+    // Track usage
+    await trackUsage(auth.user_id, 'register')
 
     return NextResponse.json({
       agent_id: agentId,

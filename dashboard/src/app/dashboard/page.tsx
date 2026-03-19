@@ -133,7 +133,11 @@ export default function DashboardPage() {
       <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-10">
         <div>
           <a href="/"><h1 className="text-3xl font-bold"><span className="holo-gradient">AgentID</span></h1></a>
-          <p className="text-gray-500 text-sm mt-1">Command Center</p>
+          <div className="flex items-center gap-4 mt-1">
+            <p className="text-gray-500 text-sm">Command Center</p>
+            <a href="/dashboard/keys" className="text-xs text-cyan-500/50 hover:text-cyan-400">API Keys</a>
+            <a href="/docs" className="text-xs text-cyan-500/50 hover:text-cyan-400">Docs</a>
+          </div>
         </div>
         <div className="flex items-center gap-6">
           <div className="text-right hidden md:block">
