@@ -8,16 +8,14 @@ import { useRouter } from 'next/navigation'
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false)
   const [checking, setChecking] = useState(true)
+  const [loggedIn, setLoggedIn] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        router.push('/dashboard')
-      } else {
-        setChecking(false)
-      }
+      setLoggedIn(!!session?.user)
+      setChecking(false)
     })
   }, [])
 
@@ -29,8 +27,14 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#0a0a0f]/80 backdrop-blur-md border-b border-white/5">
         <span className="text-xl font-black holo-gradient">AgentID</span>
         <div className="flex gap-3">
-          <a href="/login" className="px-5 py-2 text-sm text-gray-400 hover:text-white transition-colors">Log In</a>
-          <a href="/signup" className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white text-sm font-bold">Sign Up Free</a>
+          {loggedIn ? (
+            <a href="/dashboard" className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white text-sm font-bold">Dashboard</a>
+          ) : (
+            <>
+              <a href="/login" className="px-5 py-2 text-sm text-gray-400 hover:text-white transition-colors">Log In</a>
+              <a href="/signup" className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white text-sm font-bold">Sign Up Free</a>
+            </>
+          )}
         </div>
       </nav>
 
