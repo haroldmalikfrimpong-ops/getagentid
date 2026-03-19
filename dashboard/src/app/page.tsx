@@ -47,6 +47,7 @@ export default function LandingPage() {
   const [mounted, setMounted]   = useState(false)
   const [checking, setChecking] = useState(true)
   const [loggedIn, setLoggedIn] = useState(false)
+  const [agentCount, setAgentCount] = useState(0)
   const router = useRouter()
 
   useEffect(() => {
@@ -55,6 +56,10 @@ export default function LandingPage() {
       setLoggedIn(!!session?.user)
       setChecking(false)
     })
+    fetch('/api/v1/agents/discover?limit=100')
+      .then(r => r.json())
+      .then(data => setAgentCount(data.count || 0))
+      .catch(() => {})
   }, [])
 
   if (!mounted || checking) return null
@@ -206,9 +211,8 @@ export default function LandingPage() {
             className="flex items-center justify-center gap-8 mt-14 flex-wrap"
           >
             {[
-              { label: 'Agents Registered', val: 124 },
-              { label: 'Verifications/day',  val: 8300 },
-              { label: 'Uptime',             val: 99,  suffix: '.9%' },
+              { label: 'Agents Registered', val: agentCount },
+              { label: 'Uptime',            val: 99,  suffix: '.9%' },
             ].map((s, i) => (
               <div key={i} className="text-center">
                 <div className="text-2xl font-black text-white font-mono tabular-nums">
