@@ -95,7 +95,9 @@ if result.verified:
               { method: 'POST', path: '/v1/agents/register', desc: 'Register a new agent' },
               { method: 'POST', path: '/v1/agents/verify', desc: 'Verify an agent identity' },
               { method: 'GET', path: '/v1/agents/discover', desc: 'Search agents by capability' },
-              { method: 'GET', path: '/v1/agents/:id', desc: 'Get agent profile' },
+              { method: 'POST', path: '/v1/agents/connect', desc: 'Send verified message between agents' },
+              { method: 'POST', path: '/v1/agents/message', desc: 'Respond to a message' },
+              { method: 'GET', path: '/v1/agents/inbox', desc: 'Get pending messages for an agent' },
             ].map((ep, i) => (
               <div key={i} className="glow-border rounded-lg p-4 bg-[#111118] flex items-center gap-4">
                 <span className={`text-xs font-mono px-2 py-1 rounded ${ep.method === 'POST' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'}`}>

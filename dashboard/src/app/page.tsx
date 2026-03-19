@@ -247,28 +247,35 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
               {
                 icon:  '🔐',
                 label: '01',
                 title: 'Agent Certificates',
-                desc:  'Cryptographic proof of identity. "This agent belongs to Barclays and handles customer service." Signed. Verifiable. Revocable in real-time.',
+                desc:  'Cryptographic proof of identity. Signed. Verifiable. Revocable in real-time.',
                 accent: '#00d4ff',
               },
               {
                 icon:  '🔍',
                 label: '02',
                 title: 'Agent Registry',
-                desc:  'A searchable directory of verified agents. Find any agent by capability, owner, or platform. Discoverable by anyone — trusted by default.',
+                desc:  'Searchable directory of verified agents. Find any agent by capability or owner.',
                 accent: '#7b2fff',
               },
               {
                 icon:  '✓',
                 label: '03',
                 title: 'Verification API',
-                desc:  'One API call to know if an agent is legitimate before trusting it. Real-time verification. Sub-50ms response. Instant trust decisions.',
+                desc:  'One call to verify any agent. Real-time. Sub-50ms. Instant trust decisions.',
                 accent: '#00e676',
+              },
+              {
+                icon:  '🔗',
+                label: '04',
+                title: 'Agent-to-Agent',
+                desc:  'Verified communication between agents. Both sides verified before any data exchange.',
+                accent: '#ff9500',
               },
             ].map((item, i) => (
               <motion.div

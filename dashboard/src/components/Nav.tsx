@@ -40,10 +40,11 @@ export default function Nav() {
         {user && (
           <div className="flex gap-1">
             {[
-              { href: '/dashboard',      label: 'Dashboard' },
-              { href: '/dashboard/keys', label: 'API Keys' },
-              { href: '/registry',       label: 'Registry' },
-              { href: '/docs',           label: 'Docs' },
+              { href: '/dashboard',             label: 'Dashboard' },
+              { href: '/dashboard/connections', label: 'Connections' },
+              { href: '/dashboard/keys',       label: 'API Keys' },
+              { href: '/registry',             label: 'Registry' },
+              { href: '/docs',                 label: 'Docs' },
             ].map((link) => (
               <a
                 key={link.href}
