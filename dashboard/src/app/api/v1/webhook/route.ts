@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/api-auth'
+import { notifyPayment } from '@/lib/notify'
 import Stripe from 'stripe'
 
 function getStripe() {
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
           event_type: 'plan_upgraded',
           data: { user_id: userId, plan, limits },
         })
+        await notifyPayment(session.customer_email || 'unknown', plan)
       }
     }
 

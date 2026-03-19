@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage } from '@/lib/usage'
+import { notifyAgentConnect } from '@/lib/notify'
 
 export async function POST(req: NextRequest) {
   try {
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
     ])
 
     await trackUsage(auth.user_id, 'connect')
+    await notifyAgentConnect(senderAgent.name, receiverAgent.name, senderVerified && receiverVerified)
 
     return NextResponse.json({
       message_id: msg.id,

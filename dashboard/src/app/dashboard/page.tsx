@@ -226,6 +226,18 @@ export default function DashboardPage() {
         setReady(true)
         loadData()
         loadProfile()
+        // Notify on new signup
+        if (event === 'SIGNED_IN') {
+          fetch('/api/v1/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: session.user.email,
+              provider: session.user.app_metadata?.provider || 'email',
+              user_id: session.user.id,
+            }),
+          }).catch(() => {})
+        }
       }
       if (event === 'INITIAL_SESSION' && !session) {
         router.push('/login')
