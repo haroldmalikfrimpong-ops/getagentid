@@ -16,6 +16,9 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState<any[]>([])
   const [time, setTime] = useState('')
   const [ready, setReady] = useState(false)
+  const [plan, setPlan] = useState('free')
+  const [agentLimit, setAgentLimit] = useState(5)
+  const [upgrading, setUpgrading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -28,6 +31,7 @@ export default function DashboardPage() {
         setIsNew(event === 'SIGNED_IN')
         setReady(true)
         loadData()
+        loadProfile()
       }
       // Only redirect if we get INITIAL_SESSION with no user (meaning no session at all)
       // Don't redirect on SIGNED_OUT during page load
@@ -53,6 +57,30 @@ export default function DashboardPage() {
       if (eventsRes.data) setEvents(eventsRes.data)
       if (txRes.data) setTransactions(txRes.data)
     } catch (e) { console.error(e) }
+  }
+
+  async function loadProfile() {
+    const { data } = await supabase.from('profiles').select('*').single()
+    if (data) {
+      setPlan(data.plan || 'free')
+      setAgentLimit(data.agent_limit || 5)
+    }
+  }
+
+  async function handleUpgrade(planName: string) {
+    setUpgrading(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const res = await fetch('/api/v1/checkout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planName }),
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch (e) { console.error(e) }
+    setUpgrading(false)
   }
 
   async function handleSignOut() {
@@ -121,6 +149,25 @@ export default function DashboardPage() {
           </div>
         </div>
       </motion.header>
+
+      {/* Plan bar */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="flex items-center justify-between glow-border rounded-xl p-4 bg-[#111118] mb-8">
+        <div className="flex items-center gap-4">
+          <span className={`text-xs font-mono px-3 py-1 rounded-full ${plan === 'free' ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'}`}>
+            {plan.toUpperCase()}
+          </span>
+          <span className="text-sm text-gray-400">
+            {agents.length}/{agentLimit} agents
+          </span>
+        </div>
+        {plan === 'free' && (
+          <button onClick={() => handleUpgrade('startup')} disabled={upgrading}
+            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full text-white text-xs font-bold disabled:opacity-50">
+            {upgrading ? 'Loading...' : 'Upgrade to Startup — $49/mo'}
+          </button>
+        )}
+      </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <StatsPanel agents={agents} events={events} />
