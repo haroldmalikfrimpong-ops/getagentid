@@ -130,29 +130,14 @@ export default function DashboardPage() {
   // Dashboard
   return (
     <div className="min-h-screen p-6 md:p-10">
-      <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-10">
-        <div>
-          <a href="/"><h1 className="text-3xl font-bold"><span className="holo-gradient">AgentID</span></h1></a>
-          <div className="flex items-center gap-4 mt-1">
-            <p className="text-gray-500 text-sm">Command Center</p>
-            <a href="/dashboard/keys" className="text-xs text-cyan-500/50 hover:text-cyan-400">API Keys</a>
-            <a href="/docs" className="text-xs text-cyan-500/50 hover:text-cyan-400">Docs</a>
-          </div>
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-8 pt-14">
+        <h2 className="text-2xl font-bold text-white">Command Center</h2>
+        <div className="text-right">
+          <div className="text-xl font-mono text-cyan-400">{time}</div>
+          <div className="text-xs text-gray-600">{dateStr}</div>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="text-right hidden md:block">
-            <div className="text-xl font-mono text-cyan-400">{time}</div>
-            <div className="text-xs text-gray-600">{dateStr}</div>
-          </div>
-          <div className="flex items-center gap-3">
-            {avatarUrl && <img src={avatarUrl} alt="" className="w-8 h-8 rounded-full border border-cyan-500/30" />}
-            <div className="text-right">
-              <div className="text-sm text-white">{userName}</div>
-              <button onClick={handleSignOut} className="text-xs text-gray-500 hover:text-red-400 transition-colors">Sign out</button>
-            </div>
-          </div>
-        </div>
-      </motion.header>
+      </motion.div>
 
       {/* Plan bar */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
