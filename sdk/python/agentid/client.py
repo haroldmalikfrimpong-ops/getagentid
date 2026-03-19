@@ -43,6 +43,29 @@ class Agents:
         ).json()
         return AgentResult(res)
 
+    def connect(self, from_agent: str, to_agent: str, payload: dict, message_type: str = "request") -> AgentResult:
+        """Send a message from one agent to another. Both are verified first."""
+        res = self._client._post("/agents/connect", {
+            "from_agent": from_agent,
+            "to_agent": to_agent,
+            "message_type": message_type,
+            "payload": payload,
+        })
+        return AgentResult(res)
+
+    def respond(self, message_id: int, response: dict = None) -> AgentResult:
+        """Respond to an incoming message."""
+        res = self._client._post("/agents/message", {
+            "message_id": message_id,
+            "response": response or {"acknowledged": True},
+        })
+        return AgentResult(res)
+
+    def inbox(self, agent_id: str, status: str = "pending") -> list:
+        """Get incoming messages for an agent."""
+        res = self._client._get(f"/agents/inbox?agent_id={agent_id}&status={status}")
+        return [AgentResult(m) for m in res.get("messages", [])]
+
     def discover(self, capability: str = None, owner: str = None, limit: int = 20) -> list:
         """Search for agents by capability or owner."""
         params = {"limit": limit}
