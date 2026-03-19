@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-const ADMIN_ID = 'ec9ca7d8-77c8-488a-9bfd-8c800c0b5675'
+const ADMIN_ID = '425a50cf-bfba-4949-8c6b-7edb17a7bde2'
 
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/api-auth'
 
-const ADMIN_ID = 'ec9ca7d8-77c8-488a-9bfd-8c800c0b5675'
+const ADMIN_ID = '425a50cf-bfba-4949-8c6b-7edb17a7bde2'
 
 export async function POST(req: NextRequest) {
   try {
