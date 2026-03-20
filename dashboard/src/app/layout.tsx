@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Nav from '@/components/Nav'
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
   title: 'AgentID — The Identity Layer for AI Agents',
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="grid-bg min-h-screen">
         <Nav />
         {children}
+        <Analytics />
       </body>
     </html>
   )
