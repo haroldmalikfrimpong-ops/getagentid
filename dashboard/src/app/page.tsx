@@ -115,7 +115,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Hero ── */}
-      <section className="relative pt-36 pb-28 px-6 text-center overflow-hidden">
+      <section className="relative pt-36 pb-28 px-6 overflow-hidden">
         {/* Radial glow behind hero */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px]"
@@ -124,105 +124,163 @@ export default function LandingPage() {
         {/* Grid */}
         <div className="absolute inset-0 grid-bg opacity-60 pointer-events-none" />
 
-        <div className="relative max-w-4xl mx-auto">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8"
-            style={{
-              background: 'rgba(0,212,255,0.06)',
-              border:     '1px solid rgba(0,212,255,0.2)',
-            }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="text-cyan-400 text-[11px] font-mono tracking-[0.2em] uppercase">
-              The Trust Layer for AI Agents
-            </span>
-          </motion.div>
-
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-5xl md:text-7xl font-black mb-7 leading-[1.05] tracking-tight"
-          >
-            <span className="holo-gradient-animated">Every AI Agent</span>
-            <br />
-            <span className="text-white">Needs an Identity</span>
-          </motion.h1>
-
-          {/* Subheadline */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="max-w-2xl mx-auto mb-10"
-          >
-            <p className="text-lg text-gray-400 mb-3 leading-relaxed">
-              AI agents can&apos;t verify each other. Any agent can pretend to be anyone.
-            </p>
-            <p className="text-lg text-white font-semibold leading-relaxed">
-              AgentID gives every agent a cryptographic identity — like SSL certificates
-              for the agent economy.
-            </p>
-          </motion.div>
-
-          {/* CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center items-center"
-          >
-            <a href="/signup"
-              className="px-9 py-4 rounded-full text-white font-bold text-sm tracking-wider
-                transition-all hover:opacity-90 hover:-translate-y-0.5 inline-block"
+        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {/* Left — Copy */}
+          <div>
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8"
               style={{
-                background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
-                boxShadow:  '0 8px 32px rgba(0,212,255,0.2), 0 0 0 1px rgba(0,212,255,0.15)',
-              }}>
-              GET STARTED FREE
-            </a>
-            <a href="#how"
-              className="px-9 py-4 rounded-full text-gray-300 font-bold text-sm tracking-wider
-                transition-all hover:bg-white/5 hover:text-white inline-block"
-              style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-              SEE HOW IT WORKS
-            </a>
-          </motion.div>
+                background: 'rgba(0,212,255,0.06)',
+                border:     '1px solid rgba(0,212,255,0.2)',
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-cyan-400 text-[11px] font-mono tracking-[0.2em] uppercase">
+                Open Source · MIT Licensed
+              </span>
+            </motion.div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-gray-600 text-xs mt-5"
-          >
-            Free forever for small teams · No credit card required
-          </motion.p>
+            {/* Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1 }}
+              className="text-5xl md:text-6xl font-black mb-6 leading-[1.08] tracking-tight"
+            >
+              <span className="text-white">Agents can&apos;t prove</span>
+              <br />
+              <span className="text-white">who they are.</span>
+              <br />
+              <span className="holo-gradient-animated">We fix that.</span>
+            </motion.h1>
 
-          {/* Social proof strip */}
+            {/* Subheadline */}
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="text-lg text-gray-400 mb-8 leading-relaxed max-w-lg"
+            >
+              Cryptographic identity for AI agents. One API call to verify any agent before data, money, or decisions move.
+            </motion.p>
+
+            {/* Single CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-3 items-start"
+            >
+              <a href="/signup"
+                className="px-9 py-4 rounded-full text-white font-bold text-sm tracking-wider
+                  transition-all hover:opacity-90 hover:-translate-y-0.5 inline-block"
+                style={{
+                  background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
+                  boxShadow:  '0 8px 32px rgba(0,212,255,0.2), 0 0 0 1px rgba(0,212,255,0.15)',
+                }}>
+                REGISTER YOUR FIRST AGENT FREE
+              </a>
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-gray-600 text-xs mt-4"
+            >
+              No credit card · 5 agents free forever
+            </motion.p>
+          </div>
+
+          {/* Right — Live verification demo card */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="flex items-center justify-center gap-8 mt-14 flex-wrap"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.9, delay: 0.3 }}
+            className="hidden lg:block"
           >
-            {[
-              { label: 'Agents Registered', val: agentCount },
-              { label: 'Uptime',            val: 99,  suffix: '.9%' },
-            ].map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="text-2xl font-black text-white font-mono tabular-nums">
-                  <AnimatedNumber to={s.val} suffix={s.suffix} />
+            <div className="relative rounded-2xl overflow-hidden p-[1px]"
+              style={{ background: 'linear-gradient(145deg, rgba(0,212,255,0.3), rgba(123,47,255,0.3), rgba(0,212,255,0.1))' }}>
+              <div className="rounded-2xl p-6" style={{ background: 'rgba(7,7,15,0.95)' }}>
+                {/* Terminal header */}
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                  <span className="text-[10px] text-gray-600 font-mono ml-2">agent_verify.py</span>
                 </div>
-                <div className="text-[10px] text-gray-600 tracking-wider uppercase mt-0.5">{s.label}</div>
+
+                {/* Code block */}
+                <div className="font-mono text-[13px] leading-[1.7] space-y-1">
+                  <div><span className="text-purple-400">from</span> <span className="text-cyan-300">agentid</span> <span className="text-purple-400">import</span> <span className="text-white">Client</span></div>
+                  <div className="h-3" />
+                  <div><span className="text-gray-500"># Verify before you trust</span></div>
+                  <div><span className="text-white">client</span> <span className="text-purple-400">=</span> <span className="text-cyan-300">Client</span><span className="text-gray-400">(</span><span className="text-orange-300">api_key</span><span className="text-purple-400">=</span><span className="text-green-400">&quot;ak_...&quot;</span><span className="text-gray-400">)</span></div>
+                  <div><span className="text-white">result</span> <span className="text-purple-400">=</span> <span className="text-white">client.agents.</span><span className="text-cyan-300">verify</span><span className="text-gray-400">(</span><span className="text-green-400">&quot;agent_c546&quot;</span><span className="text-gray-400">)</span></div>
+                  <div className="h-3" />
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.2 }}
+                  >
+                    <div className="rounded-lg px-4 py-3 mt-2" style={{ background: 'rgba(0,230,118,0.06)', border: '1px solid rgba(0,230,118,0.15)' }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-green-400 text-sm">&#10003;</span>
+                        <span className="text-green-400 text-xs font-bold tracking-wider">VERIFIED</span>
+                      </div>
+                      <div className="text-[11px] space-y-1">
+                        <div><span className="text-gray-500">agent:</span> <span className="text-white">GoldSignalBot</span></div>
+                        <div><span className="text-gray-500">owner:</span> <span className="text-white">BillionMakerHQ</span></div>
+                        <div><span className="text-gray-500">trust:</span> <span className="text-cyan-400">0.94</span></div>
+                        <div><span className="text-gray-500">cert:</span> <span className="text-gray-400">ECDSA P-256 · valid</span></div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Floating badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5 }}
+              className="absolute -bottom-3 -left-3 rounded-xl px-4 py-2.5 flex items-center gap-2"
+              style={{
+                background: 'rgba(7,7,15,0.9)',
+                border: '1px solid rgba(0,212,255,0.2)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              }}
+            >
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-[11px] text-gray-300 font-mono">Sub-50ms response</span>
+            </motion.div>
           </motion.div>
         </div>
+
+        {/* Social proof strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="flex items-center justify-center gap-8 mt-20 flex-wrap"
+        >
+          {[
+            { label: 'Agents Registered', val: agentCount },
+            { label: 'Uptime',            val: 99,  suffix: '.9%' },
+          ].map((s, i) => (
+            <div key={i} className="text-center">
+              <div className="text-2xl font-black text-white font-mono tabular-nums">
+                <AnimatedNumber to={s.val} suffix={s.suffix} />
+              </div>
+              <div className="text-[10px] text-gray-600 tracking-wider uppercase mt-0.5">{s.label}</div>
+            </div>
+          ))}
+        </motion.div>
       </section>
 
       <div className="section-divider" />
