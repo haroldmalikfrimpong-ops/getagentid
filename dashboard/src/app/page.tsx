@@ -116,9 +116,15 @@ export default function LandingPage() {
 
   useEffect(() => {
     setMounted(true)
+    // Timeout so the page always renders even if Supabase is slow/down
+    const timeout = setTimeout(() => setChecking(false), 2000)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setLoggedIn(!!session?.user)
       setChecking(false)
+      clearTimeout(timeout)
+    }).catch(() => {
+      setChecking(false)
+      clearTimeout(timeout)
     })
     fetch('/api/v1/agents/discover?limit=100')
       .then(r => r.json())
@@ -126,7 +132,7 @@ export default function LandingPage() {
       .catch(() => {})
   }, [])
 
-  if (!mounted || checking) return null
+  if (!mounted) return null
 
   const activeCode = CODE_TABS[codeTab]
 
