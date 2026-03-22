@@ -261,16 +261,15 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Floating badge */}
+            {/* Badge below card */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5 }}
-              className="absolute bottom-4 left-4 rounded-xl px-4 py-2.5 flex items-center gap-2"
+              className="mt-4 inline-flex rounded-xl px-4 py-2.5 items-center gap-2"
               style={{
                 background: 'rgba(7,7,15,0.9)',
                 border: '1px solid rgba(0,212,255,0.2)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
               }}
             >
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
