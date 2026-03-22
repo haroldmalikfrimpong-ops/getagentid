@@ -266,7 +266,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5 }}
-              className="absolute -bottom-3 -left-3 rounded-xl px-4 py-2.5 flex items-center gap-2"
+              className="absolute bottom-4 left-4 rounded-xl px-4 py-2.5 flex items-center gap-2"
               style={{
                 background: 'rgba(7,7,15,0.9)',
                 border: '1px solid rgba(0,212,255,0.2)',
