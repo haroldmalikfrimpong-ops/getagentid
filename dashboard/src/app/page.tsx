@@ -418,85 +418,376 @@ export default function LandingPage() {
 
       <div className="section-divider" />
 
-      {/* ── Why This Matters ── */}
+      {/* ── Why This Matters — Visual Demo ── */}
       <section className="py-28 px-6" style={{ background: '#070711' }}>
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-4">
+              See It In Action
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
+              Every agent gets a passport.
+            </h2>
+            <p className="text-gray-500 max-w-lg mx-auto">
+              Cryptographic identity that proves who an agent is, who owns it, and what it&apos;s authorized to do.
+            </p>
+          </motion.div>
+
+          {/* ── Animated Agent Passport Card ── */}
+          <div className="flex flex-col lg:flex-row items-center gap-16 mb-28">
+            <motion.div
+              initial={{ opacity: 0, x: -30, rotateY: -8 }}
+              whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="w-full max-w-[380px] shrink-0"
+              style={{ perspective: '1000px' }}
+            >
+              <div className="passport-card scan-overlay p-0">
+                {/* Passport header */}
+                <div className="px-6 pt-6 pb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)' }}>
+                      <span className="text-cyan-400 text-xs font-black">ID</span>
+                    </div>
+                    <div>
+                      <div className="text-[9px] font-mono text-gray-600 tracking-[0.3em] uppercase">Agent Passport</div>
+                      <div className="text-[9px] font-mono text-purple-400/50">AGENTID.DEV</div>
+                    </div>
+                  </div>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.6, type: 'spring' }}
+                    className="px-2.5 py-1 rounded-full flex items-center gap-1.5"
+                    style={{ background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.2)' }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-green-400 text-[9px] font-mono font-bold">VERIFIED</span>
+                  </motion.div>
+                </div>
+
+                {/* Passport body */}
+                <div className="px-6 pb-5">
+                  <div className="flex items-start gap-4 mb-5">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.3 }}
+                      className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl shrink-0"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(0,212,255,0.15), rgba(123,47,255,0.15))',
+                        border: '1px solid rgba(0,212,255,0.2)',
+                      }}
+                    >
+                      <span className="text-3xl">&#129302;</span>
+                    </motion.div>
+                    <div className="min-w-0">
+                      <motion.div
+                        initial={{ opacity: 0, x: 10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        <div className="text-lg font-bold text-white">GoldSignalBot</div>
+                        <div className="text-xs text-gray-500">Trading signal agent</div>
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {[
+                      { label: 'OWNER', value: 'BillionMakerHQ', delay: 0.5 },
+                      { label: 'TRUST SCORE', value: '0.94', delay: 0.6 },
+                      { label: 'AGENT ID', value: 'agt_c546...f2a1', delay: 0.7 },
+                      { label: 'CERTIFICATE', value: 'ECDSA P-256', delay: 0.8 },
+                    ].map((field, i) => (
+                      <motion.div key={i}
+                        initial={{ opacity: 0, y: 8 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: field.delay }}
+                      >
+                        <div className="text-[8px] font-mono text-gray-600 tracking-[0.2em] uppercase mb-1">{field.label}</div>
+                        <div className="text-xs font-mono text-gray-300">{field.value}</div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Capabilities */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.9 }}
+                  >
+                    <div className="text-[8px] font-mono text-gray-600 tracking-[0.2em] uppercase mb-2">Capabilities</div>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {['trade-signals', 'market-data', 'portfolio-read'].map((cap, i) => (
+                        <span key={i} className="px-2 py-0.5 rounded text-[9px] font-mono text-cyan-400/80"
+                          style={{ background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.12)' }}>
+                          {cap}
+                        </span>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* MRZ strip */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 1.0 }}
+                  className="passport-mrz"
+                >
+                  P&lt;AGENTID&lt;GOLDSIGNALBOT&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;AGT_C546F2A1&lt;&lt;&lt;ECDSA256&lt;2026&lt;&lt;BHQ
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Explanation text */}
+            <div className="flex-1">
+              <div className="space-y-6">
+                {[
+                  {
+                    icon: '&#128274;',
+                    title: 'Cryptographic Identity',
+                    desc: 'Each agent gets a signed ECDSA P-256 certificate. Unforgeable. Verifiable by anyone, anywhere.',
+                    accent: '#00d4ff',
+                    delay: 0.2,
+                  },
+                  {
+                    icon: '&#9989;',
+                    title: 'Instant Verification',
+                    desc: 'One API call returns the agent\'s identity, owner, trust score, and certificate status. Sub-50ms.',
+                    accent: '#00e676',
+                    delay: 0.4,
+                  },
+                  {
+                    icon: '&#128209;',
+                    title: 'Full Audit Trail',
+                    desc: 'Every verification, connection, and message is logged. Know exactly who your agents are talking to.',
+                    accent: '#7b2fff',
+                    delay: 0.6,
+                  },
+                  {
+                    icon: '&#128279;',
+                    title: 'Agent-to-Agent Trust',
+                    desc: 'Both sides verified before data moves. Mutual authentication for the agent economy.',
+                    accent: '#ff9500',
+                    delay: 0.8,
+                  },
+                ].map((item, i) => (
+                  <motion.div key={i}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: item.delay }}
+                    className="flex gap-4 items-start"
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
+                      style={{ background: `${item.accent}10`, border: `1px solid ${item.accent}20` }}>
+                      <span dangerouslySetInnerHTML={{ __html: item.icon }} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white mb-1">{item.title}</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 1.0 }}
+                className="mt-8"
+              >
+                <button
+                  onClick={() => copyToClipboard('pip install agentid', setPipCopied)}
+                  className="inline-flex items-center gap-3 rounded-xl px-5 py-3 font-mono text-sm text-cyan-300 transition-all hover:border-cyan-400/30 group cursor-pointer"
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,212,255,0.15)' }}>
+                  <span>$ pip install agentid</span>
+                  <CopyIcon copied={pipCopied} />
+                </button>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* ── Agent-to-Agent Verification Flow ── */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-14"
           >
-            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-4">
-              The Problem
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-6">
-              AI agents are everywhere.<br />Trust infrastructure isn&apos;t.
+            <h2 className="text-2xl md:text-3xl font-black text-white mb-4">
+              Verified before anything moves.
             </h2>
+            <p className="text-gray-500 text-sm max-w-md mx-auto">
+              Watch two agents verify each other before exchanging data.
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
-            {[
-              {
-                before: 'Agent A calls Agent B',
-                problem: 'No way to verify who sent the request',
-                after: 'Both agents verified with ECDSA certificates before any data moves',
-                accent: '#00d4ff',
-              },
-              {
-                before: 'You deploy agents across services',
-                problem: 'No standard for agent identity — just API keys and hope',
-                after: 'Every agent gets a cryptographic identity, discoverable in the registry',
-                accent: '#7b2fff',
-              },
-              {
-                before: 'An external agent requests access',
-                problem: 'You can\'t tell if it\'s legitimate or spoofed',
-                after: 'One API call: verified owner, trust score, valid certificate — or rejected',
-                accent: '#00e676',
-              },
-              {
-                before: 'Agents communicate across orgs',
-                problem: 'Neither side can prove who they are',
-                after: 'Mutual verification — both sides checked before any exchange happens',
-                accent: '#ff9500',
-              },
-            ].map((item, i) => (
+          <div className="relative max-w-3xl mx-auto">
+            <div className="flex items-center justify-between gap-4">
+              {/* Agent A */}
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="rounded-2xl p-6 overflow-hidden"
-                style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${item.accent}18`,
-                }}
+                transition={{ duration: 0.6 }}
+                className="flex-1 rounded-2xl p-5 relative overflow-hidden"
+                style={{ background: 'rgba(0,212,255,0.03)', border: '1px solid rgba(0,212,255,0.15)' }}
               >
-                <div className="text-xs font-mono text-gray-600 mb-2">Without AgentID</div>
-                <p className="text-sm text-gray-500 mb-4">{item.before} — <span className="text-red-400/80">{item.problem}</span></p>
-                <div className="text-xs font-mono mb-2" style={{ color: item.accent }}>With AgentID</div>
-                <p className="text-sm text-gray-300">{item.after}</p>
+                <div className="absolute top-0 left-0 right-0 h-[1px]"
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.5), transparent)' }} />
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                    style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)' }}>
+                    &#129302;
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">GoldSignalBot</div>
+                    <div className="text-[10px] font-mono text-gray-600">agt_c546</div>
+                  </div>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 1.2, type: 'spring' }}
+                  className="flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                  <span className="text-[10px] font-mono text-green-400">Verified · 0.94</span>
+                </motion.div>
               </motion.div>
-            ))}
-          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center"
-          >
-            <p className="text-gray-500 text-sm mb-4">This isn&apos;t a concept. The API is live. The SDK is on pip. Start building now.</p>
-            <button
-              onClick={() => copyToClipboard('pip install agentid', setPipCopied)}
-              className="inline-flex items-center gap-3 rounded-xl px-5 py-3 font-mono text-sm text-cyan-300 transition-all hover:border-cyan-400/30 group cursor-pointer"
-              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,212,255,0.15)' }}>
-              <span>$ pip install agentid</span>
-              <CopyIcon copied={pipCopied} />
-            </button>
-          </motion.div>
+              {/* Connection line with animated data flow */}
+              <div className="flex-shrink-0 w-24 md:w-40 relative h-20 flex items-center justify-center">
+                {/* Line */}
+                <div className="absolute top-1/2 left-0 right-0 h-px"
+                  style={{ background: 'linear-gradient(90deg, rgba(0,212,255,0.3), rgba(123,47,255,0.3))' }} />
+
+                {/* Animated particles */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.8 }}
+                  className="absolute inset-0"
+                >
+                  {[0, 1, 2].map((p) => (
+                    <motion.div
+                      key={p}
+                      className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
+                      style={{ background: '#00d4ff', boxShadow: '0 0 8px rgba(0,212,255,0.8)' }}
+                      animate={{
+                        left: ['0%', '100%'],
+                        opacity: [0, 1, 1, 0],
+                      }}
+                      transition={{
+                        duration: 2,
+                        delay: 1.0 + p * 0.4,
+                        repeat: Infinity,
+                        repeatDelay: 0.6,
+                        ease: 'linear',
+                      }}
+                    />
+                  ))}
+                </motion.div>
+
+                {/* Handshake icon */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 1.5, type: 'spring' }}
+                  className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'rgba(7,7,15,0.95)',
+                    border: '1px solid rgba(0,212,255,0.3)',
+                    boxShadow: '0 0 20px rgba(0,212,255,0.15)',
+                  }}
+                >
+                  <span className="text-lg">&#129309;</span>
+                </motion.div>
+              </div>
+
+              {/* Agent B */}
+              <motion.div
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="flex-1 rounded-2xl p-5 relative overflow-hidden"
+                style={{ background: 'rgba(123,47,255,0.03)', border: '1px solid rgba(123,47,255,0.15)' }}
+              >
+                <div className="absolute top-0 left-0 right-0 h-[1px]"
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(123,47,255,0.5), transparent)' }} />
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                    style={{ background: 'rgba(123,47,255,0.1)', border: '1px solid rgba(123,47,255,0.2)' }}>
+                    &#128640;
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">PortfolioManager</div>
+                    <div className="text-[10px] font-mono text-gray-600">agt_d891</div>
+                  </div>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 1.4, type: 'spring' }}
+                  className="flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                  <span className="text-[10px] font-mono text-green-400">Verified · 0.91</span>
+                </motion.div>
+              </motion.div>
+            </div>
+
+            {/* Verification log */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 1.8 }}
+              className="mt-8 rounded-xl p-4 font-mono text-[11px] leading-relaxed"
+              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)' }}
+            >
+              {[
+                { time: '00:00.012', msg: 'GoldSignalBot requests connection to PortfolioManager', color: 'text-gray-500' },
+                { time: '00:00.024', msg: 'Verifying sender certificate... ECDSA P-256 valid', color: 'text-cyan-400/70' },
+                { time: '00:00.031', msg: 'Verifying receiver certificate... ECDSA P-256 valid', color: 'text-purple-400/70' },
+                { time: '00:00.038', msg: 'Mutual trust check: PASSED (0.94 + 0.91)', color: 'text-yellow-400/70' },
+                { time: '00:00.041', msg: 'Connection established. Both agents verified. Data exchange authorized.', color: 'text-green-400' },
+              ].map((log, i) => (
+                <motion.div key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 2.0 + i * 0.2 }}
+                  className="flex gap-3"
+                >
+                  <span className="text-gray-700 shrink-0">{log.time}</span>
+                  <span className={log.color}>{log.msg}</span>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
         </div>
       </section>
 
