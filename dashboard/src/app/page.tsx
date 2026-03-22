@@ -96,8 +96,6 @@ export default function LandingPage() {
   const [checking, setChecking] = useState(true)
   const [loggedIn, setLoggedIn] = useState(false)
   const [agentCount, setAgentCount] = useState(0)
-  const [email, setEmail]       = useState('')
-  const [submitted, setSubmitted] = useState(false)
   const [codeTab, setCodeTab]   = useState<keyof typeof CODE_TABS>('python')
   const [copied, setCopied]     = useState(false)
   const [pipCopied, setPipCopied] = useState(false)
@@ -134,28 +132,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#07070f' }}>
-
-      {/* ── Sticky CTA bar (appears on scroll) ── */}
-      <motion.div
-        initial={{ y: -60, opacity: 0 }}
-        animate={{ y: showSticky && !loggedIn ? 0 : -60, opacity: showSticky && !loggedIn ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-center gap-4 py-2.5 px-4"
-        style={{
-          background: 'rgba(7,7,15,0.95)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(0,212,255,0.1)',
-          pointerEvents: showSticky && !loggedIn ? 'auto' : 'none',
-        }}
-      >
-        <span className="text-sm text-gray-400 hidden sm:block">Identity layer for AI agents</span>
-        <a href="/signup"
-          className="px-5 py-2 rounded-full text-white text-xs font-bold transition-all hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #00d4ff, #7b2fff)' }}>
-          Get Your API Key
-        </a>
-        <span className="text-[10px] text-gray-600 hidden sm:block">Free · No credit card</span>
-      </motion.div>
 
       {/* ── Nav ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
@@ -1070,52 +1046,28 @@ export default function LandingPage() {
             </a>
           </div>
 
-          {/* Newsletter — stay in the loop */}
-          <div className="rounded-2xl p-6 max-w-md mx-auto"
-            style={{
-              background: 'rgba(255,255,255,0.025)',
-              border: '1px solid rgba(255,255,255,0.07)',
-            }}>
-            <p className="text-sm text-gray-400 mb-4">Stay in the loop — get updates on new features and the agent identity space.</p>
-            {submitted ? (
-              <p className="text-sm text-cyan-400 font-mono">You&apos;re in.</p>
-            ) : (
-              <form onSubmit={async (e) => {
-                  e.preventDefault()
-                  try {
-                    const res = await fetch('/api/v1/waitlist', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ email }),
-                    })
-                    if (res.ok) setSubmitted(true)
-                  } catch {}
-                }}
-                className="flex gap-2">
-                <input
-                  type="email"
-                  required
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 px-4 py-3 rounded-xl text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-cyan-400/30"
-                  style={{
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                  }}
-                />
-                <button type="submit"
-                  className="px-6 py-3 rounded-xl text-white text-sm font-bold transition-all hover:opacity-90"
-                  style={{
-                    background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
-                  }}>
-                  Subscribe
-                </button>
-              </form>
-            )}
-          </div>
         </motion.div>
       </section>
+
+      {/* ── Sticky bottom CTA (appears on scroll) ── */}
+      <motion.div
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: showSticky && !loggedIn ? 0 : 80, opacity: showSticky && !loggedIn ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-4 py-3 px-4 sm:hidden"
+        style={{
+          background: 'rgba(7,7,15,0.95)',
+          backdropFilter: 'blur(20px)',
+          borderTop: '1px solid rgba(0,212,255,0.1)',
+          pointerEvents: showSticky && !loggedIn ? 'auto' : 'none',
+        }}
+      >
+        <a href="/signup"
+          className="flex-1 text-center px-5 py-3 rounded-full text-white text-sm font-bold transition-all hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #00d4ff, #7b2fff)' }}>
+          Get Your API Key — Free
+        </a>
+      </motion.div>
 
       {/* ── Footer ── */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }} className="py-12 px-6">
