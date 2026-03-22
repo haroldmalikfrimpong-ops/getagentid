@@ -437,3 +437,15 @@ body {
 .fade-up-2 { animation-delay: 0.2s; }
 .fade-up-3 { animation-delay: 0.3s; }
 .fade-up-4 { animation-delay: 0.4s; }
+
+/* ─── Code tab transition ─── */
+.code-tab-active {
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+}
+
+/* ─── Testimonial quote mark ─── */
+.quote-mark {
+  font-family: Georgia, serif;
+  line-height: 1;
+}

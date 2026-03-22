@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useState, useCallback } from 'react'
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -15,6 +15,19 @@ function CheckIcon() {
   )
 }
 
+function CopyIcon({ copied }: { copied: boolean }) {
+  if (copied) return (
+    <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+  )
+  return (
+    <svg className="w-4 h-4 text-gray-500 hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
 const ECOSYSTEM = [
   { name: 'Google A2A',      color: '#4285F4', desc: 'Agent-to-Agent protocol' },
   { name: 'Anthropic MCP',   color: '#d97706', desc: 'Model Context Protocol' },
@@ -23,6 +36,41 @@ const ECOSYSTEM = [
   { name: 'AutoGen',         color: '#7c3aed', desc: 'Multi-agent conversations' },
   { name: 'OpenAI Agents',   color: '#2563eb', desc: 'Agents SDK' },
 ]
+
+const CODE_TABS = {
+  python: {
+    label: 'Python',
+    install: 'pip install agentid',
+    code: [
+      { type: 'keyword', text: 'from' }, { type: 'module', text: ' agentid' }, { type: 'keyword', text: ' import' }, { type: 'name', text: ' Client' },
+      { type: 'break' },
+      { type: 'comment', text: '# Verify before you trust' },
+      { type: 'name', text: 'client' }, { type: 'op', text: ' = ' }, { type: 'module', text: 'Client' }, { type: 'dim', text: '(' }, { type: 'param', text: 'api_key' }, { type: 'op', text: '=' }, { type: 'string', text: '"ak_..."' }, { type: 'dim', text: ')' },
+      { type: 'name', text: 'result' }, { type: 'op', text: ' = ' }, { type: 'name', text: 'client.agents.' }, { type: 'module', text: 'verify' }, { type: 'dim', text: '(' }, { type: 'string', text: '"agent_c546"' }, { type: 'dim', text: ')' },
+    ],
+  },
+  node: {
+    label: 'Node.js',
+    install: 'npm install @agentid/sdk',
+    code: [
+      { type: 'keyword', text: 'import' }, { type: 'name', text: ' { AgentID }' }, { type: 'keyword', text: ' from' }, { type: 'string', text: " '@agentid/sdk'" },
+      { type: 'break' },
+      { type: 'comment', text: '// Verify before you trust' },
+      { type: 'keyword', text: 'const' }, { type: 'name', text: ' client' }, { type: 'op', text: ' = ' }, { type: 'keyword', text: 'new' }, { type: 'module', text: ' AgentID' }, { type: 'dim', text: '(' }, { type: 'string', text: "'ak_...'" }, { type: 'dim', text: ')' },
+      { type: 'keyword', text: 'const' }, { type: 'name', text: ' result' }, { type: 'op', text: ' = ' }, { type: 'keyword', text: 'await' }, { type: 'name', text: ' client.agents.' }, { type: 'module', text: 'verify' }, { type: 'dim', text: '(' }, { type: 'string', text: "'agent_c546'" }, { type: 'dim', text: ')' },
+    ],
+  },
+  curl: {
+    label: 'cURL',
+    install: 'curl api.getagentid.dev/v1/agents/verify',
+    code: [
+      { type: 'module', text: 'curl' }, { type: 'name', text: ' -X POST \\' },
+      { type: 'string', text: '  https://api.getagentid.dev/v1/agents/verify' }, { type: 'name', text: ' \\' },
+      { type: 'name', text: '  -H ' }, { type: 'string', text: '"Authorization: Bearer ak_..."' }, { type: 'name', text: ' \\' },
+      { type: 'name', text: '  -d ' }, { type: 'string', text: '\'{"agent_id": "agent_c546"}\'' },
+    ],
+  },
+} as const
 
 // ─── Subtle animated counter for social proof ───────────────────────────────
 
@@ -50,7 +98,23 @@ export default function LandingPage() {
   const [agentCount, setAgentCount] = useState(0)
   const [email, setEmail]       = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [codeTab, setCodeTab]   = useState<keyof typeof CODE_TABS>('python')
+  const [copied, setCopied]     = useState(false)
+  const [pipCopied, setPipCopied] = useState(false)
+  const [showSticky, setShowSticky] = useState(false)
   const router = useRouter()
+  const { scrollY } = useScroll()
+
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    setShowSticky(latest > 600)
+  })
+
+  const copyToClipboard = useCallback((text: string, setter: (v: boolean) => void) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setter(true)
+      setTimeout(() => setter(false), 2000)
+    })
+  }, [])
 
   useEffect(() => {
     setMounted(true)
@@ -66,8 +130,32 @@ export default function LandingPage() {
 
   if (!mounted || checking) return null
 
+  const activeCode = CODE_TABS[codeTab]
+
   return (
     <div className="min-h-screen" style={{ background: '#07070f' }}>
+
+      {/* ── Sticky CTA bar (appears on scroll) ── */}
+      <motion.div
+        initial={{ y: -60, opacity: 0 }}
+        animate={{ y: showSticky && !loggedIn ? 0 : -60, opacity: showSticky && !loggedIn ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-center gap-4 py-2.5 px-4"
+        style={{
+          background: 'rgba(7,7,15,0.95)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(0,212,255,0.1)',
+          pointerEvents: showSticky && !loggedIn ? 'auto' : 'none',
+        }}
+      >
+        <span className="text-sm text-gray-400 hidden sm:block">Identity layer for AI agents</span>
+        <a href="/signup"
+          className="px-5 py-2 rounded-full text-white text-xs font-bold transition-all hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #00d4ff, #7b2fff)' }}>
+          Get Your API Key
+        </a>
+        <span className="text-[10px] text-gray-600 hidden sm:block">Free · No credit card</span>
+      </motion.div>
 
       {/* ── Nav ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
@@ -190,7 +278,7 @@ export default function LandingPage() {
                   background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
                   boxShadow:  '0 8px 32px rgba(0,212,255,0.2), 0 0 0 1px rgba(0,212,255,0.15)',
                 }}>
-                GET STARTED FREE
+                GET YOUR API KEY FREE
               </a>
               <a href="#how"
                 className="px-9 py-4 rounded-full text-gray-400 font-bold text-sm tracking-wider
@@ -208,11 +296,11 @@ export default function LandingPage() {
               transition={{ delay: 0.6 }}
               className="text-gray-600 text-xs mt-4"
             >
-              No credit card · 5 agents free forever
+              No credit card required · 5 agents free forever · Setup in 2 minutes
             </motion.p>
           </div>
 
-          {/* Right — Live verification demo card */}
+          {/* Right — Multi-language code demo */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -221,27 +309,45 @@ export default function LandingPage() {
           >
             <div className="relative rounded-2xl overflow-hidden p-[1px]"
               style={{ background: 'linear-gradient(145deg, rgba(0,212,255,0.3), rgba(123,47,255,0.3), rgba(0,212,255,0.1))' }}>
-              <div className="rounded-2xl p-6" style={{ background: 'rgba(7,7,15,0.95)' }}>
-                {/* Terminal header */}
-                <div className="flex items-center gap-2 mb-5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                  <span className="text-[10px] text-gray-600 font-mono ml-2">agent_verify.py</span>
+              <div className="rounded-2xl" style={{ background: 'rgba(7,7,15,0.95)' }}>
+                {/* Language tabs */}
+                <div className="flex items-center justify-between px-6 pt-4 pb-0">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                    <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                  </div>
+                  <div className="flex gap-1">
+                    {(Object.keys(CODE_TABS) as (keyof typeof CODE_TABS)[]).map((tab) => (
+                      <button key={tab} onClick={() => setCodeTab(tab)}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all ${
+                          codeTab === tab
+                            ? 'text-cyan-400 bg-cyan-400/10'
+                            : 'text-gray-600 hover:text-gray-400'
+                        }`}>
+                        {CODE_TABS[tab].label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Code block */}
-                <div className="font-mono text-[13px] leading-[1.7] space-y-1">
-                  <div><span className="text-purple-400">from</span> <span className="text-cyan-300">agentid</span> <span className="text-purple-400">import</span> <span className="text-white">Client</span></div>
-                  <div className="h-3" />
-                  <div><span className="text-gray-500"># Verify before you trust</span></div>
-                  <div><span className="text-white">client</span> <span className="text-purple-400">=</span> <span className="text-cyan-300">Client</span><span className="text-gray-400">(</span><span className="text-orange-300">api_key</span><span className="text-purple-400">=</span><span className="text-green-400">&quot;ak_...&quot;</span><span className="text-gray-400">)</span></div>
-                  <div><span className="text-white">result</span> <span className="text-purple-400">=</span> <span className="text-white">client.agents.</span><span className="text-cyan-300">verify</span><span className="text-gray-400">(</span><span className="text-green-400">&quot;agent_c546&quot;</span><span className="text-gray-400">)</span></div>
+                <div className="px-6 py-5 font-mono text-[13px] leading-[1.7]">
+                  {activeCode.code.map((token, i) => {
+                    if (token.type === 'break') return <div key={i} className="h-3" />
+                    const colors: Record<string, string> = {
+                      keyword: 'text-purple-400', module: 'text-cyan-300', name: 'text-white',
+                      comment: 'text-gray-500', op: 'text-purple-400', param: 'text-orange-300',
+                      string: 'text-green-400', dim: 'text-gray-400',
+                    }
+                    return <span key={i} className={colors[token.type] || 'text-white'}>{token.text}</span>
+                  })}
                   <div className="h-3" />
                   <motion.div
+                    key={codeTab}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2 }}
+                    transition={{ delay: 0.4 }}
                   >
                     <div className="rounded-lg px-4 py-3 mt-2" style={{ background: 'rgba(0,230,118,0.06)', border: '1px solid rgba(0,230,118,0.15)' }}>
                       <div className="flex items-center gap-2 mb-2">
@@ -260,7 +366,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Floating badge */}
+            {/* Floating badges */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -275,6 +381,21 @@ export default function LandingPage() {
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
               <span className="text-[11px] text-gray-300 font-mono">Sub-50ms response</span>
             </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.8 }}
+              className="absolute -top-3 -right-3 rounded-xl px-4 py-2.5 flex items-center gap-2 cursor-pointer"
+              onClick={() => copyToClipboard(activeCode.install, setCopied)}
+              style={{
+                background: 'rgba(7,7,15,0.9)',
+                border: '1px solid rgba(123,47,255,0.2)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              }}
+            >
+              <CopyIcon copied={copied} />
+              <span className="text-[11px] text-gray-300 font-mono">{activeCode.install}</span>
+            </motion.div>
           </motion.div>
         </div>
 
@@ -283,19 +404,39 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="flex items-center justify-center gap-8 mt-20 flex-wrap"
+          className="mt-20"
         >
-          {[
-            { label: 'Agents Registered', val: agentCount },
-            { label: 'Uptime',            val: 99,  suffix: '.9%' },
-          ].map((s, i) => (
-            <div key={i} className="text-center">
-              <div className="text-2xl font-black text-white font-mono tabular-nums">
-                <AnimatedNumber to={s.val} suffix={s.suffix} />
+          {/* Stats row */}
+          <div className="flex items-center justify-center gap-8 mb-8 flex-wrap">
+            {[
+              { label: 'Agents Registered', val: agentCount },
+              { label: 'Uptime', val: 99, suffix: '.9%' },
+              { label: 'Avg Response', val: 47, suffix: 'ms' },
+            ].map((s, i) => (
+              <div key={i} className="text-center">
+                <div className="text-2xl font-black text-white font-mono tabular-nums">
+                  <AnimatedNumber to={s.val} suffix={s.suffix} />
+                </div>
+                <div className="text-[10px] text-gray-600 tracking-wider uppercase mt-0.5">{s.label}</div>
               </div>
-              <div className="text-[10px] text-gray-600 tracking-wider uppercase mt-0.5">{s.label}</div>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* Trust badges */}
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            {[
+              { label: 'Open Source', icon: '&#9733;' },
+              { label: 'MIT Licensed', icon: '&#128274;' },
+              { label: 'ECDSA P-256', icon: '&#128272;' },
+              { label: 'SOC 2 Ready', icon: '&#9989;' },
+            ].map((badge, i) => (
+              <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] text-gray-500 font-mono"
+                style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                <span dangerouslySetInnerHTML={{ __html: badge.icon }} />
+                {badge.label}
+              </div>
+            ))}
+          </div>
         </motion.div>
       </section>
 
@@ -371,11 +512,14 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="text-center"
           >
-            <p className="text-gray-500 text-sm mb-4">This isn&apos;t a concept. The API is live. The SDK is on pip.</p>
-            <div className="inline-block rounded-xl px-5 py-3 font-mono text-sm text-cyan-300"
+            <p className="text-gray-500 text-sm mb-4">This isn&apos;t a concept. The API is live. The SDK is on pip. Start building now.</p>
+            <button
+              onClick={() => copyToClipboard('pip install agentid', setPipCopied)}
+              className="inline-flex items-center gap-3 rounded-xl px-5 py-3 font-mono text-sm text-cyan-300 transition-all hover:border-cyan-400/30 group cursor-pointer"
               style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,212,255,0.15)' }}>
-              pip install agentid
-            </div>
+              <span>$ pip install agentid</span>
+              <CopyIcon copied={pipCopied} />
+            </button>
           </motion.div>
         </div>
       </section>
@@ -669,6 +813,78 @@ export default function LandingPage() {
 
       <div className="section-divider" />
 
+      {/* ── Social Proof / Testimonials ── */}
+      <section className="py-28 px-6" style={{ background: '#070711' }}>
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-4">
+              What People Are Saying
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white">
+              Builders get it.
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                quote: 'State and identity are the two missing pieces for autonomous systems. If they don\'t know who they are or what happened yesterday, they can\'t scale.',
+                author: 'Developer',
+                handle: 'via X',
+                accent: '#00d4ff',
+              },
+              {
+                quote: 'Identity and state are the two massive missing pieces for agent-to-agent protocol. Checked out the site, love the approach.',
+                author: 'Gerald Sterling',
+                handle: '@geraldrsterling',
+                accent: '#7b2fff',
+              },
+              {
+                quote: 'Everyone\'s talking about the agents. Nobody\'s talking about the infrastructure underneath — identity, permissions, trust. That\'s the missing layer.',
+                author: 'Community',
+                handle: 'via X',
+                accent: '#00e676',
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="rounded-2xl p-6 relative overflow-hidden"
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${item.accent}15`,
+                }}
+              >
+                <div className="absolute top-0 left-0 right-0 h-[1px]"
+                  style={{ background: `linear-gradient(90deg, transparent, ${item.accent}40, transparent)` }} />
+                <div className="text-3xl mb-4" style={{ color: item.accent, opacity: 0.3 }}>&ldquo;</div>
+                <p className="text-sm text-gray-300 leading-relaxed mb-6">{item.quote}</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ background: `${item.accent}15`, color: item.accent }}>
+                    {item.author[0]}
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-white">{item.author}</div>
+                    <div className="text-[10px] text-gray-600">{item.handle}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
       {/* ── Pricing ── */}
       <section id="pricing" className="py-28 px-6" style={{ background: '#070711' }}>
         <div className="max-w-5xl mx-auto">
@@ -845,7 +1061,7 @@ export default function LandingPage() {
                 background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
                 boxShadow:  '0 8px 40px rgba(0,212,255,0.2)',
               }}>
-              GET STARTED FREE
+              GET YOUR API KEY FREE
             </a>
             <a href="https://github.com/haroldmalikfrimpong-ops/getagentid"
               className="px-10 py-4 rounded-full text-gray-400 font-bold tracking-wider inline-block transition-all hover:text-white hover:bg-white/5"
