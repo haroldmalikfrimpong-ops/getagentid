@@ -29,7 +29,7 @@ export default function SignUpPage() {
     setError('')
     setLoading(true)
     try {
-      await signUp(email, password)
+      await signUp(email, password, company ? { company } : undefined)
       setSuccess(true)
     } catch (err: any) {
       setError(err.message || 'Sign up failed. Please try again.')

@@ -6,8 +6,12 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY || ''
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Auth helpers
-export async function signUp(email: string, password: string) {
-  const { data, error } = await supabase.auth.signUp({ email, password })
+export async function signUp(email: string, password: string, metadata?: { company?: string }) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: metadata ? { data: metadata } : undefined,
+  })
   if (error) throw error
   return data
 }

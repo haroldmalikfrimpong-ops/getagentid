@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServiceClient } from '@/lib/api-auth'
+import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
+import { trackUsage, getUsageCount, trackIpUsage, getIpUsageCount } from '@/lib/usage'
+
+const IP_RATE_LIMIT = 100 // max 100 verifications per hour for unauthenticated requests
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,6 +11,57 @@ export async function POST(req: NextRequest) {
 
     if (!agent_id) {
       return NextResponse.json({ error: 'agent_id is required' }, { status: 400 })
+    }
+
+    // Check for optional API key authentication
+    const authHeader = req.headers.get('authorization')
+    let userId: string | null = null
+    let verificationLimit = 0
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Authenticated request — enforce plan limits
+      const auth = await authenticateRequest(req)
+
+      if ('error' in auth) {
+        return NextResponse.json({ error: auth.error }, { status: auth.status })
+      }
+
+      userId = auth.user_id
+      verificationLimit = auth.profile?.verification_limit ?? 1000
+
+      // Check monthly usage against plan limit
+      const currentUsage = await getUsageCount(userId!)
+      if (currentUsage >= verificationLimit) {
+        return NextResponse.json(
+          {
+            error: 'Monthly verification limit reached',
+            usage: currentUsage,
+            limit: verificationLimit,
+            plan: auth.profile?.plan ?? 'free',
+            message: `You have used ${currentUsage}/${verificationLimit} verifications this month. Upgrade your plan at https://getagentid.dev/pricing for higher limits.`,
+          },
+          { status: 429 }
+        )
+      }
+    } else {
+      // Unauthenticated request — enforce IP-based rate limiting
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+                 req.headers.get('x-real-ip') ||
+                 'unknown'
+
+      const ipUsage = await getIpUsageCount(ip)
+      if (ipUsage >= IP_RATE_LIMIT) {
+        return NextResponse.json(
+          {
+            error: 'Rate limit exceeded',
+            message: `Too many requests from this IP. Max ${IP_RATE_LIMIT} verifications per hour. Use an API key for higher limits.`,
+          },
+          { status: 429 }
+        )
+      }
+
+      // Track anonymous IP usage
+      await trackIpUsage(ip)
     }
 
     const db = getServiceClient()
@@ -46,6 +100,11 @@ export async function POST(req: NextRequest) {
       event_type: 'verified',
       data: { verified_by: 'api' },
     })
+
+    // Track usage for authenticated requests
+    if (userId) {
+      await trackUsage(userId, 'verify')
+    }
 
     return NextResponse.json({
       verified: certificate_valid && agent.active,

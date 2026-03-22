@@ -58,8 +58,22 @@ export function generateAgentId() {
   return `agent_${crypto.randomBytes(8).toString('hex')}`
 }
 
+// Get the signing secret, refusing to use a publicly-known default
+function getSigningSecret(): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error(
+      'JWT_SECRET environment variable is not set. Cannot sign certificates without a proper secret. ' +
+      'Set JWT_SECRET to a strong random value (e.g. 64+ hex chars).'
+    )
+  }
+  return secret
+}
+
 // Sign a certificate (JWT-like)
 export function issueCertificate(agentId: string, name: string, owner: string, capabilities: string[]) {
+  const secret = getSigningSecret()
+
   const now = Math.floor(Date.now() / 1000)
   const expires = now + 365 * 24 * 60 * 60 // 1 year
 
@@ -76,7 +90,6 @@ export function issueCertificate(agentId: string, name: string, owner: string, c
   // Base64 encode the payload as a simple certificate
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'AgentID' })).toString('base64url')
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
-  const secret = process.env.JWT_SECRET || 'agentid-secret'
   const signature = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url')
 
   return {

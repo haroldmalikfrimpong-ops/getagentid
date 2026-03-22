@@ -15,16 +15,21 @@ const PLAN_LIMITS: Record<string, { agent_limit: number; verification_limit: num
 
 export async function POST(req: NextRequest) {
   try {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+    if (!webhookSecret) {
+      console.error('STRIPE_WEBHOOK_SECRET is not configured — rejecting all webhook requests')
+      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+    }
+
     const body = await req.text()
     const sig = req.headers.get('stripe-signature')
 
-    let event: Stripe.Event
-
-    if (process.env.STRIPE_WEBHOOK_SECRET && sig) {
-      event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
-    } else {
-      event = JSON.parse(body) as Stripe.Event
+    if (!sig) {
+      return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 })
     }
+
+    let event: Stripe.Event
+    event = getStripe().webhooks.constructEvent(body, sig, webhookSecret)
 
     const db = getServiceClient()
 

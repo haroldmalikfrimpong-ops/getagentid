@@ -8,19 +8,57 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { email, provider } = body
 
-    if (email) {
-      await notifyNewUser(email, provider || 'email')
+    // --- Authentication: verify Supabase session token ---
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { ok: false, error: 'Missing authorization token' },
+        { status: 401 }
+      )
+    }
 
-      // Create profile
-      const db = getServiceClient()
+    const accessToken = authHeader.replace('Bearer ', '')
+    const db = getServiceClient()
+
+    const { data: authData, error: authError } = await db.auth.getUser(accessToken)
+    if (authError || !authData?.user) {
+      return NextResponse.json(
+        { ok: false, error: 'Invalid or expired session' },
+        { status: 401 }
+      )
+    }
+
+    // Ensure the caller can only create/access their own profile
+    if (body.user_id && authData.user.id !== body.user_id) {
+      return NextResponse.json(
+        { ok: false, error: 'Token does not match requested user_id' },
+        { status: 403 }
+      )
+    }
+    // --- End authentication ---
+
+    if (email) {
       if (db && body.user_id) {
-        await db.from('profiles').upsert({
-          id: body.user_id,
-          email,
-          plan: 'free',
-          agent_limit: 5,
-          verification_limit: 1000,
-        })
+        // Check if profile already exists to avoid overwriting paid plans
+        const { data: existing } = await db
+          .from('profiles')
+          .select('id')
+          .eq('id', body.user_id)
+          .single()
+
+        if (!existing) {
+          // New user — create profile with free defaults
+          await db.from('profiles').insert({
+            id: body.user_id,
+            email,
+            plan: 'free',
+            agent_limit: 5,
+            verification_limit: 1000,
+          })
+
+          // Only notify for genuinely new users
+          await notifyNewUser(email, provider || 'email')
+        }
       }
     }
 
