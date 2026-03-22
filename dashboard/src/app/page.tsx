@@ -48,6 +48,8 @@ export default function LandingPage() {
   const [checking, setChecking] = useState(true)
   const [loggedIn, setLoggedIn] = useState(false)
   const [agentCount, setAgentCount] = useState(0)
+  const [email, setEmail]       = useState('')
+  const [submitted, setSubmitted] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -79,8 +81,14 @@ export default function LandingPage() {
           <span className="text-[10px] font-mono text-gray-600 hidden sm:block mt-0.5">.dev</span>
         </a>
         <div className="flex items-center gap-3">
+          <a href="#how" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
+            How It Works
+          </a>
           <a href="/registry" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
             Registry
+          </a>
+          <a href="/docs" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
+            Docs
           </a>
           <a href="#pricing" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
             Pricing
@@ -182,7 +190,15 @@ export default function LandingPage() {
                   background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
                   boxShadow:  '0 8px 32px rgba(0,212,255,0.2), 0 0 0 1px rgba(0,212,255,0.15)',
                 }}>
-                REGISTER YOUR FIRST AGENT FREE
+                GET STARTED FREE
+              </a>
+              <a href="#how"
+                className="px-9 py-4 rounded-full text-gray-400 font-bold text-sm tracking-wider
+                  transition-all hover:text-white hover:bg-white/5 inline-block"
+                style={{
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}>
+                SEE HOW IT WORKS
               </a>
             </motion.div>
 
@@ -281,6 +297,87 @@ export default function LandingPage() {
             </div>
           ))}
         </motion.div>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* ── Why This Matters ── */}
+      <section className="py-28 px-6" style={{ background: '#070711' }}>
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-4">
+              The Problem
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-6">
+              AI agents are everywhere.<br />Trust infrastructure isn&apos;t.
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
+            {[
+              {
+                before: 'Agent A calls Agent B',
+                problem: 'No way to verify who sent the request',
+                after: 'Both agents verified with ECDSA certificates before any data moves',
+                accent: '#00d4ff',
+              },
+              {
+                before: 'You deploy agents across services',
+                problem: 'No standard for agent identity — just API keys and hope',
+                after: 'Every agent gets a cryptographic identity, discoverable in the registry',
+                accent: '#7b2fff',
+              },
+              {
+                before: 'An external agent requests access',
+                problem: 'You can\'t tell if it\'s legitimate or spoofed',
+                after: 'One API call: verified owner, trust score, valid certificate — or rejected',
+                accent: '#00e676',
+              },
+              {
+                before: 'Agents communicate across orgs',
+                problem: 'Neither side can prove who they are',
+                after: 'Mutual verification — both sides checked before any exchange happens',
+                accent: '#ff9500',
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="rounded-2xl p-6 overflow-hidden"
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${item.accent}18`,
+                }}
+              >
+                <div className="text-xs font-mono text-gray-600 mb-2">Without AgentID</div>
+                <p className="text-sm text-gray-500 mb-4">{item.before} — <span className="text-red-400/80">{item.problem}</span></p>
+                <div className="text-xs font-mono mb-2" style={{ color: item.accent }}>With AgentID</div>
+                <p className="text-sm text-gray-300">{item.after}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <p className="text-gray-500 text-sm mb-4">This isn&apos;t a concept. The API is live. The SDK is on pip.</p>
+            <div className="inline-block rounded-xl px-5 py-3 font-mono text-sm text-cyan-300"
+              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,212,255,0.15)' }}>
+              pip install agentid
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       <div className="section-divider" />
@@ -741,7 +838,7 @@ export default function LandingPage() {
             <br />
             Free forever for small teams.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-10">
             <a href="/signup"
               className="px-10 py-4 rounded-full text-white font-bold tracking-wider inline-block transition-all hover:opacity-90 hover:-translate-y-0.5"
               style={{
@@ -756,6 +853,51 @@ export default function LandingPage() {
               VIEW ON GITHUB
             </a>
           </div>
+
+          {/* Newsletter — stay in the loop */}
+          <div className="rounded-2xl p-6 max-w-md mx-auto"
+            style={{
+              background: 'rgba(255,255,255,0.025)',
+              border: '1px solid rgba(255,255,255,0.07)',
+            }}>
+            <p className="text-sm text-gray-400 mb-4">Stay in the loop — get updates on new features and the agent identity space.</p>
+            {submitted ? (
+              <p className="text-sm text-cyan-400 font-mono">You&apos;re in.</p>
+            ) : (
+              <form onSubmit={async (e) => {
+                  e.preventDefault()
+                  try {
+                    const res = await fetch('/api/v1/waitlist', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email }),
+                    })
+                    if (res.ok) setSubmitted(true)
+                  } catch {}
+                }}
+                className="flex gap-2">
+                <input
+                  type="email"
+                  required
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 px-4 py-3 rounded-xl text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-cyan-400/30"
+                  style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}
+                />
+                <button type="submit"
+                  className="px-6 py-3 rounded-xl text-white text-sm font-bold transition-all hover:opacity-90"
+                  style={{
+                    background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
+                  }}>
+                  Subscribe
+                </button>
+              </form>
+            )}
+          </div>
         </motion.div>
       </section>
 
@@ -768,6 +910,7 @@ export default function LandingPage() {
               <span className="text-gray-700 text-xs">The trust layer for AI agents</span>
             </div>
             <div className="flex gap-6 text-xs text-gray-600">
+              <a href="/docs"   className="hover:text-cyan-400 transition-colors">Docs</a>
               <a href="/login"  className="hover:text-cyan-400 transition-colors">Log In</a>
               <a href="/signup" className="hover:text-cyan-400 transition-colors">Sign Up</a>
               <a href="https://github.com/haroldmalikfrimpong-ops/getagentid" className="hover:text-cyan-400 transition-colors">GitHub</a>
