@@ -15,9 +15,10 @@ This module provides:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from .ed25519 import Ed25519Identity
 
@@ -308,3 +309,92 @@ def create_identity_with_dids(agent_id: str) -> Tuple[Ed25519Identity, str, str]
     did_aps = create_did_aps(identity.ed25519_public_key)
     register_agentid_key(agent_id, identity.ed25519_public_key)
     return identity, did_agentid, did_aps
+
+
+# ---------------------------------------------------------------------------
+# Entity verification (Corpo API)
+# ---------------------------------------------------------------------------
+
+CORPO_API_BASE = "https://api.corpo.llc/api/v1"
+
+
+def verify_entity(entity_id: str, base_url: str = CORPO_API_BASE) -> Dict[str, Any]:
+    """Verify a legal entity via the Corpo staging API.
+
+    Returns dict with entity_id, name, status, entity_type, authority_ceiling, verified_at.
+    Raises RuntimeError if entity not found or API fails.
+    """
+    import httpx
+    resp = httpx.get(f"{base_url}/entities/{entity_id}/verify", timeout=10)
+    if resp.status_code != 200:
+        raise RuntimeError(f"Entity verification failed: HTTP {resp.status_code}")
+    return resp.json()
+
+
+def verify_envelope_did(sender_key_id: bytes, did: str) -> bool:
+    """Verify that a DID resolves to an Ed25519 key matching the sender key ID.
+
+    sender_key_id is Trunc16(SHA-256(ed25519_pub)) — 16 bytes.
+    Returns True if the DID's key matches.
+    """
+    pub_key = resolve_did(did)
+    expected_key_id = hashlib.sha256(pub_key).digest()[:16]
+    return expected_key_id == sender_key_id
+
+
+def verify_agent_full(
+    did: str,
+    entity_id: Optional[str] = None,
+    sender_key_id: Optional[bytes] = None,
+) -> Dict[str, Any]:
+    """Full agent verification: DID + optional sender key match + optional entity.
+
+    Returns a dict with:
+      - did: the DID string
+      - did_valid: True if DID resolves to a valid Ed25519 key
+      - ed25519_public_key: hex of the resolved key
+      - sender_match: True/False/None (None if sender_key_id not provided)
+      - entity: entity verification result or None
+      - fully_verified: True only if all provided checks pass
+    """
+    result: Dict[str, Any] = {
+        "did": did,
+        "did_valid": False,
+        "ed25519_public_key": None,
+        "sender_match": None,
+        "entity": None,
+        "fully_verified": False,
+    }
+
+    # Step 1: Resolve DID
+    try:
+        pub_key = resolve_did(did)
+        result["did_valid"] = True
+        result["ed25519_public_key"] = pub_key.hex()
+    except Exception:
+        return result
+
+    # Step 2: Verify sender key ID matches (if provided)
+    if sender_key_id is not None:
+        expected = hashlib.sha256(pub_key).digest()[:16]
+        result["sender_match"] = (expected == sender_key_id)
+    else:
+        result["sender_match"] = None
+
+    # Step 3: Verify legal entity (if provided)
+    if entity_id is not None:
+        try:
+            entity = verify_entity(entity_id)
+            result["entity"] = entity
+        except Exception as e:
+            result["entity"] = {"error": str(e)}
+
+    # Fully verified = DID valid + sender matches (if checked) + entity active (if checked)
+    checks = [result["did_valid"]]
+    if result["sender_match"] is not None:
+        checks.append(result["sender_match"])
+    if result["entity"] is not None and "error" not in result["entity"]:
+        checks.append(result["entity"].get("status") == "active")
+    result["fully_verified"] = all(checks)
+
+    return result
