@@ -25,6 +25,18 @@ from .aps_bridge import (
     verify_aps_passport,
     create_delegation_request,
 )
+from .did import (
+    create_did_agentid,
+    create_did_aps,
+    resolve_did_agentid,
+    resolve_did_aps,
+    resolve_did,
+    sign_with_did,
+    verify_with_did,
+    register_agentid_key,
+    clear_agentid_registry,
+    create_identity_with_dids,
+)
 
 __version__ = "0.3.0"
 __all__ = [
@@ -48,4 +60,14 @@ __all__ = [
     "create_aps_metadata",
     "verify_aps_passport",
     "create_delegation_request",
+    "create_did_agentid",
+    "create_did_aps",
+    "resolve_did_agentid",
+    "resolve_did_aps",
+    "resolve_did",
+    "sign_with_did",
+    "verify_with_did",
+    "register_agentid_key",
+    "clear_agentid_registry",
+    "create_identity_with_dids",
 ]
