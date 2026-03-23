@@ -22,6 +22,9 @@ const ECOSYSTEM = [
   { name: 'LangChain',       color: '#16a34a', desc: 'LLM application framework' },
   { name: 'AutoGen',         color: '#7c3aed', desc: 'Multi-agent conversations' },
   { name: 'OpenAI Agents',   color: '#2563eb', desc: 'Agents SDK' },
+  { name: 'qntm',            color: '#00d4ff', desc: 'Encrypted agent transport' },
+  { name: 'Agent Passport',  color: '#ff6b6b', desc: 'Ed25519 delegation chains' },
+  { name: 'LangGraph',       color: '#16a34a', desc: 'Graph-based orchestration' },
 ]
 
 // ─── Subtle animated counter for social proof ───────────────────────────────
@@ -510,6 +513,85 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* ── Proven In Production ── */}
+      <section className="py-28 px-6">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-4">
+              Proven
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
+              Not theoretical. Battle-tested.
+            </h2>
+            <p className="text-gray-500 max-w-lg mx-auto">
+              AgentID is live on encrypted relays, interoperable with multiple identity systems, and verified across Python and TypeScript.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                title: 'A2A Protocol',
+                desc: 'Proposed as the identity verification layer for Google\'s Agent-to-Agent protocol. Active collaboration with protocol contributors.',
+                accent: '#4285F4',
+                tag: 'STANDARD',
+              },
+              {
+                title: 'Encrypted Relay',
+                desc: 'Live on qntm encrypted relay. HKDF key derivation, XChaCha20-Poly1305 encryption, Ed25519 signatures. Full two-way communication proven.',
+                accent: '#00e676',
+                tag: 'LIVE',
+              },
+              {
+                title: 'DID Interop',
+                desc: 'Cross-verification between did:agentid and did:aps proven. Different identity systems, same crypto, mutual verification across languages.',
+                accent: '#7b2fff',
+                tag: 'PROVEN',
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="relative rounded-2xl p-7 overflow-hidden"
+                style={{ background: 'rgba(255,255,255,0.025)', border: `1px solid ${item.accent}18` }}
+              >
+                <div className="absolute top-0 left-0 right-0 h-[1px]"
+                  style={{ background: `linear-gradient(90deg, transparent, ${item.accent}50, transparent)` }} />
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider"
+                    style={{ background: `${item.accent}15`, color: item.accent, border: `1px solid ${item.accent}30` }}>
+                    {item.tag}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-3">{item.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mt-10"
+          >
+            <p className="text-gray-600 text-xs">
+              Ed25519 + X25519 + HKDF-SHA-256 + XChaCha20-Poly1305 — full crypto stack verified byte-for-byte across implementations
+            </p>
+          </motion.div>
         </div>
       </section>
 
