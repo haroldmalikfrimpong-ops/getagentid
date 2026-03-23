@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="getagentid",
-    version="0.2.0",
+    version="0.3.0",
     packages=find_packages(),
-    install_requires=["httpx>=0.27.0"],
+    install_requires=["httpx>=0.27.0", "PyNaCl>=1.5.0"],
     python_requires=">=3.8",
     description="AgentID SDK — Identity & verification for AI agents",
     long_description="The Identity & Discovery Layer for AI Agents. Register, verify, and discover agents with cryptographic certificates.",

@@ -66,6 +66,23 @@ class Agents:
         res = self._client._get(f"/agents/inbox?agent_id={agent_id}&status={status}")
         return [AgentResult(m) for m in res.get("messages", [])]
 
+    def bind_ed25519(self, agent_id: str, ed25519_public_key: str) -> AgentResult:
+        """Bind an Ed25519 public key to an agent and receive a signed certificate.
+
+        Args:
+            agent_id: The agent's unique identifier.
+            ed25519_public_key: 64-char hex Ed25519 public key.
+
+        Returns:
+            AgentResult with agent_id, ed25519_public_key, certificate,
+            issued_at, and expires_at.
+        """
+        res = self._client._post("/agents/bind-ed25519", {
+            "agent_id": agent_id,
+            "ed25519_public_key": ed25519_public_key,
+        })
+        return AgentResult(res)
+
     def discover(self, capability: str = None, owner: str = None, limit: int = 20) -> list:
         """Search for agents by capability or owner."""
         params = {"limit": limit}
