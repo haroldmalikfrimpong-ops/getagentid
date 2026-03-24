@@ -231,20 +231,92 @@ def resolve_did_aps(did_string: str) -> bytes:
     return raw_key
 
 
-def resolve_did(did_string: str) -> bytes:
+def resolve_did_key(did_string: str) -> bytes:
+    """Resolve a ``did:key`` DID to an Ed25519 public key.
+
+    Format: ``did:key:z<base58btc(0xed01 + 32-byte-pubkey)>``
+
+    The multicodec prefix ``0xed 0x01`` identifies Ed25519.
+    """
+    if not did_string.startswith("did:key:z"):
+        raise ValueError(f"Invalid did:key format: {did_string!r}")
+
+    multibase_value = did_string[8:]  # strip "did:key:"
+    if not multibase_value.startswith("z"):
+        raise ValueError(f"did:key must use z-prefix multibase: {did_string!r}")
+
+    raw = _b58decode(multibase_value[1:])  # strip "z" prefix
+
+    # Check for Ed25519 multicodec prefix (0xed, 0x01)
+    if len(raw) < 34 or raw[0] != 0xED or raw[1] != 0x01:
+        raise ValueError(
+            f"Unsupported key type in did:key. Expected Ed25519 multicodec "
+            f"prefix 0xed01, got 0x{raw[0]:02x}{raw[1]:02x}"
+        )
+
+    pub_key = raw[2:34]
+    if len(pub_key) != 32:
+        raise ValueError(f"Expected 32-byte Ed25519 key, got {len(pub_key)}")
+
+    return pub_key
+
+
+def resolve_did_web(did_string: str, did_document: Optional[dict] = None) -> bytes:
+    """Resolve a ``did:web`` DID to an Ed25519 public key.
+
+    If *did_document* is provided, extracts the key from it directly.
+    Otherwise fetches ``https://<domain>/.well-known/did.json``.
+    """
+    if not did_string.startswith("did:web:"):
+        raise ValueError(f"Invalid did:web format: {did_string!r}")
+
+    if did_document is None:
+        import httpx
+        domain = did_string[8:].replace(":", "/")
+        url = f"https://{domain}/.well-known/did.json"
+        resp = httpx.get(url, timeout=10, follow_redirects=True)
+        if resp.status_code != 200:
+            raise RuntimeError(f"Failed to fetch DID Document from {url}: HTTP {resp.status_code}")
+        did_document = resp.json()
+
+    # Extract Ed25519 key from verificationMethod
+    methods = did_document.get("verificationMethod", [])
+    if not methods:
+        raise ValueError(f"DID Document has no verificationMethod: {did_string!r}")
+
+    for method in methods:
+        if method.get("type") == "Ed25519VerificationKey2020":
+            multibase = method.get("publicKeyMultibase", "")
+            if multibase.startswith("z"):
+                raw = _b58decode(multibase[1:])
+                # Handle with or without multicodec prefix
+                if len(raw) >= 34 and raw[0] == 0xED and raw[1] == 0x01:
+                    return raw[2:34]
+                elif len(raw) == 32:
+                    return raw
+                else:
+                    raise ValueError(f"Unexpected key length: {len(raw)}")
+
+    raise ValueError(f"No Ed25519VerificationKey2020 found in DID Document: {did_string!r}")
+
+
+def resolve_did(did_string: str, did_document: Optional[dict] = None) -> bytes:
     """Resolve any supported DID and return the Ed25519 public key.
 
-    Dispatches to :func:`resolve_did_agentid` or :func:`resolve_did_aps`
-    based on the DID method.
+    Supports: did:agentid, did:aps, did:key, did:web.
     """
     if did_string.startswith("did:agentid:"):
         return resolve_did_agentid(did_string)
     elif did_string.startswith("did:aps:"):
         return resolve_did_aps(did_string)
+    elif did_string.startswith("did:key:"):
+        return resolve_did_key(did_string)
+    elif did_string.startswith("did:web:"):
+        return resolve_did_web(did_string, did_document)
     else:
         raise ValueError(
             f"Unsupported DID method: {did_string!r}. "
-            "Supported methods: did:agentid, did:aps."
+            "Supported methods: did:agentid, did:aps, did:key, did:web."
         )
 
 
