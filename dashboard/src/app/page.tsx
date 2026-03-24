@@ -154,7 +154,7 @@ export default function LandingPage() {
             >
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               <span className="text-cyan-400 text-[11px] font-mono tracking-[0.2em] uppercase">
-                Open Source · MIT Licensed
+                Open Source · MIT Licensed · OATR Registered
               </span>
             </motion.div>
 
@@ -542,19 +542,19 @@ export default function LandingPage() {
             {[
               {
                 title: 'A2A Protocol',
-                desc: 'Proposed as the identity verification layer for Google\'s Agent-to-Agent protocol. Active collaboration with protocol contributors.',
+                desc: 'Proposed as the identity verification layer for Google\'s Agent-to-Agent protocol. Founding member of the Agent Identity Working Group.',
                 accent: '#4285F4',
                 tag: 'STANDARD',
               },
               {
                 title: 'Encrypted Relay',
-                desc: 'Live on qntm encrypted relay. HKDF key derivation, XChaCha20-Poly1305 encryption, Ed25519 signatures. Full two-way communication proven.',
+                desc: 'Live on qntm encrypted relay. HKDF key derivation, XChaCha20-Poly1305 encryption, Ed25519 signatures. QSP-1 conformant. Full two-way communication proven.',
                 accent: '#00e676',
                 tag: 'LIVE',
               },
               {
                 title: 'DID Interop',
-                desc: 'Cross-verification between did:agentid and did:aps proven. Different identity systems, same crypto, mutual verification across languages.',
+                desc: 'Cross-verification between did:agentid and did:aps proven. Registered issuer in the Open Agent Trust Registry. Different identity systems, same crypto, mutual verification across languages.',
                 accent: '#7b2fff',
                 tag: 'PROVEN',
               },
