@@ -12,6 +12,7 @@ export default function KeysPage() {
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [revoking, setRevoking] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -54,6 +55,30 @@ export default function KeysPage() {
     navigator.clipboard.writeText(newKey)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function revokeKey(keyId: string) {
+    if (!confirm('Are you sure? This cannot be undone.')) return
+
+    setRevoking(keyId)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const res = await fetch('/api/v1/keys', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key_id: keyId }),
+      })
+
+      if (res.ok) {
+        setKeys(keys.map(k => k.id === keyId ? { ...k, active: false } : k))
+      }
+    } catch (e) { console.error(e) }
+    setRevoking(null)
   }
 
   if (!ready) {
@@ -122,9 +147,20 @@ export default function KeysPage() {
                     {k.last_used ? ` Last used ${new Date(k.last_used).toLocaleDateString()}` : ' Never used'}
                   </div>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${k.active ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                  {k.active ? 'Active' : 'Revoked'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs px-2 py-1 rounded-full ${k.active ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                    {k.active ? 'Active' : 'Revoked'}
+                  </span>
+                  {k.active && (
+                    <button
+                      onClick={() => revokeKey(k.id)}
+                      disabled={revoking === k.id}
+                      className="text-xs px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:text-red-300 transition-colors disabled:opacity-50"
+                    >
+                      {revoking === k.id ? 'Revoking...' : 'Revoke'}
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

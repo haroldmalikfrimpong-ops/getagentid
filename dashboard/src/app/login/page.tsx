@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { signIn, signInWithGitHub, getUser } from '@/lib/supabase'
+import { signIn, signInWithGitHub, getUser, resetPasswordForEmail } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const GitHubIcon = () => (
@@ -16,6 +16,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const [resetError, setResetError] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -33,6 +38,19 @@ export default function LoginPage() {
       setError(err.message || 'Login failed. Please check your credentials.')
     }
     setLoading(false)
+  }
+
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setResetError('')
+    setResetLoading(true)
+    try {
+      await resetPasswordForEmail(resetEmail)
+      setResetSent(true)
+    } catch (err: any) {
+      setResetError(err.message || 'Failed to send reset link. Please try again.')
+    }
+    setResetLoading(false)
   }
 
   return (
@@ -173,7 +191,108 @@ export default function LoginPage() {
               </motion.button>
             </form>
 
-            <p className="text-center text-gray-600 text-xs mt-6">
+            {/* Forgot password */}
+            {!showForgot ? (
+              <p className="text-center text-gray-600 text-xs mt-4">
+                <button
+                  type="button"
+                  onClick={() => { setShowForgot(true); setResetEmail(email); setResetSent(false); setResetError('') }}
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium"
+                >
+                  Forgot password?
+                </button>
+              </p>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                transition={{ duration: 0.3 }}
+                className="mt-4 pt-4 border-t border-white/5"
+              >
+                {resetSent ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-xl p-3.5 text-sm flex items-start gap-2.5"
+                    style={{
+                      background: 'rgba(0,212,255,0.08)',
+                      border:     '1px solid rgba(0,212,255,0.2)',
+                      color:      '#80e5ff',
+                    }}
+                  >
+                    Check your email for the reset link
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleResetPassword} className="space-y-3">
+                    <label className="block text-[11px] font-mono text-gray-500 uppercase tracking-[0.18em] mb-2">
+                      Reset password
+                    </label>
+
+                    {resetError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-xl p-3.5 text-sm flex items-start gap-2.5"
+                        style={{
+                          background: 'rgba(255,82,82,0.08)',
+                          border:     '1px solid rgba(255,82,82,0.2)',
+                          color:      '#ff8a80',
+                        }}
+                      >
+                        <span className="mt-0.5 shrink-0">⚠</span>
+                        {resetError}
+                      </motion.div>
+                    )}
+
+                    <input
+                      type="email"
+                      value={resetEmail}
+                      onChange={e => setResetEmail(e.target.value)}
+                      required
+                      className="input-field w-full rounded-xl px-4 py-3 text-sm"
+                      placeholder="you@company.com"
+                      autoComplete="email"
+                    />
+
+                    <div className="flex gap-2">
+                      <motion.button
+                        type="submit"
+                        disabled={resetLoading}
+                        whileHover={resetLoading ? {} : { scale: 1.01 }}
+                        whileTap={resetLoading ? {} : { scale: 0.99 }}
+                        className="flex-1 py-3 rounded-xl text-sm font-bold tracking-wider
+                          relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        style={{ background: 'linear-gradient(135deg, #00d4ff, #7b2fff)' }}
+                      >
+                        {resetLoading ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <motion.span
+                              className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full"
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                            />
+                            Sending...
+                          </span>
+                        ) : 'SEND RESET LINK'}
+                      </motion.button>
+                      <button
+                        type="button"
+                        onClick={() => setShowForgot(false)}
+                        className="px-4 py-3 rounded-xl text-sm text-gray-500 hover:text-gray-300 transition-colors"
+                        style={{
+                          background: 'rgba(255,255,255,0.04)',
+                          border:     '1px solid rgba(255,255,255,0.09)',
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </motion.div>
+            )}
+
+            <p className="text-center text-gray-600 text-xs mt-4">
               No account yet?{' '}
               <a href="/signup" className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium">
                 Sign up free
