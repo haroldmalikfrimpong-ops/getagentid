@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, generateAgentId, issueCertificate, getServiceClient } from '@/lib/api-auth'
 import { trackUsage } from '@/lib/usage'
 import { notifyAgentRegistered } from '@/lib/notify'
+import { TrustLevel, PERMISSIONS, getSpendingLimit, TRUST_LEVEL_LABELS } from '@/lib/trust-levels'
 import crypto from 'crypto'
 
 export async function POST(req: NextRequest) {
@@ -46,7 +47,8 @@ export async function POST(req: NextRequest) {
       privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
     })
 
-    // Store in database
+    // Store in database — new agents start at L0 (Unverified)
+    const initialTrustLevel = TrustLevel.L0_UNVERIFIED
     const { error: dbError } = await db.from('agents').insert({
       agent_id: agentId,
       name,
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
       public_key: publicKey,
       certificate: cert.certificate,
       trust_score: 0,
+      trust_level: initialTrustLevel,
       verified: false,
       active: true,
       user_id: auth.user_id,
@@ -87,6 +90,10 @@ export async function POST(req: NextRequest) {
       private_key: privateKey,
       issued_at: cert.issued_at,
       expires_at: cert.expires_at,
+      trust_level: initialTrustLevel,
+      trust_level_label: TRUST_LEVEL_LABELS[initialTrustLevel],
+      permissions: PERMISSIONS[initialTrustLevel],
+      spending_limit: getSpendingLimit(initialTrustLevel),
     }, { status: 201 })
 
   } catch (e: any) {

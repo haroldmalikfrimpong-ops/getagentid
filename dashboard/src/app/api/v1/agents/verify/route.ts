@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage, getUsageCount, trackIpUsage, getIpUsageCount } from '@/lib/usage'
+import { calculateTrustLevel, PERMISSIONS, getSpendingLimit, TRUST_LEVEL_LABELS, type AgentTrustData } from '@/lib/trust-levels'
 
 const IP_RATE_LIMIT = 100 // max 100 verifications per hour for unauthenticated requests
 
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
     const db = getServiceClient()
     const { data: agent, error } = await db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate')
+      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id')
       .eq('agent_id', agent_id)
       .single()
 
@@ -90,6 +91,36 @@ export async function POST(req: NextRequest) {
         }
       } catch {}
     }
+
+    // Count successful verifications for this agent
+    const { count: verificationCount } = await db
+      .from('agent_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('agent_id', agent_id)
+      .eq('event_type', 'verified')
+
+    // Get owner profile to check email verification status and entity verification
+    const { data: ownerProfile } = await db
+      .from('profiles')
+      .select('email_verified, entity_verified')
+      .eq('id', agent.user_id)
+      .single()
+
+    // Calculate trust level
+    const agentTrustData: AgentTrustData = {
+      trust_score: agent.trust_score ?? 0,
+      verified: agent.verified ?? false,
+      certificate_valid,
+      entity_verified: ownerProfile?.entity_verified === true,
+      owner_email_verified: ownerProfile?.email_verified === true,
+      created_at: agent.created_at,
+      successful_verifications: verificationCount ?? 0,
+    }
+
+    const trust_level = calculateTrustLevel(agentTrustData)
+    const permissions = PERMISSIONS[trust_level]
+    const spending_limit = getSpendingLimit(trust_level)
+    const trust_level_label = TRUST_LEVEL_LABELS[trust_level]
 
     // Update last_active
     await db.from('agents').update({ last_active: new Date().toISOString() }).eq('agent_id', agent_id)
@@ -115,6 +146,10 @@ export async function POST(req: NextRequest) {
       capabilities: agent.capabilities,
       platform: agent.platform,
       trust_score: agent.trust_score,
+      trust_level,
+      trust_level_label,
+      permissions,
+      spending_limit,
       certificate_valid,
       active: agent.active,
       created_at: agent.created_at,

@@ -37,6 +37,16 @@ from .did import (
     clear_agentid_registry,
     create_identity_with_dids,
 )
+from .trust_levels import (
+    TrustLevel,
+    PERMISSIONS as TRUST_PERMISSIONS,
+    ACTIONS as TRUST_ACTIONS,
+    calculate_trust_level,
+    check_permission,
+    get_spending_limit,
+    level_up_requirements,
+)
+from .spending import SpendingClient, SpendingError, SpendingResult
 
 __version__ = "0.3.0"
 __all__ = [
@@ -70,4 +80,14 @@ __all__ = [
     "register_agentid_key",
     "clear_agentid_registry",
     "create_identity_with_dids",
+    "TrustLevel",
+    "TRUST_PERMISSIONS",
+    "TRUST_ACTIONS",
+    "calculate_trust_level",
+    "check_permission",
+    "get_spending_limit",
+    "level_up_requirements",
+    "SpendingClient",
+    "SpendingError",
+    "SpendingResult",
 ]
