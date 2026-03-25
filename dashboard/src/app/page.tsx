@@ -1180,10 +1180,12 @@ export default function LandingPage() {
               <span className="text-gray-700 text-xs">The trust layer for AI agents</span>
             </div>
             <div className="flex gap-6 text-xs text-gray-600">
-              <a href="/login"  className="hover:text-cyan-400 transition-colors">Log In</a>
-              <a href="/signup" className="hover:text-cyan-400 transition-colors">Sign Up</a>
+              <a href="/docs" className="hover:text-cyan-400 transition-colors">Docs</a>
+              <a href="/registry" className="hover:text-cyan-400 transition-colors">Registry</a>
               <a href="https://github.com/haroldmalikfrimpong-ops/getagentid" className="hover:text-cyan-400 transition-colors">GitHub</a>
+              <a href="https://x.com/Getagentid_" className="hover:text-cyan-400 transition-colors">X / Twitter</a>
               <a href="mailto:hello@getagentid.dev" className="hover:text-cyan-400 transition-colors">Contact</a>
+              <a href="/terms" className="hover:text-cyan-400 transition-colors">Terms</a>
             </div>
             <span className="text-xs text-gray-700">getagentid.dev · {new Date().getFullYear()}</span>
           </div>
