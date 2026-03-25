@@ -558,6 +558,12 @@ export default function LandingPage() {
                 accent: '#7b2fff',
                 tag: 'PROVEN',
               },
+              {
+                title: 'Trust Levels (L0-L4)',
+                desc: 'Five-tier trust system. Agents earn trust through verifications, time, and entity binding. Each level gates permissions and spending authority up to $10,000/day. Automatic promotion, no manual intervention.',
+                accent: '#ff9500',
+                tag: 'NEW',
+              },
             ].map((item, i) => (
               <motion.div
                 key={i}
