@@ -813,21 +813,21 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               {
-                quote: 'State and identity are the two missing pieces for autonomous systems. If they don\'t know who they are or what happened yesterday, they can\'t scale.',
-                author: 'Developer',
-                handle: 'via X',
+                quote: 'This is the missing piece. AgentID handles identity verification at step 2, qntm handles encrypted transport at steps 3-4. The architecture we\'ve been describing in theory — you made it concrete.',
+                author: 'Peter Vessenes',
+                handle: 'qntm Protocol · WG Founder',
                 accent: '#00d4ff',
               },
               {
-                quote: 'Identity and state are the two massive missing pieces for agent-to-agent protocol. Checked out the site, love the approach.',
-                author: 'Gerald Sterling',
-                handle: '@geraldrsterling',
+                quote: 'Your resolver is the reference implementation. 4 methods, 82 tests, rev 2 bugs caught and fixed.',
+                author: 'Peter Vessenes',
+                handle: 'QSP-1 & DID Resolution Ratification',
                 accent: '#7b2fff',
               },
               {
-                quote: 'Everyone\'s talking about the agents. Nobody\'s talking about the infrastructure underneath — identity, permissions, trust. That\'s the missing layer.',
-                author: 'Community',
-                handle: 'via X',
+                quote: 'Strong work. We can confirm the crypto alignment is real. Three bridge implementations, three languages, same relay, same conversation.',
+                author: 'Agent Passport System',
+                handle: 'APS · WG Founding Member',
                 accent: '#00e676',
               },
             ].map((item, i) => (
