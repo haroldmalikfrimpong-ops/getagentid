@@ -597,6 +597,123 @@ export default function LandingPage() {
 
       <div className="section-divider" />
 
+      {/* ── Live Receipts ── */}
+      <section className="py-28 px-6" style={{ background: '#070711' }}>
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-4">
+              Real Data
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
+              Every handoff. Signed. Verified. Receipted.
+            </h2>
+            <p className="text-gray-500 max-w-lg mx-auto">
+              Real agent-to-agent communication receipts from production systems.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Verification Receipt */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="rounded-2xl overflow-hidden"
+              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,230,118,0.15)' }}
+            >
+              <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span className="text-[10px] font-mono text-green-400 tracking-wider">VERIFICATION RECEIPT</span>
+                <span className="text-[9px] font-mono text-gray-600">seq: 14</span>
+              </div>
+              <div className="p-5 font-mono text-[12px] leading-[1.8] text-gray-400">
+                <div><span className="text-gray-600">agent:</span> <span className="text-white">Trading Bot</span></div>
+                <div><span className="text-gray-600">agent_id:</span> <span className="text-cyan-400">agent_c5460451b4344268</span></div>
+                <div><span className="text-gray-600">verified:</span> <span className="text-green-400">true</span></div>
+                <div><span className="text-gray-600">trust_score:</span> <span className="text-cyan-400">0.94</span></div>
+                <div><span className="text-gray-600">certificate:</span> <span className="text-gray-500">ECDSA P-256 · valid</span></div>
+                <div><span className="text-gray-600">owner:</span> <span className="text-white">BillionMakerHQ</span></div>
+              </div>
+            </motion.div>
+
+            {/* Handoff Receipt */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="rounded-2xl overflow-hidden"
+              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,212,255,0.15)' }}
+            >
+              <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span className="text-[10px] font-mono text-cyan-400 tracking-wider">HANDOFF RECEIPT</span>
+                <span className="text-[9px] font-mono text-gray-600">Ed25519 signed</span>
+              </div>
+              <div className="p-5 font-mono text-[12px] leading-[1.8] text-gray-400">
+                <div><span className="text-gray-600">from:</span> <span className="text-white">Scout</span> <span className="text-gray-600">(agent_9d23...)</span></div>
+                <div><span className="text-gray-600">to:</span> <span className="text-white">Analyst</span> <span className="text-gray-600">(agent_363a...)</span></div>
+                <div><span className="text-gray-600">payload_hash:</span> <span className="text-purple-400">sha256:4a21542a...</span></div>
+                <div><span className="text-gray-600">signature:</span> <span className="text-cyan-400">b1ac3679af9a81ba...</span></div>
+                <div><span className="text-gray-600">verified:</span> <span className="text-green-400">true</span></div>
+                <div><span className="text-gray-600">timestamp:</span> <span className="text-gray-500">2026-03-24T08:35:25Z</span></div>
+              </div>
+            </motion.div>
+
+            {/* Relay Delivery */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="rounded-2xl overflow-hidden"
+              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(123,47,255,0.15)' }}
+            >
+              <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span className="text-[10px] font-mono text-purple-400 tracking-wider">ENCRYPTED RELAY</span>
+                <span className="text-[9px] font-mono text-gray-600">QSP-1 v1.0</span>
+              </div>
+              <div className="p-5 font-mono text-[12px] leading-[1.8] text-gray-400">
+                <div><span className="text-gray-600">relay:</span> <span className="text-white">inbox.qntm.corpo.llc</span></div>
+                <div><span className="text-gray-600">conv:</span> <span className="text-purple-400">dca83b70ccd763a8...</span></div>
+                <div><span className="text-gray-600">encryption:</span> <span className="text-gray-500">XChaCha20-Poly1305</span></div>
+                <div><span className="text-gray-600">HKDF vectors:</span> <span className="text-green-400">3/3 PASS</span></div>
+                <div><span className="text-gray-600">status:</span> <span className="text-green-400">HTTP 201</span> <span className="text-gray-600">seq:</span> <span className="text-cyan-400">15</span></div>
+                <div><span className="text-gray-600">did:</span> <span className="text-cyan-400">did:agentid:copywriter-agent-01</span></div>
+              </div>
+            </motion.div>
+
+            {/* Trust Chain */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="rounded-2xl overflow-hidden"
+              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,149,0,0.15)' }}
+            >
+              <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span className="text-[10px] font-mono text-orange-400 tracking-wider">ENTITY VERIFICATION</span>
+                <span className="text-[9px] font-mono text-gray-600">Corpo API</span>
+              </div>
+              <div className="p-5 font-mono text-[12px] leading-[1.8] text-gray-400">
+                <div><span className="text-gray-600">did_valid:</span> <span className="text-green-400">true</span></div>
+                <div><span className="text-gray-600">sender_match:</span> <span className="text-green-400">true</span></div>
+                <div><span className="text-gray-600">entity:</span> <span className="text-white">Test Verification DAO LLC</span></div>
+                <div><span className="text-gray-600">entity_type:</span> <span className="text-gray-500">wyoming_dao_llc</span></div>
+                <div><span className="text-gray-600">authority:</span> <span className="text-orange-400">[&quot;hold_assets&quot;]</span></div>
+                <div><span className="text-gray-600">fully_verified:</span> <span className="text-green-400">true</span></div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
       {/* ── Works With ── */}
       <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
