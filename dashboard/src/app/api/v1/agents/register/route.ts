@@ -106,6 +106,8 @@ export async function POST(req: NextRequest) {
       trust_level_label: TRUST_LEVEL_LABELS[initialTrustLevel],
       permissions: PERMISSIONS[initialTrustLevel],
       spending_limit: getSpendingLimit(initialTrustLevel),
+      solana_wallet: null, // Bind an Ed25519 key via POST /api/v1/agents/bind-ed25519 to auto-derive a Solana wallet
+      next_step: 'Bind an Ed25519 key to get a Solana wallet: POST /api/v1/agents/bind-ed25519 with { agent_id, ed25519_public_key }',
     }, { status: 201 })
 
   } catch (e: any) {

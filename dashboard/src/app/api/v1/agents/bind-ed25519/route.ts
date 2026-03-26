@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage } from '@/lib/usage'
+import { createDualReceipt } from '@/lib/receipts'
+import { PublicKey } from '@solana/web3.js'
 import crypto from 'crypto'
 
 /**
@@ -8,6 +10,10 @@ import crypto from 'crypto'
  *
  * Bind an Ed25519 public key to an existing agent and receive a signed
  * certificate that attests the binding.
+ *
+ * IMPORTANT: This also derives a Solana wallet address from the Ed25519 key.
+ * Solana uses Ed25519 natively, so the 32-byte public key in base58 IS a
+ * valid Solana address. This means: bind key = get wallet, in one step.
  *
  * Body: { agent_id: string, ed25519_public_key: string (64-char hex) }
  * Auth: Bearer API key (required)
@@ -57,9 +63,19 @@ export async function POST(req: NextRequest) {
     // ── Store the Ed25519 public key ─────────────────────────────
     const normalizedKey = ed25519_public_key.toLowerCase()
 
+    // ── Derive Solana wallet address from Ed25519 public key ────
+    // Solana uses Ed25519 natively. The 32-byte public key encoded
+    // as base58 IS a valid Solana address. No derivation needed —
+    // it's the same key, different encoding.
+    const pubKeyBytes = Buffer.from(normalizedKey, 'hex')
+    const solanaAddress = new PublicKey(pubKeyBytes).toBase58()
+
     const { error: updateError } = await db
       .from('agents')
-      .update({ ed25519_key: normalizedKey })
+      .update({
+        ed25519_key: normalizedKey,
+        solana_address: solanaAddress,
+      })
       .eq('agent_id', agent_id)
 
     if (updateError) {
@@ -82,26 +98,42 @@ export async function POST(req: NextRequest) {
       .update({ ed25519_certificate: cert.certificate })
       .eq('agent_id', agent_id)
 
+    // ── Create dual receipt for the binding ─────────────────────
+    const receipt = await createDualReceipt('ed25519_bound', agent_id, {
+      ed25519_public_key: normalizedKey,
+      solana_address: solanaAddress,
+      owner: agent.owner,
+    })
+
     // ── Log event ────────────────────────────────────────────────
     await db.from('agent_events').insert({
       agent_id,
       event_type: 'ed25519_bound',
       data: {
         ed25519_public_key: normalizedKey,
+        solana_address: solanaAddress,
         issued_at: cert.issued_at,
         expires_at: cert.expires_at,
+        receipt_id: receipt.hash.receipt_id,
       },
     })
 
     // ── Track usage ──────────────────────────────────────────────
     await trackUsage(auth.user_id, 'bind_ed25519')
 
+    const cluster = process.env.SOLANA_CLUSTER || 'devnet'
+    const explorerBase = 'https://explorer.solana.com/address'
+    const explorerSuffix = cluster === 'mainnet-beta' ? '' : `?cluster=${cluster}`
+
     return NextResponse.json({
       agent_id,
       ed25519_public_key: normalizedKey,
+      solana_address: solanaAddress,
+      solana_explorer_url: `${explorerBase}/${solanaAddress}${explorerSuffix}`,
       certificate: cert.certificate,
       issued_at: cert.issued_at,
       expires_at: cert.expires_at,
+      receipt,
     })
 
   } catch (e: any) {

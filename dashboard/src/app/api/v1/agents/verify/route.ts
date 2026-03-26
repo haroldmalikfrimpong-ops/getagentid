@@ -3,6 +3,8 @@ import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage, getUsageCount, trackIpUsage, getIpUsageCount } from '@/lib/usage'
 import { calculateTrustLevel, PERMISSIONS, getSpendingLimit, TRUST_LEVEL_LABELS, type AgentTrustData } from '@/lib/trust-levels'
 import { sendWebhook } from '@/lib/webhooks'
+import { quickAnomalyCheck, calculateRiskScore, type AnomalyAlert } from '@/lib/behaviour'
+import { createDualReceipt } from '@/lib/receipts'
 
 const IP_RATE_LIMIT = 100 // max 100 verifications per hour for unauthenticated requests
 
@@ -69,7 +71,7 @@ export async function POST(req: NextRequest) {
     const db = getServiceClient()
     const { data: agent, error } = await db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id')
+      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, wallet_address, wallet_chain, wallet_bound_at, solana_address, ed25519_key')
       .eq('agent_id', agent_id)
       .single()
 
@@ -152,6 +154,54 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    // Run behavioural anomaly check (non-blocking — errors are swallowed)
+    let behaviour_warnings: AnomalyAlert[] = []
+    let behaviour_risk_score = 0
+    try {
+      behaviour_warnings = await quickAnomalyCheck(agent_id)
+      behaviour_risk_score = calculateRiskScore(behaviour_warnings)
+
+      // Fire webhook for high-severity anomalies
+      if (agent.user_id && behaviour_warnings.some((a) => a.severity === 'high')) {
+        sendWebhook(agent.user_id, 'agent.behaviour_anomaly', {
+          agent_id: agent.agent_id,
+          name: agent.name,
+          risk_score: behaviour_risk_score,
+          anomalies: behaviour_warnings.filter((a) => a.severity === 'high'),
+        })
+      }
+    } catch {
+      // Never block verification on behaviour check failure
+    }
+
+    // Build wallet info if bound
+    const wallet = agent.wallet_address
+      ? {
+          wallet_address: agent.wallet_address,
+          chain: agent.wallet_chain,
+          bound_at: agent.wallet_bound_at,
+        }
+      : null
+
+    // Build Solana wallet info (auto-derived from Ed25519 key)
+    const cluster = process.env.SOLANA_CLUSTER || 'devnet'
+    const solana_wallet = agent.solana_address
+      ? {
+          solana_address: agent.solana_address,
+          cluster,
+          explorer_url: `https://explorer.solana.com/address/${agent.solana_address}${cluster === 'mainnet-beta' ? '' : `?cluster=${cluster}`}`,
+        }
+      : null
+
+    // Create dual receipt for this verification
+    const receipt = await createDualReceipt('verification', agent.agent_id, {
+      verified: certificate_valid && agent.active,
+      trust_level,
+      trust_level_label,
+      certificate_valid,
+      verified_by: userId || 'anonymous',
+    })
+
     return NextResponse.json({
       verified: certificate_valid && agent.active,
       agent_id: agent.agent_id,
@@ -169,6 +219,15 @@ export async function POST(req: NextRequest) {
       active: agent.active,
       created_at: agent.created_at,
       last_active: agent.last_active,
+      wallet,
+      solana_wallet,
+      receipt,
+      ...(behaviour_warnings.length > 0 && {
+        behaviour: {
+          risk_score: behaviour_risk_score,
+          warnings: behaviour_warnings,
+        },
+      }),
       message: certificate_valid && agent.active ? 'Agent verified' : 'Agent not verified',
     })
 

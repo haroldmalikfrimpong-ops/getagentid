@@ -47,8 +47,12 @@ from .trust_levels import (
     level_up_requirements,
 )
 from .spending import SpendingClient, SpendingError, SpendingResult
+from .crypto_payments import PaymentClient, PaymentIntent, PaymentRecord, PaymentError
+from .challenge import request_challenge, respond_to_challenge
+from .wallet import bind_wallet, get_wallet, build_binding_message
+from .agent_wallet import AgentWallet, ed25519_pub_to_solana_address
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __all__ = [
     "Client",
     "Ed25519Identity",
@@ -90,4 +94,15 @@ __all__ = [
     "SpendingClient",
     "SpendingError",
     "SpendingResult",
+    "PaymentClient",
+    "PaymentIntent",
+    "PaymentRecord",
+    "PaymentError",
+    "request_challenge",
+    "respond_to_challenge",
+    "bind_wallet",
+    "get_wallet",
+    "build_binding_message",
+    "AgentWallet",
+    "ed25519_pub_to_solana_address",
 ]

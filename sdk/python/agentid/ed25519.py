@@ -82,6 +82,19 @@ class Ed25519Identity:
         full_sk = bytes(self._signing_key) + bytes(self._signing_key.verify_key)
         return crypto_sign_ed25519_sk_to_curve25519(full_sk)
 
+    # ── Solana address (auto-derived) ─────────────────────────────
+
+    @property
+    def solana_address(self) -> str:
+        """Derive the Solana wallet address from the Ed25519 public key.
+
+        Solana uses Ed25519 natively. The 32-byte public key in base58
+        IS a valid Solana address. No derivation math needed — just
+        a base58 encoding of the same key bytes.
+        """
+        from .agent_wallet import ed25519_pub_to_solana_address
+        return ed25519_pub_to_solana_address(self.ed25519_public_key_hex)
+
     # ── Signing / verification ────────────────────────────────────
 
     def sign(self, message: bytes) -> bytes:
@@ -109,6 +122,7 @@ class Ed25519Identity:
         return {
             "ed25519_public_key": self.ed25519_public_key_hex,
             "x25519_public_key": self.x25519_public_key_hex,
+            "solana_address": self.solana_address,
         }
 
     def __repr__(self) -> str:

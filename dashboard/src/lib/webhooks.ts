@@ -13,8 +13,16 @@ export type WebhookEvent =
   | 'agent.verified'
   | 'agent.trust_level_changed'
   | 'agent.certificate_expired'
+  | 'agent.behaviour_anomaly'
   | 'spend.authorized'
   | 'spend.denied'
+  | 'payment.authorized'
+  | 'payment.denied'
+  | 'payment.human_authorized'
+  | 'payment.human_pending_approval'
+  | 'payment.human_denied'
+  | 'payment.frozen'
+  | 'payment.unfrozen'
 
 // ── Webhook payload shape ───────────────────────────────────────────────────
 interface WebhookPayload {
