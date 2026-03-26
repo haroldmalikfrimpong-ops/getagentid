@@ -7,8 +7,8 @@ function getStripe() {
 }
 
 const PRICES: Record<string, string> = {
-  pro: 'price_1TCUsi14BefVjWWDgCHDqpRB',
-  startup: 'price_1TCUsi14BefVjWWDgCHDqpRB', // legacy alias
+  pro: 'price_1TFAVX14BefVjWWDgoK2OTEC',
+  startup: 'price_1TFAVX14BefVjWWDgoK2OTEC', // legacy alias
   business: 'price_1TCUsj14BefVjWWDG9B9NNLM',
   enterprise: 'price_1TCUsk14BefVjWWDQwFSTAhr',
 }
