@@ -257,6 +257,8 @@ export default function LandingPage() {
                         <div><span className="text-gray-500">owner:</span> <span className="text-white">BillionMakerHQ</span></div>
                         <div><span className="text-gray-500">trust:</span> <span className="text-cyan-400">0.94</span></div>
                         <div><span className="text-gray-500">cert:</span> <span className="text-gray-400">ECDSA P-256 · valid</span></div>
+                        <div><span className="text-gray-500">solana_address:</span> <span className="text-purple-400">7xKXt...mR9v</span></div>
+                        <div><span className="text-gray-500">blockchain_receipt:</span> <span className="text-green-400">&#10003; on-chain</span></div>
                       </div>
                     </div>
                   </motion.div>
@@ -442,42 +444,56 @@ export default function LandingPage() {
               What We Build
             </div>
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-              Three products. One trust layer.
+              One registration. Everything an agent needs.
             </h2>
             <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
-              Everything you need to make agent-to-agent trust possible at scale.
+              Identity, wallet, payments, security, and audit trail — all from a single API call.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
                 icon:  '🔐',
                 label: '01',
-                title: 'Agent Certificates',
-                desc:  'Cryptographic proof of identity. Signed. Verifiable. Revocable in real-time.',
+                title: 'Identity',
+                desc:  'ECDSA P-256 certificates. Cryptographic proof of who an agent is, who owns it, and what it can do.',
                 accent: '#00d4ff',
               },
               {
-                icon:  '🔍',
+                icon:  '💎',
                 label: '02',
-                title: 'Agent Registry',
-                desc:  'Searchable directory of verified agents. Find any agent by capability or owner.',
+                title: 'Blockchain Wallet',
+                desc:  'Solana address auto-derived from Ed25519 key. Register once — get identity and wallet in one step.',
                 accent: '#7b2fff',
               },
               {
-                icon:  '✓',
+                icon:  '💸',
                 label: '03',
-                title: 'Verification API',
-                desc:  'One call to verify any agent. Real-time. Instant trust decisions with full audit trail.',
+                title: 'Crypto Payments',
+                desc:  'Agent-to-agent and agent-to-human stablecoin transfers. Trust level gated. Full settlement on-chain.',
                 accent: '#00e676',
               },
               {
-                icon:  '🔗',
+                icon:  '🛡️',
                 label: '04',
-                title: 'Agent-to-Agent',
-                desc:  'Verified communication between agents. Both sides verified before any data exchange.',
+                title: 'Security',
+                desc:  'Challenge-response key proof, behavioural fingerprinting, anomaly detection, and real-time risk scoring.',
                 accent: '#ff9500',
+              },
+              {
+                icon:  '📜',
+                label: '05',
+                title: 'Audit Trail',
+                desc:  'Dual receipts — cryptographic hash plus blockchain record. Every action viewable on Solana Explorer.',
+                accent: '#e040fb',
+              },
+              {
+                icon:  '🏅',
+                label: '06',
+                title: 'Trust Levels',
+                desc:  'L0 through L4. Each level gates permissions and spending authority. Agents earn trust automatically over time.',
+                accent: '#ffd600',
               },
             ].map((item, i) => (
               <motion.div
@@ -720,6 +736,94 @@ export default function LandingPage() {
 
       <div className="section-divider" />
 
+      {/* ── Blockchain Native ── */}
+      <section className="py-28 px-6">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <div className="text-[11px] font-mono text-purple-400/60 tracking-[0.3em] uppercase mb-4">
+              On-Chain
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
+              Blockchain native. Verify everything.
+            </h2>
+            <p className="text-gray-500 max-w-lg mx-auto">
+              Every verification, payment, and handoff is recorded on Solana. View any receipt on the blockchain. No trust required — verify it yourself.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-2xl mx-auto rounded-2xl overflow-hidden"
+            style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(123,47,255,0.2)' }}
+          >
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                <span className="text-[10px] font-mono text-purple-400 tracking-wider">SOLANA EXPLORER</span>
+              </div>
+              <span className="text-[9px] font-mono text-gray-600">mainnet-beta</span>
+            </div>
+            <div className="p-5 font-mono text-[12px] leading-[1.8] text-gray-400">
+              <div><span className="text-gray-600">tx:</span> <span className="text-purple-400">4sGjM...Wv8nK</span></div>
+              <div><span className="text-gray-600">block:</span> <span className="text-white">289,441,203</span></div>
+              <div><span className="text-gray-600">timestamp:</span> <span className="text-gray-500">2026-03-26T14:22:08Z</span></div>
+              <div className="h-2" />
+              <div><span className="text-gray-600">type:</span> <span className="text-cyan-400">AGENT_VERIFICATION</span></div>
+              <div><span className="text-gray-600">agent_id:</span> <span className="text-white">agent_c5460451b4344268</span></div>
+              <div><span className="text-gray-600">agent_wallet:</span> <span className="text-purple-400">7xKXtR9...mR9v</span></div>
+              <div><span className="text-gray-600">trust_level:</span> <span className="text-cyan-400">L3</span></div>
+              <div><span className="text-gray-600">certificate:</span> <span className="text-gray-500">ECDSA P-256</span></div>
+              <div><span className="text-gray-600">hash:</span> <span className="text-green-400">sha256:9f3a7c2e...</span></div>
+              <div><span className="text-gray-600">status:</span> <span className="text-green-400">&#10003; Confirmed</span></div>
+            </div>
+            <div className="px-5 pb-4">
+              <a href="https://explorer.solana.com" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-mono transition-colors hover:text-purple-300"
+                style={{ color: 'rgba(123,47,255,0.8)' }}>
+                View on Solana Explorer <span className="text-lg">&rarr;</span>
+              </a>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-wrap justify-center gap-4 mt-10"
+          >
+            {[
+              { label: 'Solana', color: '#9945FF' },
+              { label: 'Ethereum', color: '#627EEA' },
+              { label: 'Polygon', color: '#8247E5' },
+            ].map((chain, i) => (
+              <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-xl"
+                style={{ background: `${chain.color}10`, border: `1px solid ${chain.color}25` }}>
+                <div className="w-2 h-2 rounded-full" style={{ background: chain.color }} />
+                <span className="text-xs font-mono text-gray-300">{chain.label}</span>
+              </div>
+            ))}
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center text-xs text-gray-600 mt-4"
+          >
+            Multi-chain wallet support — agents hold wallets on Solana, Ethereum, and Polygon simultaneously
+          </motion.p>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
       {/* ── Works With ── */}
       <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
@@ -868,7 +972,7 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl font-black text-white">Built for builders</h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
               {
                 icon:  '⚡',
@@ -887,6 +991,12 @@ export default function LandingPage() {
                 title: 'Platforms',
                 desc:  'Connecting agents from different providers. AgentID is the neutral trust layer that makes inter-agent commerce possible.',
                 accent: '#00e676',
+              },
+              {
+                icon:  '⛓️',
+                title: 'Web3 Teams',
+                desc:  'Building on Solana, Ethereum, or Polygon. Your agents get crypto wallets, hold funds, and pay other agents — all with blockchain receipts.',
+                accent: '#9945FF',
               },
             ].map((item, i) => (
               <motion.div
