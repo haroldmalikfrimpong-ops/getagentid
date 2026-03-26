@@ -238,7 +238,7 @@ export default function SignUpPage() {
         {/* Free tier note */}
         {!success && (
           <p className="text-center text-gray-700 text-xs mt-4">
-            Free tier: 5 agents · 1,000 verifications/month · No credit card required
+            Free tier: 100 agents · 10,000 verifications/month · No credit card required
           </p>
         )}
       </motion.div>

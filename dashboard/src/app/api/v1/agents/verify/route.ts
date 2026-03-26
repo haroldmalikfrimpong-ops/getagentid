@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage, getUsageCount, trackIpUsage, getIpUsageCount } from '@/lib/usage'
 import { calculateTrustLevel, PERMISSIONS, getSpendingLimit, TRUST_LEVEL_LABELS, type AgentTrustData } from '@/lib/trust-levels'
+import { sendWebhook } from '@/lib/webhooks'
 
 const IP_RATE_LIMIT = 100 // max 100 verifications per hour for unauthenticated requests
 
@@ -135,6 +136,20 @@ export async function POST(req: NextRequest) {
     // Track usage for authenticated requests
     if (userId) {
       await trackUsage(userId, 'verify')
+    }
+
+    // Fire webhook to the agent owner
+    if (agent.user_id) {
+      sendWebhook(agent.user_id, 'agent.verified', {
+        agent_id: agent.agent_id,
+        name: agent.name,
+        owner: agent.owner,
+        trust_level,
+        trust_level_label,
+        certificate_valid,
+        active: agent.active,
+        verified_by: userId || 'anonymous',
+      })
     }
 
     return NextResponse.json({

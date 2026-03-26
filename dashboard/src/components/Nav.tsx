@@ -41,6 +41,7 @@ export default function Nav() {
           <div className="flex gap-1">
             {[
               { href: '/dashboard',             label: 'Dashboard' },
+              { href: '/dashboard/fleet',      label: 'Fleet' },
               { href: '/dashboard/connections', label: 'Connections' },
               { href: '/dashboard/keys',       label: 'API Keys' },
               { href: '/registry',             label: 'Registry' },

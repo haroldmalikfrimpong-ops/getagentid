@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, generateAgentId, issueCertificate, getServiceClient } from '@/lib/api-auth'
 import { trackUsage } from '@/lib/usage'
 import { notifyAgentRegistered } from '@/lib/notify'
+import { sendWebhook } from '@/lib/webhooks'
 import { TrustLevel, PERMISSIONS, getSpendingLimit, TRUST_LEVEL_LABELS } from '@/lib/trust-levels'
 import crypto from 'crypto'
 
@@ -80,6 +81,17 @@ export async function POST(req: NextRequest) {
     // Track usage + notify
     await trackUsage(auth.user_id, 'register')
     await notifyAgentRegistered(name, owner, agentId)
+
+    // Fire webhook
+    sendWebhook(auth.user_id, 'agent.registered', {
+      agent_id: agentId,
+      name,
+      owner,
+      capabilities: capabilities || [],
+      platform: platform || null,
+      trust_level: initialTrustLevel,
+      trust_level_label: TRUST_LEVEL_LABELS[initialTrustLevel],
+    })
 
     return NextResponse.json({
       agent_id: agentId,

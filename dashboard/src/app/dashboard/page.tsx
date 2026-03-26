@@ -78,11 +78,12 @@ function EmptyAgents() {
         <div className="p-4 space-y-3">
           <div>
             <div className="text-[10px] text-gray-600 mb-1">1. Install the SDK</div>
-            <code className="text-cyan-400 font-mono text-sm block">pip install agentid</code>
+            <code className="text-cyan-400 font-mono text-sm block">pip install getagentid</code>
           </div>
           <div>
             <div className="text-[10px] text-gray-600 mb-1">2. Register your agent</div>
-            <pre className="text-cyan-300 font-mono text-xs leading-relaxed">{`agent = agentid.register(
+            <pre className="text-cyan-300 font-mono text-xs leading-relaxed">{`client = agentid.Client(api_key="your-key")
+agent = client.agents.register(
     name="My Agent",
     capabilities=["trading"]
 )`}</pre>
@@ -210,7 +211,7 @@ export default function DashboardPage() {
   const [time, setTime]               = useState('')
   const [ready, setReady]             = useState(false)
   const [plan, setPlan]               = useState('free')
-  const [agentLimit, setAgentLimit]   = useState(5)
+  const [agentLimit, setAgentLimit]   = useState(100)
   const [upgrading, setUpgrading]     = useState(false)
   const router = useRouter()
 
@@ -267,7 +268,7 @@ export default function DashboardPage() {
     const { data } = await supabase.from('profiles').select('*').single()
     if (data) {
       setPlan(data.plan || 'free')
-      setAgentLimit(data.agent_limit || 5)
+      setAgentLimit(data.agent_limit || 100)
     }
   }
 

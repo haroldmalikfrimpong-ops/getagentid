@@ -154,7 +154,7 @@ export default function LandingPage() {
             >
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               <span className="text-cyan-400 text-[11px] font-mono tracking-[0.2em] uppercase">
-                Open Source · MIT Licensed · OATR Registered
+                Open Source · EU AI Act Ready · OATR Registered
               </span>
             </motion.div>
 
@@ -179,7 +179,7 @@ export default function LandingPage() {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="text-lg text-gray-400 mb-8 leading-relaxed max-w-lg"
             >
-              Cryptographic identity for AI agents. One API call to verify any agent before data, money, or decisions move.
+              Compliance infrastructure for AI agents. Verify identity, enforce trust levels, and create audit trails — one API call.
             </motion.p>
 
             {/* Single CTA */}
@@ -212,7 +212,7 @@ export default function LandingPage() {
               transition={{ delay: 0.6 }}
               className="text-gray-600 text-xs mt-4"
             >
-              No credit card required · 5 agents free forever · Setup in 2 minutes
+              No credit card required · 100 agents free forever · Setup in 2 minutes
             </motion.p>
           </div>
 
@@ -276,7 +276,7 @@ export default function LandingPage() {
               }}
             >
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[11px] text-gray-300 font-mono">Sub-50ms response</span>
+              <span className="text-[11px] text-gray-300 font-mono">Real-time verification</span>
             </motion.div>
           </motion.div>
         </div>
@@ -406,8 +406,8 @@ export default function LandingPage() {
               <div className="space-y-6">
                 {[
                   { title: 'Cryptographic Identity', desc: 'Each agent gets a signed ECDSA P-256 certificate. Unforgeable. Verifiable by anyone, anywhere.', accent: '#00d4ff' },
-                  { title: 'Instant Verification', desc: 'One API call returns the agent\'s identity, owner, trust score, and certificate status. Sub-50ms.', accent: '#00e676' },
-                  { title: 'Full Audit Trail', desc: 'Every verification, connection, and message is logged. Know exactly who your agents are talking to.', accent: '#7b2fff' },
+                  { title: 'Instant Verification', desc: 'One API call returns the agent\'s identity, owner, trust score, and certificate status. Real-time.', accent: '#00e676' },
+                  { title: 'Full Audit Trail', desc: 'Every verification is cryptographically timestamped with pinned keys. Full accountability for every agent action.', accent: '#7b2fff' },
                   { title: 'Agent-to-Agent Trust', desc: 'Both sides verified before data moves. Mutual authentication for the agent economy.', accent: '#ff9500' },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4 items-start">
@@ -469,7 +469,7 @@ export default function LandingPage() {
                 icon:  '✓',
                 label: '03',
                 title: 'Verification API',
-                desc:  'One call to verify any agent. Real-time. Sub-50ms. Instant trust decisions.',
+                desc:  'One call to verify any agent. Real-time. Instant trust decisions with full audit trail.',
                 accent: '#00e676',
               },
               {
@@ -879,7 +879,7 @@ export default function LandingPage() {
               {
                 icon:  '🏢',
                 title: 'Companies',
-                desc:  'Deploying agents that interact with external businesses. Prove your agent is legitimate before they trust it.',
+                desc:  'Deploying AI agents at scale. AgentID provides the audit trail and compliance reports you need for EU AI Act and internal governance.',
                 accent: '#7b2fff',
               },
               {
@@ -1150,9 +1150,9 @@ export default function LandingPage() {
             <span className="text-white">in the agent economy?</span>
           </h2>
           <p className="text-gray-500 mb-10 text-lg leading-relaxed">
-            Register your first agent in seconds.
+            Register your first 100 agents free.
             <br />
-            Free forever for small teams.
+            Compliance-ready from day one.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <a href="/signup"
