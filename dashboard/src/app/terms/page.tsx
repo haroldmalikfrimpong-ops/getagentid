@@ -32,7 +32,7 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-lg font-bold text-white mb-3">4. API Usage</h2>
-              <p>API keys are issued per account. Free tier includes 5 registered agents and 1,000 verifications per month. Usage beyond these limits requires a paid plan. API keys must not be shared or exposed publicly.</p>
+              <p>API keys are issued per account. Free tier includes 100 registered agents and 10,000 verifications per month. Usage beyond these limits requires a paid plan. API keys must not be shared or exposed publicly.</p>
             </section>
 
             <section>
@@ -57,7 +57,7 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-lg font-bold text-white mb-3">9. Payments</h2>
-              <p>Paid plans are billed monthly via Stripe. You may cancel at any time. Refunds are not provided for partial months. Downgrading to free tier reduces your agent limit to 5.</p>
+              <p>Paid plans are billed monthly via Stripe. You may cancel at any time. Refunds are not provided for partial months. Downgrading to free tier reduces your agent limit to 100.</p>
             </section>
 
             <section>

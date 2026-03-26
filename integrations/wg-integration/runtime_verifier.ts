@@ -21,6 +21,10 @@ export interface RuntimeVerification {
   spending_limit: number; // daily USD limit
   did_resolution_status: "live" | "cached" | "failed";
   entity_verified: boolean;
+  // Cryptographic binding fields (WG feedback -- desiorac)
+  execution_timestamp: string;   // ISO 8601 UTC -- when verification was performed
+  pinned_public_key: string;     // Resolved public key at verification time
+  scope: string | null;          // Delegation scope if known
 }
 
 export interface RuntimeVerifierOptions {
@@ -111,6 +115,9 @@ export class RuntimeVerifier {
       spending_limit: 0,
       did_resolution_status: "failed",
       entity_verified: false,
+      execution_timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
+      pinned_public_key: "",
+      scope: null,
     };
 
     const agentId = extractAgentId(agentDID);
@@ -129,6 +136,11 @@ export class RuntimeVerifier {
       result.verified = verifyResult.verified;
       result.trust_score = verifyResult.trust_score ?? 0;
       result.did_resolution_status = verifyResult.verified ? "live" : "failed";
+
+      // Pin the provided public key when DID resolves successfully
+      if (verifyResult.verified) {
+        result.pinned_public_key = agentPublicKey.toLowerCase().replace(/^0x/, "");
+      }
 
       // If the API returned a certificate check, use it for DID status
       if (verifyResult.certificate_valid && !verifyResult.verified) {

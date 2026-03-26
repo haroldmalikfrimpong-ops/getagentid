@@ -145,14 +145,14 @@ function PlanBar({
 
       {plan === 'free' && (
         <motion.button
-          onClick={() => onUpgrade('startup')}
+          onClick={() => onUpgrade('pro')}
           disabled={upgrading}
           whileHover={upgrading ? {} : { scale: 1.02 }}
           whileTap={upgrading ? {} : { scale: 0.98 }}
           className="px-5 py-2 rounded-full text-white text-xs font-bold tracking-wide disabled:opacity-50 transition-all"
           style={{ background: 'linear-gradient(135deg, #00d4ff, #7b2fff)', boxShadow: '0 4px 16px rgba(0,212,255,0.2)' }}
         >
-          {upgrading ? 'Redirecting...' : 'Upgrade to Startup — $49/mo'}
+          {upgrading ? 'Redirecting...' : 'Upgrade to Pro — $99/mo'}
         </motion.button>
       )}
     </motion.div>

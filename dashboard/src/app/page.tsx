@@ -1000,6 +1000,7 @@ export default function LandingPage() {
               Simple, transparent pricing
             </h2>
             <p className="text-gray-500">Start free. Scale when you need to. No surprises.</p>
+            <p className="text-xs text-cyan-400/60 mt-2 font-mono tracking-wide">EU AI Act compliance deadline: August 2026 — get audit-ready now</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
@@ -1010,8 +1011,8 @@ export default function LandingPage() {
                 period:    'forever',
                 tagline:   'Perfect to get started',
                 features:  [
-                  '5 registered agents',
-                  '1,000 verifications/month',
+                  '100 registered agents',
+                  '10,000 verifications/month',
                   'Agent Registry access',
                   'Basic dashboard',
                   'Community support',
@@ -1021,15 +1022,15 @@ export default function LandingPage() {
                 highlight: false,
               },
               {
-                tier:      'Startup',
-                price:     '$49',
+                tier:      'Pro',
+                price:     '$99',
                 period:    '/month',
                 tagline:   'For growing teams',
                 features:  [
-                  '50 registered agents',
-                  '50,000 verifications/month',
-                  'Custom trust rules',
-                  'API analytics dashboard',
+                  '500 registered agents',
+                  '100,000 verifications/month',
+                  'Audit dashboard',
+                  'Compliance reports',
                   'Webhook events',
                   'Email support',
                 ],
@@ -1040,16 +1041,16 @@ export default function LandingPage() {
               },
               {
                 tier:      'Enterprise',
-                price:     'Custom',
-                period:    '',
+                price:     '$5,000',
+                period:    '/month',
                 tagline:   'For mission-critical deployments',
                 features:  [
                   'Unlimited agents',
                   'Unlimited verifications',
                   'SLA guarantee (99.9%)',
-                  'On-premise deployment',
-                  'Dedicated account manager',
-                  'Priority support',
+                  'Fleet management',
+                  'EU AI Act compliance reports',
+                  'Dedicated support',
                 ],
                 cta:       'Contact Sales',
                 ctaHref:   'mailto:hello@getagentid.dev',

@@ -8,8 +8,9 @@ function getStripe() {
 }
 
 const PLAN_LIMITS: Record<string, { agent_limit: number; verification_limit: number }> = {
-  startup: { agent_limit: 50, verification_limit: 50000 },
-  business: { agent_limit: 500, verification_limit: 500000 },
+  startup: { agent_limit: 500, verification_limit: 100000 },
+  pro: { agent_limit: 500, verification_limit: 100000 },
+  business: { agent_limit: 2000, verification_limit: 500000 },
   enterprise: { agent_limit: 999999, verification_limit: 999999 },
 }
 

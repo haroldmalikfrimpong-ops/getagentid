@@ -42,7 +42,7 @@ export async function authenticateRequest(req: NextRequest) {
   // Update last used
   await db.from('api_keys').update({ last_used: new Date().toISOString() }).eq('id', data.id)
 
-  return { user_id: data.user_id, api_key_id: data.id, profile: profile || { agent_limit: 5, verification_limit: 1000, plan: 'free' } }
+  return { user_id: data.user_id, api_key_id: data.id, profile: profile || { agent_limit: 100, verification_limit: 10000, plan: 'free' } }
 }
 
 // Generate a new API key for a user

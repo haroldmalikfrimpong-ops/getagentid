@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field, asdict
+from datetime import datetime, timezone
 from typing import List, Literal, Optional
 
 import httpx
@@ -44,6 +45,10 @@ class RuntimeVerification:
     spending_limit: int = 0
     did_resolution_status: Literal["live", "cached", "failed"] = "failed"
     entity_verified: bool = False
+    # Cryptographic binding fields (WG feedback — desiorac)
+    execution_timestamp: str = ""  # ISO 8601 UTC — when verification was performed
+    pinned_public_key: str = ""    # Resolved public key at verification time
+    scope: Optional[str] = None    # Delegation scope if known
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -83,6 +88,11 @@ class RuntimeVerifier:
         """
         result = RuntimeVerification()
 
+        # Bind execution timestamp immediately (ISO 8601 UTC)
+        result.execution_timestamp = (
+            datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
+
         # --- Step 1: Local DID resolution + entity check ---
         try:
             did_result = verify_agent_full(agent_did)
@@ -94,6 +104,11 @@ class RuntimeVerifier:
                 # Cross-check: resolved key must match the provided public key
                 resolved_hex = did_result.get("ed25519_public_key", "")
                 provided_hex = agent_public_key.lower().replace("0x", "")
+
+                # Pin the resolved public key at verification time
+                if resolved_hex:
+                    result.pinned_public_key = resolved_hex.lower()
+
                 if resolved_hex and resolved_hex.lower() != provided_hex:
                     # Key mismatch — DID resolved but key doesn't match
                     result.did_resolution_status = "failed"
