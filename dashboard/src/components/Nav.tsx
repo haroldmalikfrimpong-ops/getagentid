@@ -33,6 +33,7 @@ export default function Nav() {
     { href: '/dashboard/audit',       label: 'Audit' },
     { href: '/dashboard/reports',     label: 'Reports' },
     { href: '/registry',              label: 'Registry' },
+    { href: '/setup',                 label: 'Setup' },
     { href: '/docs',                  label: 'Docs' },
   ]
 
@@ -43,7 +44,7 @@ export default function Nav() {
 
   function handleNavClick(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
     // Public routes don't need auth
-    if (href === '/registry' || href === '/docs') return
+    if (href === '/registry' || href === '/docs' || href === '/setup') return
     // If not logged in, redirect to login
     if (!user) {
       e.preventDefault()
