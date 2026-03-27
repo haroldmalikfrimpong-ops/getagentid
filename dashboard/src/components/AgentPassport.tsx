@@ -184,6 +184,103 @@ function VerifyResultModal({ result, onClose }: { result: any; onClose: () => vo
   )
 }
 
+function KeyGeneratedModal({ data, onClose }: { data: { publicKey: string; privateKey: string; privateKeyFull: string; solanaAddress: string }; onClose: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const [downloadedKey, setDownloadedKey] = useState(false)
+
+  function copyPrivateKey() {
+    navigator.clipboard.writeText(data.privateKeyFull)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 3000)
+  }
+
+  function downloadKey() {
+    const blob = new Blob([data.privateKeyFull], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `agentid-key-${data.solanaAddress.slice(0, 8)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    setDownloadedKey(true)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="absolute inset-0 z-40 flex items-center justify-center rounded-[20px]"
+      style={{ background: 'rgba(7,7,15,0.95)', backdropFilter: 'blur(12px)' }}
+    >
+      <div className="p-5 w-full max-w-[90%]">
+        {/* Success header */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+            <span className="text-green-400 text-sm">&#10003;</span>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-white">Security Key Generated!</h4>
+            <p className="text-[10px] text-gray-500">Your agent is now L2 — Verified</p>
+          </div>
+        </div>
+
+        {/* Solana wallet */}
+        {data.solanaAddress && (
+          <div className="rounded-lg p-3 mb-3" style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,212,255,0.1)' }}>
+            <div className="text-[9px] font-mono text-gray-500 tracking-wider mb-1">SOLANA WALLET ADDRESS</div>
+            <div className="text-[11px] font-mono text-cyan-400 break-all">{data.solanaAddress}</div>
+            <div className="text-[9px] text-gray-600 mt-1">Your agent can now receive funds at this address</div>
+          </div>
+        )}
+
+        {/* Private key warning */}
+        <div className="rounded-lg p-3 mb-3" style={{ background: 'rgba(255,149,0,0.06)', border: '1px solid rgba(255,149,0,0.15)' }}>
+          <div className="text-[10px] font-bold text-orange-400 mb-1">Save your private key</div>
+          <div className="text-[10px] text-gray-400 leading-relaxed">
+            This is the only time you will see this key. Save it somewhere safe. You need it to prove your agent's identity and to sign transactions.
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={copyPrivateKey}
+            className="flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all"
+            style={{
+              background: copied ? 'rgba(34,197,94,0.1)' : 'rgba(0,212,255,0.08)',
+              border: copied ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(0,212,255,0.15)',
+              color: copied ? '#22c55e' : '#00d4ff',
+            }}
+          >
+            {copied ? 'Copied!' : 'Copy Private Key'}
+          </button>
+          <button
+            onClick={downloadKey}
+            className="flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all"
+            style={{
+              background: downloadedKey ? 'rgba(34,197,94,0.1)' : 'rgba(123,47,255,0.08)',
+              border: downloadedKey ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(123,47,255,0.15)',
+              color: downloadedKey ? '#22c55e' : '#a78bfa',
+            }}
+          >
+            {downloadedKey ? 'Downloaded!' : 'Download Key File'}
+          </button>
+        </div>
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="w-full px-3 py-2.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #00d4ff, #7b2fff)' }}
+        >
+          Done — I've saved my key
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function AgentPassport({ agent, index, onAgentUpdated }: { agent: Agent; index: number; onAgentUpdated?: () => void }) {
   const [verifying, setVerifying] = useState(false)
   const [verifyResult, setVerifyResult] = useState<any>(null)
@@ -191,6 +288,8 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
   const [bindingWallet, setBindingWallet] = useState(false)
   const [challenging, setChallenging] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [keyModal, setKeyModal] = useState<{ publicKey: string; privateKey: string; privateKeyFull: string; solanaAddress: string } | null>(null)
+  const [keyCopied, setKeyCopied] = useState(false)
 
   const isOnline = agent.last_active
     ? (Date.now() - new Date(agent.last_active).getTime()) < 600000
@@ -300,13 +399,19 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
 
       const data = await res.json()
       if (res.ok) {
-        showToast(`Security key generated! Your agent now has a Solana wallet.`, 'success')
+        // Show the key modal with all details
+        const privateKeyBase64 = privateKeyJwk.d || ''
+        setKeyModal({
+          publicKey: publicKeyHex,
+          privateKey: privateKeyBase64,
+          privateKeyFull: JSON.stringify(privateKeyJwk, null, 2),
+          solanaAddress: data.solana_address || '',
+        })
         onAgentUpdated?.()
       } else {
-        showToast(data.error || 'Failed to bind key', 'error')
+        showToast(data.error || 'Failed to generate key', 'error')
       }
     } catch (err: any) {
-      // Fallback: if Web Crypto Ed25519 is not supported
       if (err.name === 'NotSupportedError' || err.message?.includes('Ed25519')) {
         showToast('Your browser does not support this feature. Try Chrome or Firefox.', 'error')
       } else {
@@ -456,6 +561,13 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
       <AnimatePresence>
         {verifyResult && (
           <VerifyResultModal result={verifyResult} onClose={() => setVerifyResult(null)} />
+        )}
+      </AnimatePresence>
+
+      {/* Key generated modal */}
+      <AnimatePresence>
+        {keyModal && (
+          <KeyGeneratedModal data={keyModal} onClose={() => setKeyModal(null)} />
         )}
       </AnimatePresence>
 
