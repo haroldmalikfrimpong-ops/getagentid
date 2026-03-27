@@ -2,6 +2,52 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage } from '@/lib/usage'
 import { notifyAgentConnect } from '@/lib/notify'
+import { calculateTrustLevel, checkPermission, TRUST_LEVEL_LABELS, type AgentTrustData } from '@/lib/trust-levels'
+import { quickAnomalyCheck, calculateRiskScore, type AnomalyAlert } from '@/lib/behaviour'
+import { createDualReceipt } from '@/lib/receipts'
+import { sendWebhook } from '@/lib/webhooks'
+
+// ── Helper: compute trust level for an agent row ────────────────────────────
+
+async function getAgentTrustLevel(agent: any, db: any) {
+  // Check certificate validity
+  let certificate_valid = false
+  if (agent.certificate) {
+    try {
+      const parts = agent.certificate.split('.')
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString())
+        certificate_valid = payload.exp > Math.floor(Date.now() / 1000)
+      }
+    } catch {}
+  }
+
+  // Count successful verifications
+  const { count: verificationCount } = await db
+    .from('agent_events')
+    .select('*', { count: 'exact', head: true })
+    .eq('agent_id', agent.agent_id)
+    .eq('event_type', 'verified')
+
+  // Get owner profile
+  const { data: ownerProfile } = await db
+    .from('profiles')
+    .select('email_verified, entity_verified')
+    .eq('id', agent.user_id)
+    .single()
+
+  const trustData: AgentTrustData = {
+    trust_score: agent.trust_score ?? 0,
+    verified: agent.verified ?? false,
+    certificate_valid,
+    entity_verified: ownerProfile?.entity_verified === true,
+    owner_email_verified: ownerProfile?.email_verified === true,
+    created_at: agent.created_at,
+    successful_verifications: verificationCount ?? 0,
+  }
+
+  return calculateTrustLevel(trustData)
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,7 +97,72 @@ export async function POST(req: NextRequest) {
     const senderVerified = senderAgent.verified && senderAgent.active
     const receiverVerified = receiverAgent.verified && receiverAgent.active
 
-    // Create the message
+    // ── Trust level checks ──────────────────────────────────────────────────
+
+    const senderTrustLevel = await getAgentTrustLevel(senderAgent, db)
+    const receiverTrustLevel = await getAgentTrustLevel(receiverAgent, db)
+
+    // L0 agents CANNOT connect
+    if (senderTrustLevel === 0) {
+      return NextResponse.json({
+        error: 'Sender agent is L0 (Unverified) and cannot connect to other agents',
+        sender_trust_level: senderTrustLevel,
+        sender_trust_label: (TRUST_LEVEL_LABELS as any)[senderTrustLevel],
+      }, { status: 403 })
+    }
+
+    if (receiverTrustLevel === 0) {
+      return NextResponse.json({
+        error: 'Receiving agent is L0 (Unverified) and cannot accept connections',
+        receiver_trust_level: receiverTrustLevel,
+        receiver_trust_label: TRUST_LEVEL_LABELS[receiverTrustLevel],
+      }, { status: 403 })
+    }
+
+    // L1 can only discover — cannot connect
+    if (!checkPermission(senderTrustLevel, 'connect')) {
+      return NextResponse.json({
+        error: 'Sender agent does not have permission to connect. L2+ required.',
+        sender_trust_level: senderTrustLevel,
+        sender_trust_label: (TRUST_LEVEL_LABELS as any)[senderTrustLevel],
+        required: 'L2 — Verified',
+      }, { status: 403 })
+    }
+
+    // ── Behavioural anomaly check on sender ─────────────────────────────────
+
+    let sender_behaviour_warnings: AnomalyAlert[] = []
+    let sender_risk_score = 0
+    try {
+      sender_behaviour_warnings = await quickAnomalyCheck(from_agent)
+      sender_risk_score = calculateRiskScore(sender_behaviour_warnings)
+
+      // Block connection if high-risk anomaly detected
+      if (sender_behaviour_warnings.some((a) => a.severity === 'high')) {
+        // Fire webhook to alert agent owner
+        if (senderAgent.user_id) {
+          sendWebhook(senderAgent.user_id, 'agent.connection_blocked', {
+            agent_id: from_agent,
+            name: senderAgent.name,
+            target_agent: to_agent,
+            risk_score: sender_risk_score,
+            anomalies: sender_behaviour_warnings.filter((a) => a.severity === 'high'),
+            reason: 'High-risk behavioural anomaly detected',
+          })
+        }
+
+        return NextResponse.json({
+          error: 'Connection blocked — high-risk behavioural anomaly detected on sending agent',
+          sender_risk_score,
+          anomalies: sender_behaviour_warnings.filter((a) => a.severity === 'high'),
+        }, { status: 403 })
+      }
+    } catch {
+      // Never block the connection on behaviour check failure
+    }
+
+    // ── Create the message ──────────────────────────────────────────────────
+
     const { data: msg, error: msgError } = await db
       .from('agent_messages')
       .insert({
@@ -79,6 +190,54 @@ export async function POST(req: NextRequest) {
     await trackUsage(auth.user_id, 'connect')
     await notifyAgentConnect(senderAgent.name, receiverAgent.name, senderVerified && receiverVerified)
 
+    // ── Create dual receipt for the connection ──────────────────────────────
+
+    let receipt = null
+    try {
+      receipt = await createDualReceipt('connection', from_agent, {
+        message_id: msg.id,
+        from_agent,
+        to_agent,
+        message_type: message_type || 'request',
+        sender_trust_level: senderTrustLevel,
+        receiver_trust_level: receiverTrustLevel,
+        both_verified: senderVerified && receiverVerified,
+      })
+    } catch {
+      // Never block on receipt creation failure
+    }
+
+    // ── Fire webhook: agent.connected ────────────────────────────────────────
+
+    if (senderAgent.user_id) {
+      sendWebhook(senderAgent.user_id, 'agent.connected', {
+        message_id: msg.id,
+        from_agent,
+        to_agent,
+        from_name: senderAgent.name,
+        to_name: receiverAgent.name,
+        sender_trust_level: senderTrustLevel,
+        receiver_trust_level: receiverTrustLevel,
+        sender_risk_score,
+        both_verified: senderVerified && receiverVerified,
+      })
+    }
+
+    // Also notify the receiver's owner
+    if (receiverAgent.user_id && receiverAgent.user_id !== senderAgent.user_id) {
+      sendWebhook(receiverAgent.user_id, 'agent.connected', {
+        message_id: msg.id,
+        from_agent,
+        to_agent,
+        from_name: senderAgent.name,
+        to_name: receiverAgent.name,
+        sender_trust_level: senderTrustLevel,
+        receiver_trust_level: receiverTrustLevel,
+        sender_risk_score,
+        both_verified: senderVerified && receiverVerified,
+      })
+    }
+
     return NextResponse.json({
       message_id: msg.id,
       status: 'pending',
@@ -86,22 +245,42 @@ export async function POST(req: NextRequest) {
         agent_id: from_agent,
         name: senderAgent.name,
         verified: senderVerified,
+        trust_level: senderTrustLevel,
+        trust_label: (TRUST_LEVEL_LABELS as any)[senderTrustLevel],
+        risk_score: sender_risk_score,
       },
       receiver: {
         agent_id: to_agent,
         name: receiverAgent.name,
         verified: receiverVerified,
+        trust_level: receiverTrustLevel,
+        trust_label: TRUST_LEVEL_LABELS[receiverTrustLevel],
       },
       trust_check: {
         both_verified: senderVerified && receiverVerified,
         sender_verified: senderVerified,
         receiver_verified: receiverVerified,
+        sender_trust_level: senderTrustLevel,
+        receiver_trust_level: receiverTrustLevel,
         recommendation: senderVerified && receiverVerified
           ? 'TRUSTED — both agents verified. Safe to exchange data.'
           : !senderVerified && !receiverVerified
           ? 'UNTRUSTED — neither agent is verified. Do not exchange sensitive data.'
           : 'PARTIAL — one agent is unverified. Proceed with caution.',
       },
+      receipt: receipt ? {
+        hash: receipt.hash,
+        blockchain: receipt.blockchain ? {
+          tx_hash: receipt.blockchain.tx_hash,
+          explorer_url: receipt.blockchain.explorer_url,
+        } : null,
+      } : null,
+      blockchain_receipt: receipt?.blockchain ? {
+        tx_hash: receipt.blockchain.tx_hash,
+        explorer_url: receipt.blockchain.explorer_url,
+      } : null,
+      sender_trust_level: senderTrustLevel,
+      sender_risk_score,
     }, { status: 201 })
 
   } catch (e: any) {

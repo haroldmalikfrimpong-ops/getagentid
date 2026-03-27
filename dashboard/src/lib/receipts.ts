@@ -45,6 +45,8 @@ export type ReceiptAction =
   | 'challenge'
   | 'registration'
   | 'ed25519_bound'
+  | 'connection'
+  | 'message'
 
 // ---------------------------------------------------------------------------
 // Config
