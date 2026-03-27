@@ -40,21 +40,68 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
+    // ── Idempotency check ──────────────────────────────────────────
+    // If the client sends an Idempotency-Key header, we check if we've
+    // already processed this exact request. If yes, return the cached
+    // response instead of processing again. Prevents double-payments
+    // on network retries.
+    const idempotencyKey = req.headers.get('idempotency-key') || req.headers.get('x-idempotency-key')
+    if (idempotencyKey) {
+      const db = getServiceClient()
+      const { data: existing } = await db
+        .from('idempotency_cache')
+        .select('response_status, response_body')
+        .eq('idempotency_key', idempotencyKey)
+        .eq('user_id', auth.user_id)
+        .single()
+
+      if (existing) {
+        // Already processed — return cached response
+        return NextResponse.json(
+          { ...JSON.parse(existing.response_body), idempotent_replay: true },
+          { status: existing.response_status }
+        )
+      }
+    }
+
     // Route to execute handler if action is "execute"
     if (body.action === 'execute') {
-      return handleExecute(auth, body)
+      const response = await handleExecute(auth, body)
+      if (idempotencyKey) await cacheIdempotentResponse(idempotencyKey, auth.user_id, response)
+      return response
     }
 
     // Route to agent-to-human if to_wallet is provided
     if (body.to_wallet) {
-      return handleHumanPayment(auth, body)
+      const response = await handleHumanPayment(auth, body)
+      if (idempotencyKey) await cacheIdempotentResponse(idempotencyKey, auth.user_id, response)
+      return response
     }
 
     // Otherwise: create agent-to-agent payment intent
-    return handleCreateIntent(auth, body)
+    const response = await handleCreateIntent(auth, body)
+    if (idempotencyKey) await cacheIdempotentResponse(idempotencyKey, auth.user_id, response)
+    return response
 
   } catch (e: any) {
     return NextResponse.json({ error: e.message || 'Internal error' }, { status: 500 })
+  }
+}
+
+// ── Cache idempotent response ────────────────────────────────────────────────
+async function cacheIdempotentResponse(key: string, userId: string, response: NextResponse) {
+  try {
+    const db = getServiceClient()
+    const cloned = response.clone()
+    const body = await cloned.text()
+    await db.from('idempotency_cache').insert({
+      idempotency_key: key,
+      user_id: userId,
+      response_status: cloned.status,
+      response_body: body,
+    })
+  } catch {
+    // Never block payment on cache failure
   }
 }
 
