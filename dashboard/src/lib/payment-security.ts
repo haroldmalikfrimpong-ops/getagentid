@@ -190,7 +190,6 @@ export async function addToAllowlist(
   }
 
   const { error } = await db.from('payment_allowlist').insert({
-    id: `al_${crypto.randomBytes(12).toString('hex')}`,
     user_id: userId,
     wallet_address: walletAddress.trim(),
     chain,
