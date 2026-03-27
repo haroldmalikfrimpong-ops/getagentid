@@ -300,7 +300,7 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
 
       const data = await res.json()
       if (res.ok) {
-        showToast(`Ed25519 key bound. Solana address: ${data.solana_address?.slice(0, 8)}...`, 'success')
+        showToast(`Security key generated! Your agent now has a Solana wallet.`, 'success')
         onAgentUpdated?.()
       } else {
         showToast(data.error || 'Failed to bind key', 'error')
@@ -308,7 +308,7 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
     } catch (err: any) {
       // Fallback: if Web Crypto Ed25519 is not supported
       if (err.name === 'NotSupportedError' || err.message?.includes('Ed25519')) {
-        showToast('Ed25519 not supported in this browser. Use the SDK: pip install getagentid', 'error')
+        showToast('Your browser does not support this feature. Try Chrome or Firefox.', 'error')
       } else {
         showToast(err.message || 'Failed to generate key', 'error')
       }
@@ -321,14 +321,14 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
     try {
       // If agent has a solana_address (from Ed25519 key), bind that as the wallet
       if (!agent.ed25519_key) {
-        showToast('Bind an Ed25519 key first to derive a Solana wallet', 'error')
+        showToast('Generate a security key first (click "Generate Security Key" above)', 'error')
         setBindingWallet(false)
         return
       }
 
       const walletAddress = agent.solana_address
       if (!walletAddress) {
-        showToast('No Solana address derived yet. Bind an Ed25519 key first.', 'error')
+        showToast('Generate a security key first to get a wallet address', 'error')
         setBindingWallet(false)
         return
       }
@@ -380,7 +380,7 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
 
       const data = await res.json()
       if (res.ok) {
-        showToast('Wallet bound! Your agent is now L3 — Secured', 'success')
+        showToast('Wallet connected! Your agent can now send and receive payments.', 'success')
         onAgentUpdated?.()
       } else {
         showToast(data.error || 'Failed to bind wallet', 'error')
@@ -412,7 +412,7 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
 
       const data = await res.json()
       if (res.ok) {
-        showToast(`Challenge issued: ${data.challenge.slice(0, 16)}... (expires: 60s)`, 'info')
+        showToast('Identity challenge sent! Your agent must respond within 60 seconds to prove it is real.', 'info')
       } else {
         showToast(data.error || 'Failed to issue challenge', 'error')
       }
@@ -425,9 +425,9 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
   // Determine level-up info
   const levelUpInfo = (() => {
     if (trustLevel >= 4) return null
-    if (trustLevel === 1) return { text: 'Bind Ed25519 Key to reach L2', action: handleBindEd25519, loading: bindingKey }
-    if (trustLevel === 2) return { text: 'Bind Wallet to reach L3', action: handleBindWallet, loading: bindingWallet }
-    if (trustLevel === 3) return { text: 'Complete Entity Verification for L4', action: null, loading: false }
+    if (trustLevel === 1) return { text: 'Secure your agent with a cryptographic key', buttonLabel: 'Generate Security Key', action: handleBindEd25519, loading: bindingKey, hint: 'This gives your agent a unique digital signature — like a fingerprint. Takes 2 seconds.' }
+    if (trustLevel === 2) return { text: 'Connect a Solana wallet to enable payments', buttonLabel: 'Connect Wallet', action: handleBindWallet, loading: bindingWallet, hint: 'Your agent gets its own blockchain wallet. It can hold and send funds, with receipts on-chain.' }
+    if (trustLevel === 3) return { text: 'Verify your business identity for full authority', buttonLabel: 'Verify Business', action: null, loading: false, hint: 'Proves your agent is backed by a real organisation. Unlocks $100K/day spending and contract signing.' }
     return null
   })()
 
@@ -568,25 +568,30 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
 
         {/* -- Level Up Section -- */}
         {levelUpInfo && (
-          <div className="mb-4 rounded-xl p-3"
+          <div className="mb-4 rounded-xl p-3.5"
             style={{
-              background: 'rgba(0,212,255,0.03)',
-              border: '1px solid rgba(0,212,255,0.08)',
+              background: 'rgba(0,212,255,0.04)',
+              border: '1px solid rgba(0,212,255,0.12)',
             }}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-mono text-gray-400">
-                {levelUpInfo.text}
-              </span>
+            <div className="text-xs text-white font-medium mb-1">
+              {levelUpInfo.text}
+            </div>
+            {levelUpInfo.hint && (
+              <div className="text-[10px] text-gray-500 mb-3 leading-relaxed">
+                {levelUpInfo.hint}
+              </div>
+            )}
+            <div className="flex items-center gap-2">
               {levelUpInfo.action ? (
                 <motion.button
                   onClick={levelUpInfo.action}
                   disabled={levelUpInfo.loading}
                   whileHover={levelUpInfo.loading ? {} : { scale: 1.03 }}
                   whileTap={levelUpInfo.loading ? {} : { scale: 0.97 }}
-                  className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold font-mono tracking-wide text-white disabled:opacity-50 transition-all"
+                  className="px-4 py-2 rounded-lg text-xs font-bold text-white disabled:opacity-50 transition-all"
                   style={{
                     background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
-                    boxShadow: '0 2px 8px rgba(0,212,255,0.15)',
+                    boxShadow: '0 2px 12px rgba(0,212,255,0.2)',
                   }}
                 >
                   {levelUpInfo.loading ? (
@@ -597,9 +602,9 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
                         className="inline-block w-3 h-3 rounded-full"
                         style={{ border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: 'white' }}
                       />
-                      Binding...
+                      Setting up...
                     </span>
-                  ) : trustLevel === 1 ? 'Bind Key' : 'Bind Wallet'}
+                  ) : levelUpInfo.buttonLabel}
                 </motion.button>
               ) : (
                 <a

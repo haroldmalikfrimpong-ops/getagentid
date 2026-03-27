@@ -99,10 +99,10 @@ function GettingStarted({ agents }: { agents: any[] }) {
   if (!hasAgents) return null
 
   const steps = [
-    { done: hasAgents,  label: `Register an agent (done — you have ${agents.length} agent${agents.length !== 1 ? 's' : ''})`, href: null },
-    { done: hasEd25519, label: 'Bind an Ed25519 key (makes your agent L2 — Verified)', href: null, note: 'Use the "Bind Key" button on your agent card' },
-    { done: hasWallet,  label: 'Bind a wallet (makes your agent L3 — Secured, enables payments)', href: null, note: 'Use the "Bind Wallet" button on your agent card' },
-    { done: hasEntity,  label: 'Complete entity verification (L4 — Certified, full authority)', href: 'mailto:verify@getagentid.dev?subject=Entity%20Verification%20Request', note: 'Contact us to verify your organization' },
+    { done: hasAgents,  label: `Register an agent — you have ${agents.length}`, href: null },
+    { done: hasEd25519, label: 'Generate a security key for your agent', href: null, note: 'Click "Generate Security Key" on any agent card below' },
+    { done: hasWallet,  label: 'Connect a blockchain wallet to enable payments', href: null, note: 'Click "Connect Wallet" on any agent card below' },
+    { done: hasEntity,  label: 'Verify your business for full authority', href: 'mailto:hello@getagentid.dev?subject=Business%20Verification%20Request', note: 'Email us to verify your organisation' },
   ]
 
   return (
