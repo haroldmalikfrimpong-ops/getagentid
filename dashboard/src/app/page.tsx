@@ -174,11 +174,11 @@ export default function LandingPage() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="text-5xl md:text-6xl font-black mb-6 leading-[1.08] tracking-tight"
             >
-              <span className="text-white">Agents can&apos;t prove</span>
+              <span className="text-white">Deploy agents fast.</span>
               <br />
-              <span className="text-white">who they are.</span>
+              <span className="text-white">We&apos;ve got your back.</span>
               <br />
-              <span className="holo-gradient-animated">We fix that.</span>
+              <span className="holo-gradient-animated">Identity. Trust. Proof.</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -188,7 +188,7 @@ export default function LandingPage() {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="text-lg text-gray-400 mb-8 leading-relaxed max-w-lg"
             >
-              Compliance infrastructure for AI agents. Verify identity, enforce trust levels, and create audit trails — one API call.
+              Ship your agents with confidence. Cryptographic identity, blockchain receipts, and trust levels — all in one API call. From registration to on-chain proof in under 60 seconds.
             </motion.p>
 
             {/* Single CTA */}
@@ -556,7 +556,7 @@ export default function LandingPage() {
               Proven
             </div>
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-              Not theoretical. Battle-tested.
+              Shipped. Proven. On-chain.
             </h2>
             <p className="text-gray-500 max-w-lg mx-auto">
               AgentID is live on encrypted relays, interoperable with multiple identity systems, and verified across Python and TypeScript.
@@ -978,7 +978,7 @@ export default function LandingPage() {
             <div className="text-[11px] font-mono text-purple-400/50 tracking-[0.3em] uppercase mb-4">
               Who It&apos;s For
             </div>
-            <h2 className="text-3xl md:text-4xl font-black text-white">Built for builders</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-white">Go fast. Stay safe.</h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -1276,14 +1276,14 @@ export default function LandingPage() {
             Get Started Today
           </div>
           <h2 className="text-4xl md:text-5xl font-black mb-5 leading-tight">
-            <span className="holo-gradient">Ready to build trust</span>
+            <span className="holo-gradient">Deploy with confidence.</span>
             <br />
-            <span className="text-white">in the agent economy?</span>
+            <span className="text-white">We handle the trust.</span>
           </h2>
           <p className="text-gray-500 mb-10 text-lg leading-relaxed">
-            Register your first 100 agents free.
+            100 agents free. Blockchain receipts from day one.
             <br />
-            Compliance-ready from day one.
+            From zero to on-chain proof in under 60 seconds.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <a href="/signup"
@@ -1309,7 +1309,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <span className="holo-gradient text-lg font-black">AgentID</span>
-              <span className="text-gray-700 text-xs">The trust layer for AI agents</span>
+              <span className="text-gray-700 text-xs">Deploy agents fast. We&apos;ve got your back.</span>
             </div>
             <div className="flex gap-6 text-xs text-gray-600">
               <a href="/docs" className="hover:text-cyan-400 transition-colors">Docs</a>
