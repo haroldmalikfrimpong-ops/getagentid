@@ -24,14 +24,15 @@ function Navbar({ userName, avatarUrl, onSignOut }: { userName: string; avatarUr
   const isActive = (path: string) => pathname === path
 
   const navLinks = [
-    { href: '/dashboard',           label: 'Dashboard' },
-    { href: '/dashboard/fleet',     label: 'Fleet' },
-    { href: '/dashboard/audit',     label: 'Audit' },
-    { href: '/dashboard/reports',   label: 'Reports' },
-    { href: '/dashboard/webhooks',  label: 'Webhooks' },
-    { href: '/dashboard/keys',      label: 'API Keys' },
-    { href: '/registry',            label: 'Registry' },
-    { href: '/docs',                label: 'Docs' },
+    { href: '/dashboard',                  label: 'Dashboard' },
+    { href: '/dashboard/fleet',            label: 'Fleet' },
+    { href: '/dashboard/audit',            label: 'Audit' },
+    { href: '/dashboard/reports',          label: 'Reports' },
+    { href: '/dashboard/webhooks',         label: 'Webhooks' },
+    { href: '/dashboard/keys',             label: 'API Keys' },
+    { href: '/dashboard/verify-business',  label: 'Verify Business' },
+    { href: '/registry',                   label: 'Registry' },
+    { href: '/docs',                       label: 'Docs' },
   ]
 
   return (
@@ -102,7 +103,7 @@ function GettingStarted({ agents }: { agents: any[] }) {
     { done: hasAgents,  label: `Register an agent — you have ${agents.length}`, href: null },
     { done: hasEd25519, label: 'Generate a security key for your agent', href: null, note: 'Click "Generate Security Key" on any agent card below' },
     { done: hasWallet,  label: 'Connect a blockchain wallet to enable payments', href: null, note: 'Click "Connect Wallet" on any agent card below' },
-    { done: hasEntity,  label: 'Verify your business for full authority', href: 'mailto:hello@getagentid.dev?subject=Business%20Verification%20Request', note: 'Email us to verify your organisation' },
+    { done: hasEntity,  label: 'Verify your business for full authority', href: '/dashboard/verify-business', note: 'Submit your business details for L4 certification' },
   ]
 
   return (

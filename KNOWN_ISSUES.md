@@ -28,6 +28,22 @@
 
 - [ ] **Payment tests not yet run** — No agents are at L3+ with wallets bound, so payment flow hasn't been tested end-to-end on the live API.
 
+## CRITICAL — UX (reported by founder)
+
+- [ ] **Verify button does nothing** — clicking verify on an agent doesn't do anything visible. No feedback, no result, no loading state.
+
+- [ ] **No directions on how to level up** — user registers an agent at L1, has no idea how to get to L2/L3/L4. No checklist, no buttons, no guidance. The trust level system is invisible.
+
+- [ ] **Navigation hidden when logged out** — Fleet, Dashboard, Registry, Audit, Reports should all be visible in the nav. If not signed in, clicking them should redirect to login. Right now they're hidden and the user doesn't know they exist.
+
+- [ ] **No onboarding flow** — after signup, user sees agents but doesn't know what to do next. No "here's how to get started" wizard. No step-by-step. Nothing.
+
+- [ ] **No way to create a wallet from the dashboard** — user has to know about the API endpoint. There should be a "Bind Ed25519 Key" button and a "Bind Wallet" button on each agent card.
+
+- [ ] **No way to understand trust levels** — what does L1 mean? What can I do? What can't I do? How do I get to L3? This needs to be explained IN the dashboard, not just the docs.
+
+- [ ] **Built for developers, not humans** — the entire dashboard assumes technical knowledge. A vibe coder should be able to use this. Every action should have a button, not require API calls.
+
 ## LOW
 
 - [ ] **Duplicate agents in registry** — Multiple agents with the same name (Scout, Analyst, Designer) from test runs. Registry discover returns duplicates. May want to add duplicate name prevention per user.

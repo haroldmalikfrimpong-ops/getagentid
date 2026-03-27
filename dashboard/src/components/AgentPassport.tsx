@@ -720,14 +720,14 @@ export default function AgentPassport({ agent, index, onAgentUpdated }: { agent:
                 </motion.button>
               ) : (
                 <a
-                  href="mailto:verify@getagentid.dev?subject=Entity%20Verification%20Request"
+                  href="/dashboard/verify-business"
                   className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold font-mono tracking-wide text-white transition-all hover:opacity-90"
                   style={{
                     background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                     boxShadow: '0 2px 8px rgba(245,158,11,0.15)',
                   }}
                 >
-                  Request Verification
+                  Verify Business
                 </a>
               )}
             </div>
