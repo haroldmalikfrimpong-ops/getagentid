@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     // Fetch agent
     const { data: agent, error } = await db
       .from('agents')
-      .select('agent_id, name, owner, trust_score, verified, active, created_at, last_active, certificate, user_id')
+      .select('agent_id, name, owner, trust_score, verified, active, created_at, last_active, certificate, user_id, ed25519_key, wallet_address')
       .eq('agent_id', agent_id)
       .single()
 
@@ -86,6 +86,8 @@ export async function GET(req: NextRequest) {
       owner_email_verified: ownerProfile?.email_verified === true,
       created_at: agent.created_at,
       successful_verifications: verificationCount ?? 0,
+      ed25519_key: agent.ed25519_key ?? null,
+      wallet_address: agent.wallet_address ?? null,
     }
 
     const trust_level = calculateTrustLevel(agentTrustData)

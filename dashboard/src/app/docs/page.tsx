@@ -52,11 +52,11 @@ export default function DocsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-black/40 rounded-lg p-4">
                 <div className="text-xs text-gray-500 mb-2">Python</div>
-                <code className="text-cyan-300 text-sm">pip install agentid</code>
+                <code className="text-cyan-300 text-sm">pip install getagentid</code>
               </div>
               <div className="bg-black/40 rounded-lg p-4">
                 <div className="text-xs text-gray-500 mb-2">Node.js</div>
-                <code className="text-cyan-300 text-sm">npm install agentid</code>
+                <code className="text-cyan-300 text-sm">TypeScript SDK coming soon — <a href="https://github.com/haroldmalikfrimpong-ops/getagentid" className="underline hover:text-cyan-200">github.com/haroldmalikfrimpong-ops/getagentid</a></code>
               </div>
             </div>
           </div>

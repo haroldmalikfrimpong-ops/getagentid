@@ -44,6 +44,8 @@ async function getAgentTrustLevel(agent: any, db: any) {
     owner_email_verified: ownerProfile?.email_verified === true,
     created_at: agent.created_at,
     successful_verifications: verificationCount ?? 0,
+    ed25519_key: agent.ed25519_key ?? null,
+    wallet_address: agent.wallet_address ?? null,
   }
 
   return calculateTrustLevel(trustData)
@@ -98,38 +100,24 @@ export async function POST(req: NextRequest) {
     const receiverVerified = receiverAgent.verified && receiverAgent.active
 
     // ── Trust level checks ──────────────────────────────────────────────────
+    // L1+ can connect — all registered agents can connect immediately.
 
     const senderTrustLevel = await getAgentTrustLevel(senderAgent, db)
     const receiverTrustLevel = await getAgentTrustLevel(receiverAgent, db)
 
-    // L0 agents CANNOT connect
-    if (senderTrustLevel === 0) {
-      return NextResponse.json({
-        error: 'Sender agent is L0 (Unverified) and cannot connect to other agents',
-        sender_trust_level: senderTrustLevel,
-        sender_trust_label: (TRUST_LEVEL_LABELS as any)[senderTrustLevel],
-      }, { status: 403 })
-    }
-
-    if (receiverTrustLevel === 0) {
-      return NextResponse.json({
-        error: 'Receiving agent is L0 (Unverified) and cannot accept connections',
-        receiver_trust_level: receiverTrustLevel,
-        receiver_trust_label: TRUST_LEVEL_LABELS[receiverTrustLevel],
-      }, { status: 403 })
-    }
-
-    // L1 can only discover — cannot connect
+    // L1+ has connect permission, so this only blocks if something is truly wrong
     if (!checkPermission(senderTrustLevel, 'connect')) {
       return NextResponse.json({
-        error: 'Sender agent does not have permission to connect. L2+ required.',
+        error: 'Sender agent does not have permission to connect. L1+ required.',
         sender_trust_level: senderTrustLevel,
-        sender_trust_label: (TRUST_LEVEL_LABELS as any)[senderTrustLevel],
-        required: 'L2 — Verified',
+        sender_trust_label: TRUST_LEVEL_LABELS[senderTrustLevel],
+        required: 'L1 — Registered',
       }, { status: 403 })
     }
 
     // ── Behavioural anomaly check on sender ─────────────────────────────────
+    // The behavioural system stays — it's security, not governance.
+    // Only block on HIGH severity (50+ calls/hour).
 
     let sender_behaviour_warnings: AnomalyAlert[] = []
     let sender_risk_score = 0
@@ -246,7 +234,7 @@ export async function POST(req: NextRequest) {
         name: senderAgent.name,
         verified: senderVerified,
         trust_level: senderTrustLevel,
-        trust_label: (TRUST_LEVEL_LABELS as any)[senderTrustLevel],
+        trust_label: TRUST_LEVEL_LABELS[senderTrustLevel],
         risk_score: sender_risk_score,
       },
       receiver: {

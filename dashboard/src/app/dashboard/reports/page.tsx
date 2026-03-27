@@ -97,7 +97,6 @@ const SEVERITY_STYLES: Record<string, { bg: string; border: string; text: string
 // ── Trust level badge colours ────────────────────────────────────────────────
 
 const TRUST_BADGE_STYLES: Record<number, { bg: string; border: string; text: string }> = {
-  0: { bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)', text: '#94a3b8' },
   1: { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)', text: '#60a5fa' },
   2: { bg: 'rgba(0,212,255,0.08)', border: 'rgba(0,212,255,0.2)', text: '#00d4ff' },
   3: { bg: 'rgba(123,47,255,0.08)', border: 'rgba(123,47,255,0.2)', text: '#a78bfa' },
@@ -403,7 +402,8 @@ export default function ReportsPage() {
             {Object.entries(trust_level_distribution).map(([label, count], i) => {
               const maxCount = Math.max(1, ...Object.values(trust_level_distribution))
               const height = count > 0 ? Math.max(8, (count / maxCount) * 100) : 4
-              const style = TRUST_BADGE_STYLES[i] || TRUST_BADGE_STYLES[0]
+              const levelNum = parseInt(label.match(/L(\d)/)?.[1] || '1', 10)
+              const style = TRUST_BADGE_STYLES[levelNum] || TRUST_BADGE_STYLES[1]
 
               return (
                 <div key={label} className="flex-1 flex flex-col items-center gap-1">
@@ -416,7 +416,7 @@ export default function ReportsPage() {
                     transition={{ duration: 0.6, delay: 0.3 + i * 0.08 }}
                   />
                   <span className="text-[9px] text-gray-600 font-mono text-center leading-tight mt-1">
-                    L{i}
+                    L{levelNum}
                   </span>
                 </div>
               )
@@ -509,7 +509,7 @@ export default function ReportsPage() {
           ) : (
             <div className="space-y-2">
               {agent_inventory.map((agent, i) => {
-                const badge = TRUST_BADGE_STYLES[agent.trust_level] || TRUST_BADGE_STYLES[0]
+                const badge = TRUST_BADGE_STYLES[agent.trust_level] || TRUST_BADGE_STYLES[1]
 
                 return (
                   <motion.div

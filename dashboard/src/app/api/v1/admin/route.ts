@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/api-auth'
 
-const ADMIN_ID = process.env.ADMIN_USER_ID || '425a50cf-bfba-4949-8c6b-7edb17a7bde2'
-
 export async function POST(req: NextRequest) {
   try {
+    const ADMIN_ID = process.env.ADMIN_USER_ID
+    if (!ADMIN_ID) {
+      return NextResponse.json({ error: 'ADMIN_USER_ID env var is not configured' }, { status: 500 })
+    }
+
     // Verify admin
     const authHeader = req.headers.get('authorization')
     if (!authHeader) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })

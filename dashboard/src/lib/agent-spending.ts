@@ -1,9 +1,12 @@
 // AgentID Spending Authority System
 // Gates whether a specific agent is authorized to spend, based on trust level and daily limits.
 // This is NOT payment processing — the owner pre-funds; this layer enforces authorization.
+//
+// Key change: spending limits are DEFAULTS that the user can LOWER.
+// The system enforces the LOWER of: the trust level default OR the user's custom limit.
 
 import { getServiceClient } from './api-auth'
-import { TrustLevel, calculateTrustLevel, getSpendingLimit, AgentTrustData } from './trust-levels'
+import { TrustLevel, calculateTrustLevel, getSpendingLimit, normalizeTrustLevel, AgentTrustData } from './trust-levels'
 import crypto from 'crypto'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -13,6 +16,8 @@ export interface SpendingAuthority {
   reason?: string
   trust_level: TrustLevel
   daily_limit: number
+  custom_daily_limit: number | null
+  effective_daily_limit: number
   spent_today: number
   remaining_daily_limit: number
 }
@@ -33,19 +38,20 @@ export interface AgentBalance {
   agent_id: string
   trust_level: TrustLevel
   daily_limit: number
+  custom_daily_limit: number | null
+  effective_daily_limit: number
   spent_today: number
   remaining_daily_limit: number
   transaction_count_today: number
 }
 
-// ── Daily spending limits (mirrors trust-levels.ts, re-stated for clarity) ──
+// ── Daily spending limits (mirrors trust-levels.ts, new model) ───────────────
 
 export const AgentSpendingLimits: Record<TrustLevel, number> = {
-  [TrustLevel.L0_UNVERIFIED]: 0,
-  [TrustLevel.L1_BASIC]: 0,
-  [TrustLevel.L2_VERIFIED]: 0,
-  [TrustLevel.L3_TRUSTED]: 100,
-  [TrustLevel.L4_FULL_AUTHORITY]: 10000,
+  [TrustLevel.L1_REGISTERED]: 0,       // no wallet bound yet
+  [TrustLevel.L2_VERIFIED]: 0,         // no wallet bound yet
+  [TrustLevel.L3_SECURED]: 10000,      // default — user can lower this
+  [TrustLevel.L4_CERTIFIED]: 100000,   // default — user can lower this
 }
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
@@ -82,7 +88,7 @@ async function resolveAgentTrust(agentId: string): Promise<{ trustLevel: TrustLe
 
   const { data: agent, error } = await db
     .from('agents')
-    .select('agent_id, name, owner, trust_score, verified, active, created_at, certificate, entity_verified, owner_email_verified, user_id')
+    .select('agent_id, name, owner, trust_score, verified, active, created_at, certificate, entity_verified, owner_email_verified, user_id, ed25519_key, wallet_address, custom_daily_limit')
     .eq('agent_id', agentId)
     .single()
 
@@ -115,6 +121,8 @@ async function resolveAgentTrust(agentId: string): Promise<{ trustLevel: TrustLe
     owner_email_verified: agent.owner_email_verified ?? false,
     created_at: agent.created_at,
     successful_verifications: successfulVerifications ?? 0,
+    ed25519_key: agent.ed25519_key ?? null,
+    wallet_address: agent.wallet_address ?? null,
   }
 
   return { trustLevel: calculateTrustLevel(agentData), agent }
@@ -133,11 +141,101 @@ function signReceipt(payload: Record<string, any>): string {
   return `${header}.${body}.${signature}`
 }
 
+// ── Effective spending limit (trust default vs user custom) ──────────────────
+
+/**
+ * Get the effective daily spending limit for an agent.
+ * Returns the LOWER of: the trust level default OR the user's custom limit.
+ * If no custom limit is set, returns the trust level default.
+ */
+export async function getEffectiveSpendingLimit(agentId: string, trustLevel?: TrustLevel | number): Promise<number> {
+  const db = getServiceClient()
+
+  // Get the agent's custom limit if it exists
+  const { data: agent } = await db
+    .from('agents')
+    .select('custom_daily_limit')
+    .eq('agent_id', agentId)
+    .single()
+
+  const normalized = trustLevel != null ? normalizeTrustLevel(trustLevel) : TrustLevel.L1_REGISTERED
+  const trustDefault = getSpendingLimit(normalized)
+  const customLimit = agent?.custom_daily_limit
+
+  // If user set a custom limit, enforce the LOWER of custom vs trust default
+  if (customLimit != null && customLimit >= 0) {
+    return Math.min(trustDefault, customLimit)
+  }
+
+  return trustDefault
+}
+
+/**
+ * Let the user set their own daily spending limit for an agent.
+ * The user can only LOWER the limit below the trust level default — they cannot raise it above.
+ * Set to null to revert to the trust level default.
+ */
+export async function setCustomSpendingLimit(
+  agentId: string,
+  userId: string,
+  dailyLimit: number | null
+): Promise<{ success: boolean; effective_limit: number; error?: string }> {
+  const db = getServiceClient()
+
+  // Verify the user owns this agent
+  const { data: agent } = await db
+    .from('agents')
+    .select('agent_id, user_id')
+    .eq('agent_id', agentId)
+    .eq('user_id', userId)
+    .single()
+
+  if (!agent) {
+    return { success: false, effective_limit: 0, error: 'Agent not found or you do not own it' }
+  }
+
+  // Validate the limit
+  if (dailyLimit !== null && dailyLimit < 0) {
+    return { success: false, effective_limit: 0, error: 'Daily limit cannot be negative' }
+  }
+
+  // Update the agent's custom limit
+  const { error: updateError } = await db
+    .from('agents')
+    .update({ custom_daily_limit: dailyLimit })
+    .eq('agent_id', agentId)
+
+  if (updateError) {
+    console.error('Failed to set custom spending limit:', updateError)
+    return { success: false, effective_limit: 0, error: 'Failed to update spending limit' }
+  }
+
+  // Resolve the effective limit
+  const resolved = await resolveAgentTrust(agentId)
+  const trustDefault = resolved ? getSpendingLimit(resolved.trustLevel) : 0
+  const effectiveLimit = dailyLimit != null ? Math.min(trustDefault, dailyLimit) : trustDefault
+
+  // Log the event
+  await db.from('agent_events').insert({
+    agent_id: agentId,
+    event_type: 'spending_limit_changed',
+    data: {
+      custom_daily_limit: dailyLimit,
+      trust_default: trustDefault,
+      effective_limit: effectiveLimit,
+      changed_by: userId,
+    },
+  })
+
+  return { success: true, effective_limit: effectiveLimit }
+}
+
 // ── Public API ───────────────────────────────────────────────────────────────
 
 /**
  * Check whether an agent is authorized to spend a given amount.
  * Does NOT record the spend — use recordSpend() for that.
+ * Enforces the LOWER of trust level default and user's custom limit.
  */
 export async function checkSpendingAuthority(
   agentId: string,
@@ -148,8 +246,10 @@ export async function checkSpendingAuthority(
     return {
       authorized: false,
       reason: 'Amount must be greater than zero',
-      trust_level: TrustLevel.L0_UNVERIFIED,
+      trust_level: TrustLevel.L1_REGISTERED,
       daily_limit: 0,
+      custom_daily_limit: null,
+      effective_daily_limit: 0,
       spent_today: 0,
       remaining_daily_limit: 0,
     }
@@ -160,36 +260,44 @@ export async function checkSpendingAuthority(
     return {
       authorized: false,
       reason: 'Agent not found',
-      trust_level: TrustLevel.L0_UNVERIFIED,
+      trust_level: TrustLevel.L1_REGISTERED,
       daily_limit: 0,
+      custom_daily_limit: null,
+      effective_daily_limit: 0,
       spent_today: 0,
       remaining_daily_limit: 0,
     }
   }
 
-  const { trustLevel } = resolved
-  const dailyLimit = getSpendingLimit(trustLevel)
+  const { trustLevel, agent } = resolved
+  const trustDefault = getSpendingLimit(trustLevel)
+  const customLimit = agent.custom_daily_limit
+  const effectiveLimit = customLimit != null && customLimit >= 0 ? Math.min(trustDefault, customLimit) : trustDefault
 
-  if (trustLevel < TrustLevel.L3_TRUSTED) {
+  if (trustLevel < TrustLevel.L3_SECURED) {
     return {
       authorized: false,
-      reason: `Trust level L${trustLevel} is insufficient. Spending requires L3 (Trusted) or higher.`,
+      reason: `Trust level L${trustLevel} is insufficient. Spending requires L3 (Secured — wallet bound) or higher.`,
       trust_level: trustLevel,
-      daily_limit: dailyLimit,
+      daily_limit: trustDefault,
+      custom_daily_limit: customLimit ?? null,
+      effective_daily_limit: effectiveLimit,
       spent_today: 0,
       remaining_daily_limit: 0,
     }
   }
 
   const { total: spentToday } = await sumSpentToday(agentId)
-  const remaining = Math.max(0, dailyLimit - spentToday)
+  const remaining = Math.max(0, effectiveLimit - spentToday)
 
   if (amount > remaining) {
     return {
       authorized: false,
-      reason: `Exceeds daily spending limit. Limit: $${dailyLimit}, spent today: $${spentToday.toFixed(2)}, remaining: $${remaining.toFixed(2)}, requested: $${amount.toFixed(2)}`,
+      reason: `Exceeds daily spending limit. Effective limit: $${effectiveLimit}, spent today: $${spentToday.toFixed(2)}, remaining: $${remaining.toFixed(2)}, requested: $${amount.toFixed(2)}`,
       trust_level: trustLevel,
-      daily_limit: dailyLimit,
+      daily_limit: trustDefault,
+      custom_daily_limit: customLimit ?? null,
+      effective_daily_limit: effectiveLimit,
       spent_today: spentToday,
       remaining_daily_limit: remaining,
     }
@@ -198,7 +306,9 @@ export async function checkSpendingAuthority(
   return {
     authorized: true,
     trust_level: trustLevel,
-    daily_limit: dailyLimit,
+    daily_limit: trustDefault,
+    custom_daily_limit: customLimit ?? null,
+    effective_daily_limit: effectiveLimit,
     spent_today: spentToday,
     remaining_daily_limit: remaining,
   }
@@ -276,7 +386,7 @@ export async function recordSpend(
   })
 
   const newSpentToday = authority.spent_today + amount
-  const newRemaining = Math.max(0, authority.daily_limit - newSpentToday)
+  const newRemaining = Math.max(0, authority.effective_daily_limit - newSpentToday)
 
   return {
     transaction: {
@@ -295,21 +405,25 @@ export async function recordSpend(
 }
 
 /**
- * Get the agent's current balance — how much has been spent today vs. the daily limit.
+ * Get the agent's current balance — how much has been spent today vs. the effective daily limit.
  */
 export async function getAgentBalance(agentId: string): Promise<AgentBalance | null> {
   const resolved = await resolveAgentTrust(agentId)
   if (!resolved) return null
 
-  const { trustLevel } = resolved
-  const dailyLimit = getSpendingLimit(trustLevel)
+  const { trustLevel, agent } = resolved
+  const trustDefault = getSpendingLimit(trustLevel)
+  const customLimit = agent.custom_daily_limit
+  const effectiveLimit = customLimit != null && customLimit >= 0 ? Math.min(trustDefault, customLimit) : trustDefault
   const { total: spentToday, count } = await sumSpentToday(agentId)
-  const remaining = Math.max(0, dailyLimit - spentToday)
+  const remaining = Math.max(0, effectiveLimit - spentToday)
 
   return {
     agent_id: agentId,
     trust_level: trustLevel,
-    daily_limit: dailyLimit,
+    daily_limit: trustDefault,
+    custom_daily_limit: customLimit ?? null,
+    effective_daily_limit: effectiveLimit,
     spent_today: spentToday,
     remaining_daily_limit: remaining,
     transaction_count_today: count,

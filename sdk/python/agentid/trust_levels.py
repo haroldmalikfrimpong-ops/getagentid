@@ -1,7 +1,8 @@
 """
 AgentID Trust Level System
 
-Defines L0-L4 trust levels with permissions, spending limits, and level-up requirements.
+Security layer with user control. No gated governance — you register, you're in.
+Levels are based on what security capabilities you've set up, not time or score.
 """
 
 from enum import IntEnum
@@ -11,11 +12,14 @@ from typing import Any, Optional
 
 class TrustLevel(IntEnum):
     """Trust levels for AgentID agents."""
-    L0_UNVERIFIED = 0      # Just registered. No access.
-    L1_BASIC = 1           # Read-only. Can browse, search, discover.
-    L2_VERIFIED = 2        # Can send messages, make API calls, interact with agents.
-    L3_TRUSTED = 3         # Can handle sensitive data, access paid services, small payments.
-    L4_FULL_AUTHORITY = 4  # Can make payments, sign contracts, manage funds, full autonomy.
+    L1_REGISTERED = 1    # registered, certificate issued
+    L2_VERIFIED = 2      # Ed25519 key bound
+    L3_SECURED = 3       # wallet bound, payments enabled
+    L4_CERTIFIED = 4     # entity verified
+
+
+# Backward compatibility: old L0 agents map to L1 (they're registered — that's enough)
+LEGACY_L0_MAPS_TO = TrustLevel.L1_REGISTERED
 
 
 # All possible actions in the system
@@ -25,6 +29,7 @@ ACTIONS = [
     "verify",
     "send_message",
     "connect",
+    "challenge_response",
     "handle_data",
     "access_paid_service",
     "make_payment",
@@ -35,197 +40,159 @@ ACTIONS = [
 
 # Permission sets per trust level (cumulative)
 PERMISSIONS: dict[TrustLevel, list[str]] = {
-    TrustLevel.L0_UNVERIFIED: [],
-    TrustLevel.L1_BASIC: ["read", "discover"],
-    TrustLevel.L2_VERIFIED: ["read", "discover", "verify", "send_message", "connect"],
-    TrustLevel.L3_TRUSTED: [
+    TrustLevel.L1_REGISTERED: ["read", "discover", "verify", "send_message", "connect"],
+    TrustLevel.L2_VERIFIED: [
         "read", "discover", "verify", "send_message", "connect",
-        "handle_data", "access_paid_service", "make_payment",
+        "challenge_response", "handle_data",
     ],
-    TrustLevel.L4_FULL_AUTHORITY: [
+    TrustLevel.L3_SECURED: [
         "read", "discover", "verify", "send_message", "connect",
-        "handle_data", "access_paid_service", "make_payment",
+        "challenge_response", "handle_data", "make_payment", "access_paid_service",
+    ],
+    TrustLevel.L4_CERTIFIED: [
+        "read", "discover", "verify", "send_message", "connect",
+        "challenge_response", "handle_data", "make_payment", "access_paid_service",
         "sign_contract", "manage_funds", "full_autonomy",
     ],
 }
 
 # Daily spending limits in USD per trust level
+# These are DEFAULTS — the user can LOWER these, not us.
 SPENDING_LIMITS: dict[TrustLevel, int] = {
-    TrustLevel.L0_UNVERIFIED: 0,
-    TrustLevel.L1_BASIC: 0,
-    TrustLevel.L2_VERIFIED: 0,
-    TrustLevel.L3_TRUSTED: 100,
-    TrustLevel.L4_FULL_AUTHORITY: 10000,
+    TrustLevel.L1_REGISTERED: 0,       # no wallet bound yet
+    TrustLevel.L2_VERIFIED: 0,         # no wallet bound yet
+    TrustLevel.L3_SECURED: 10000,      # default — user can lower this
+    TrustLevel.L4_CERTIFIED: 100000,   # default — user can lower this
 }
 
 # Human-readable labels
 TRUST_LEVEL_LABELS: dict[TrustLevel, str] = {
-    TrustLevel.L0_UNVERIFIED: "L0 — Unverified",
-    TrustLevel.L1_BASIC: "L1 — Basic",
+    TrustLevel.L1_REGISTERED: "L1 — Registered",
     TrustLevel.L2_VERIFIED: "L2 — Verified",
-    TrustLevel.L3_TRUSTED: "L3 — Trusted",
-    TrustLevel.L4_FULL_AUTHORITY: "L4 — Full Authority",
+    TrustLevel.L3_SECURED: "L3 — Secured",
+    TrustLevel.L4_CERTIFIED: "L4 — Certified",
 }
 
 
-def _days_since(iso_timestamp: str) -> float:
-    """Calculate days elapsed since an ISO timestamp."""
-    created = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-    now = datetime.now(timezone.utc)
-    return (now - created).total_seconds() / 86400
+def normalize_trust_level(level: int) -> TrustLevel:
+    """
+    Normalize a trust level value, mapping legacy L0 to L1.
+    Use this when reading trust_level from the database to handle old agents.
+    """
+    if level == 0:
+        return TrustLevel.L1_REGISTERED
+    if 1 <= level <= 4:
+        return TrustLevel(level)
+    return TrustLevel.L1_REGISTERED
 
 
 def calculate_trust_level(agent_data: dict[str, Any]) -> TrustLevel:
     """
-    Calculate the trust level for an agent based on its data.
+    Calculate the trust level for an agent based on what security capabilities are set up.
+    No time requirements. No verification count requirements. You complete the step, you get the level.
 
     Expected keys in agent_data:
-        trust_score (float): 0.0 to 1.0
+        trust_score (float): 0.0 to 1.0 (informational only — does NOT gate levels)
         verified (bool): has been verified at least once
         certificate_valid (bool): current certificate is not expired
         entity_verified (bool, optional): legal entity binding confirmed
         owner_email_verified (bool, optional): owner has verified their email
         created_at (str): ISO timestamp
         successful_verifications (int, optional): count of successful verifications
+        ed25519_key (str or None, optional): Ed25519 public key (if bound)
+        wallet_address (str or None, optional): crypto wallet address (if bound)
     """
-    trust_score = agent_data.get("trust_score", 0)
-    certificate_valid = agent_data.get("certificate_valid", False)
     entity_verified = agent_data.get("entity_verified", False)
-    owner_email_verified = agent_data.get("owner_email_verified", False)
-    created_at = agent_data.get("created_at", datetime.now(timezone.utc).isoformat())
-    successful_verifications = agent_data.get("successful_verifications", 0)
+    wallet_address = agent_data.get("wallet_address", None)
+    ed25519_key = agent_data.get("ed25519_key", None)
 
-    days_active = _days_since(created_at)
+    # L4: entity verified
+    if entity_verified:
+        return TrustLevel.L4_CERTIFIED
 
-    # L4: trust_score >= 0.9, entity verified, 30 days active, 50+ successful verifications
-    if (
-        trust_score >= 0.9
-        and entity_verified
-        and days_active >= 30
-        and successful_verifications >= 50
-        and certificate_valid
-    ):
-        return TrustLevel.L4_FULL_AUTHORITY
+    # L3: wallet bound (wallet_address is not null/empty)
+    if wallet_address is not None and wallet_address != "":
+        return TrustLevel.L3_SECURED
 
-    # L3: trust_score >= 0.7, 10+ successful verifications, 7 days active
-    if (
-        trust_score >= 0.7
-        and successful_verifications >= 10
-        and days_active >= 7
-        and certificate_valid
-    ):
-        return TrustLevel.L3_TRUSTED
-
-    # L2: certificate issued + at least 1 successful verification
-    if certificate_valid and successful_verifications >= 1:
+    # L2: Ed25519 key bound (ed25519_key is not null/empty)
+    if ed25519_key is not None and ed25519_key != "":
         return TrustLevel.L2_VERIFIED
 
-    # L1: agent exists + owner verified email
-    if owner_email_verified:
-        return TrustLevel.L1_BASIC
-
-    # L0: default
-    return TrustLevel.L0_UNVERIFIED
+    # L1: default for all registered agents
+    return TrustLevel.L1_REGISTERED
 
 
-def check_permission(level: TrustLevel, action: str) -> bool:
+def check_permission(level: TrustLevel | int, action: str) -> bool:
     """Check whether a given trust level grants permission for a specific action."""
-    allowed = PERMISSIONS.get(level, [])
+    normalized = normalize_trust_level(int(level))
+    allowed = PERMISSIONS.get(normalized, [])
     return action in allowed
 
 
-def get_spending_limit(level: TrustLevel) -> int:
+def get_spending_limit(level: TrustLevel | int) -> int:
     """Get the maximum daily spending limit in USD for a trust level."""
-    return SPENDING_LIMITS.get(level, 0)
+    normalized = normalize_trust_level(int(level))
+    return SPENDING_LIMITS.get(normalized, 0)
 
 
 def level_up_requirements(
-    current_level: TrustLevel,
+    current_level: TrustLevel | int,
     agent_data: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
     Return what an agent needs to reach the next trust level.
-    Includes which requirements are already met based on the agent's current data.
+    Clear, actionable steps — not time-based gates.
     """
-    if current_level >= TrustLevel.L4_FULL_AUTHORITY:
+    normalized = normalize_trust_level(int(current_level))
+
+    if normalized >= TrustLevel.L4_CERTIFIED:
         return {
-            "current_level": int(current_level),
+            "current_level": int(normalized),
             "next_level": None,
             "requirements": ["Already at maximum trust level"],
             "met": {"max_level": True},
         }
 
-    days_active = 0.0
-    successful_verifications = 0
-    if agent_data:
-        created_at = agent_data.get("created_at", datetime.now(timezone.utc).isoformat())
-        days_active = _days_since(created_at)
-        successful_verifications = agent_data.get("successful_verifications", 0)
-
-    if current_level == TrustLevel.L0_UNVERIFIED:
+    if normalized == TrustLevel.L1_REGISTERED:
+        ed25519_key = agent_data.get("ed25519_key", None) if agent_data else None
         return {
-            "current_level": int(current_level),
-            "next_level": int(TrustLevel.L1_BASIC),
-            "requirements": [
-                "Agent must exist (registered)",
-                "Owner must verify their email address",
-            ],
-            "met": {
-                "agent_exists": True,
-                "owner_email_verified": bool(agent_data.get("owner_email_verified", False)) if agent_data else False,
-            },
-        }
-
-    if current_level == TrustLevel.L1_BASIC:
-        return {
-            "current_level": int(current_level),
+            "current_level": int(normalized),
             "next_level": int(TrustLevel.L2_VERIFIED),
             "requirements": [
-                "Valid certificate must be issued",
-                "At least 1 successful verification",
+                "Bind an Ed25519 key (POST /agents/bind-ed25519)",
             ],
             "met": {
-                "certificate_valid": bool(agent_data.get("certificate_valid", False)) if agent_data else False,
-                "has_verification": successful_verifications >= 1,
+                "ed25519_key_bound": ed25519_key is not None and ed25519_key != "",
             },
         }
 
-    if current_level == TrustLevel.L2_VERIFIED:
+    if normalized == TrustLevel.L2_VERIFIED:
+        wallet_address = agent_data.get("wallet_address", None) if agent_data else None
         return {
-            "current_level": int(current_level),
-            "next_level": int(TrustLevel.L3_TRUSTED),
+            "current_level": int(normalized),
+            "next_level": int(TrustLevel.L3_SECURED),
             "requirements": [
-                "Trust score >= 0.7",
-                "At least 10 successful verifications",
-                "At least 7 days active",
+                "Bind a crypto wallet (POST /agents/bind-wallet)",
             ],
             "met": {
-                "trust_score_sufficient": (agent_data.get("trust_score", 0) if agent_data else 0) >= 0.7,
-                "enough_verifications": successful_verifications >= 10,
-                "days_active_sufficient": days_active >= 7,
+                "wallet_bound": wallet_address is not None and wallet_address != "",
             },
         }
 
-    if current_level == TrustLevel.L3_TRUSTED:
+    if normalized == TrustLevel.L3_SECURED:
         return {
-            "current_level": int(current_level),
-            "next_level": int(TrustLevel.L4_FULL_AUTHORITY),
+            "current_level": int(normalized),
+            "next_level": int(TrustLevel.L4_CERTIFIED),
             "requirements": [
-                "Trust score >= 0.9",
-                "Entity verified (legal entity binding)",
-                "At least 30 days active",
-                "At least 50 successful verifications",
+                "Complete entity verification",
             ],
             "met": {
-                "trust_score_sufficient": (agent_data.get("trust_score", 0) if agent_data else 0) >= 0.9,
                 "entity_verified": bool(agent_data.get("entity_verified", False)) if agent_data else False,
-                "days_active_sufficient": days_active >= 30,
-                "enough_verifications": successful_verifications >= 50,
             },
         }
 
     return {
-        "current_level": int(current_level),
+        "current_level": int(normalized),
         "next_level": None,
         "requirements": [],
         "met": {},

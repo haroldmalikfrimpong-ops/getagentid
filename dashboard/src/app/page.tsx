@@ -492,7 +492,7 @@ export default function LandingPage() {
                 icon:  '🏅',
                 label: '06',
                 title: 'Trust Levels',
-                desc:  'L0 through L4. Each level gates permissions and spending authority. Agents earn trust automatically over time.',
+                desc:  'L1 through L4. Security layers that unlock as you bind keys, wallets, and verify your entity. You control the limits.',
                 accent: '#ffd600',
               },
             ].map((item, i) => (
@@ -575,8 +575,8 @@ export default function LandingPage() {
                 tag: 'PROVEN',
               },
               {
-                title: 'Trust Levels (L0-L4)',
-                desc: 'Five-tier trust system. Agents earn trust through verifications, time, and entity binding. Each level gates permissions and spending authority up to $10,000/day. Automatic promotion, no manual intervention.',
+                title: 'Trust Levels (L1-L4)',
+                desc: 'Four-tier trust system. Levels based on what security capabilities are set up: Ed25519 key binding, wallet binding, and entity verification. Each level gates permissions and spending authority up to $100,000/day.',
                 accent: '#ff9500',
                 tag: 'NEW',
               },

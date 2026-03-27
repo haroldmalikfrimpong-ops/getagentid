@@ -15,7 +15,7 @@
 
 export interface RuntimeVerification {
   verified: boolean;
-  trust_level: number; // 0-4
+  trust_level: number; // 1-4
   trust_score: number; // 0.0 - 1.0
   permissions: string[];
   spending_limit: number; // daily USD limit
@@ -37,26 +37,27 @@ export interface RuntimeVerifierOptions {
 // ---------------------------------------------------------------------------
 
 const PERMISSIONS: Record<number, string[]> = {
-  0: [],
-  1: ["read", "discover"],
-  2: ["read", "discover", "verify", "send_message", "connect"],
+  1: ["read", "discover", "verify", "send_message", "connect"],
+  2: ["read", "discover", "verify", "send_message", "connect",
+      "challenge_response", "handle_data"],
   3: [
     "read", "discover", "verify", "send_message", "connect",
-    "handle_data", "access_paid_service", "make_payment",
+    "challenge_response", "handle_data",
+    "make_payment", "access_paid_service",
   ],
   4: [
     "read", "discover", "verify", "send_message", "connect",
-    "handle_data", "access_paid_service", "make_payment",
+    "challenge_response", "handle_data",
+    "make_payment", "access_paid_service",
     "sign_contract", "manage_funds", "full_autonomy",
   ],
 };
 
 const SPENDING_LIMITS: Record<number, number> = {
-  0: 0,
   1: 0,
   2: 0,
-  3: 100,
-  4: 10000,
+  3: 10000,
+  4: 100000,
 };
 
 // ---------------------------------------------------------------------------
@@ -109,7 +110,7 @@ export class RuntimeVerifier {
   async verify(agentDID: string, agentPublicKey: string): Promise<RuntimeVerification> {
     const result: RuntimeVerification = {
       verified: false,
-      trust_level: 0,
+      trust_level: 1,
       trust_score: 0,
       permissions: [],
       spending_limit: 0,
@@ -150,7 +151,7 @@ export class RuntimeVerifier {
 
     // --- Process trust-level response ---
     if (trustLevelResult) {
-      result.trust_level = Math.max(0, Math.min(4, trustLevelResult.trust_level ?? 0));
+      result.trust_level = Math.max(1, Math.min(4, trustLevelResult.trust_level ?? 1));
       result.entity_verified = trustLevelResult.entity_verified ?? false;
     } else {
       // Fallback: estimate trust level from score
@@ -242,9 +243,8 @@ function extractAgentId(did: string): string | null {
 }
 
 function estimateTrustLevel(trustScore: number, entityVerified: boolean): number {
-  if (trustScore >= 0.9 && entityVerified) return 4;
+  if (entityVerified) return 4;
   if (trustScore >= 0.7) return 3;
   if (trustScore >= 0.4) return 2;
-  if (trustScore > 0) return 1;
-  return 0;
+  return 1; // minimum is L1 in new model, no L0
 }

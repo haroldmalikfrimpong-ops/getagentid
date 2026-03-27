@@ -37,6 +37,8 @@ async function getAgentTrustLevel(agent: any, db: any) {
     owner_email_verified: ownerProfile?.email_verified === true,
     created_at: agent.created_at,
     successful_verifications: verificationCount ?? 0,
+    ed25519_key: agent.ed25519_key ?? null,
+    wallet_address: agent.wallet_address ?? null,
   }
 
   return calculateTrustLevel(trustData)
@@ -95,14 +97,14 @@ export async function GET(req: NextRequest) {
         .single()
 
       // Calculate sender trust level
-      let senderTrustLevel = 0
-      let senderTrustLabel = TRUST_LEVEL_LABELS[0]
+      let senderTrustLevel = 1
+      let senderTrustLabel = (TRUST_LEVEL_LABELS as any)[1] || 'L1 — Registered'
       if (sender) {
         try {
           senderTrustLevel = await getAgentTrustLevel(sender, db)
           senderTrustLabel = (TRUST_LEVEL_LABELS as any)[senderTrustLevel]
         } catch {
-          // Default to L0 if trust level calculation fails
+          // Default to L1 if trust level calculation fails
         }
       }
 

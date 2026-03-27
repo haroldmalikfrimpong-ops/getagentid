@@ -15,7 +15,7 @@ interface RuntimeVerifier {
 
 interface RuntimeVerification {
   verified: boolean;         // agent passed all checks
-  trust_level: number;       // 0-4 (L0 Unverified .. L4 Full Authority)
+  trust_level: number;       // 1-4 (L1 Registered .. L4 Certified)
   trust_score: number;       // 0.0 - 1.0
   permissions: string[];     // actions allowed at this trust level
   spending_limit: number;    // daily USD limit

@@ -1,8 +1,8 @@
 """AgentID Crypto Payment Client — Agent-to-Agent and Agent-to-Human.
 
 Authorization layer for agent crypto payments. Trust levels gate spending
-authority — L0-L2 cannot pay ($0 limit), L3 up to $100/day, L4 up to
-$10,000/day.
+authority — L1-L2 cannot pay ($0 limit, no wallet bound), L3 up to
+$10,000/day (default, user can lower), L4 up to $100,000/day (default, user can lower).
 
 This is the AUTHORIZATION layer. The actual on-chain transfer is a separate
 step — we build the trust/authorization layer that sits BEFORE the crypto

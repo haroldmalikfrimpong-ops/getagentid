@@ -39,7 +39,7 @@ class RuntimeVerification:
     """
 
     verified: bool = False
-    trust_level: int = 0  # 0-4
+    trust_level: int = 1  # 1-4 (minimum L1 in new model)
     trust_score: float = 0.0
     permissions: List[str] = field(default_factory=list)
     spending_limit: int = 0
@@ -146,8 +146,8 @@ class RuntimeVerifier:
                 result.did_resolution_status = "cached"
 
         if api_trust_level:
-            level_int = int(api_trust_level.get("trust_level", 0))
-            result.trust_level = max(0, min(4, level_int))
+            level_int = int(api_trust_level.get("trust_level", 1))
+            result.trust_level = max(1, min(4, level_int))
         else:
             # Calculate trust level locally from what we know
             result.trust_level = _calculate_level_from_score(
@@ -220,13 +220,19 @@ def _extract_agent_id(did: str) -> Optional[str]:
 
 
 def _calculate_level_from_score(trust_score: float, entity_verified: bool) -> int:
-    """Rough trust level estimate from trust score alone (API fallback)."""
-    if trust_score >= 0.9 and entity_verified:
+    """Rough trust level estimate when API is unavailable (fallback only).
+
+    New model: levels are based on what's set up, not scores. But when the API
+    is down and we only have a trust_score + entity_verified, we estimate:
+    - L4 if entity_verified (entity verification is the L4 requirement)
+    - L3 if score >= 0.7 (likely has wallet bound)
+    - L2 if score >= 0.4 (likely has Ed25519 key)
+    - L1 default (all registered agents are at least L1)
+    """
+    if entity_verified:
         return 4
     if trust_score >= 0.7:
         return 3
     if trust_score >= 0.4:
         return 2
-    if trust_score > 0:
-        return 1
-    return 0
+    return 1  # minimum is L1 in new model, no L0

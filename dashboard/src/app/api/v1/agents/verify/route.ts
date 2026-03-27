@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage, getUsageCount, trackIpUsage, getIpUsageCount } from '@/lib/usage'
-import { calculateTrustLevel, PERMISSIONS, getSpendingLimit, TRUST_LEVEL_LABELS, type AgentTrustData } from '@/lib/trust-levels'
+import { calculateTrustLevel, PERMISSIONS, getSpendingLimit, TRUST_LEVEL_LABELS, levelUpRequirements, type AgentTrustData } from '@/lib/trust-levels'
 import { sendWebhook } from '@/lib/webhooks'
 import { quickAnomalyCheck, calculateRiskScore, type AnomalyAlert } from '@/lib/behaviour'
 import { createDualReceipt } from '@/lib/receipts'
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       .eq('id', agent.user_id)
       .single()
 
-    // Calculate trust level
+    // Calculate trust level based on security capabilities, not time/score
     const agentTrustData: AgentTrustData = {
       trust_score: agent.trust_score ?? 0,
       verified: agent.verified ?? false,
@@ -118,12 +118,15 @@ export async function POST(req: NextRequest) {
       owner_email_verified: ownerProfile?.email_verified === true,
       created_at: agent.created_at,
       successful_verifications: verificationCount ?? 0,
+      ed25519_key: agent.ed25519_key ?? null,
+      wallet_address: agent.wallet_address ?? null,
     }
 
     const trust_level = calculateTrustLevel(agentTrustData)
     const permissions = PERMISSIONS[trust_level]
     const spending_limit = getSpendingLimit(trust_level)
     const trust_level_label = TRUST_LEVEL_LABELS[trust_level]
+    const level_up = levelUpRequirements(trust_level, agentTrustData)
 
     // Update last_active
     await db.from('agents').update({ last_active: new Date().toISOString() }).eq('agent_id', agent_id)
@@ -210,6 +213,7 @@ export async function POST(req: NextRequest) {
       owner: agent.owner,
       capabilities: agent.capabilities,
       platform: agent.platform,
+      // Trust score is INFORMATIONAL — included for reference but does NOT gate anything
       trust_score: agent.trust_score,
       trust_level,
       trust_level_label,
@@ -222,6 +226,8 @@ export async function POST(req: NextRequest) {
       wallet,
       solana_wallet,
       receipt,
+      // Always show what to do next
+      level_up,
       ...(behaviour_warnings.length > 0 && {
         behaviour: {
           risk_score: behaviour_risk_score,

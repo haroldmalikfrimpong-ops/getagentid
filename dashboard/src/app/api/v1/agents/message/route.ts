@@ -14,6 +14,7 @@ import {
   checkCoolingPeriod,
   validateWalletAddress,
 } from '@/lib/payment-security'
+import { getEffectiveSpendingLimit } from '@/lib/agent-spending'
 import crypto from 'crypto'
 
 // ── Helper: compute trust level for an agent row ────────────────────────────
@@ -50,6 +51,8 @@ async function getAgentTrustLevel(agent: any, db: any) {
     owner_email_verified: ownerProfile?.email_verified === true,
     created_at: agent.created_at,
     successful_verifications: verificationCount ?? 0,
+    ed25519_key: agent.ed25519_key ?? null,
+    wallet_address: agent.wallet_address ?? null,
   }
 
   return calculateTrustLevel(trustData)
@@ -106,17 +109,18 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Trust level checks ──────────────────────────────────────────────────
+    // L1+ can send messages — all registered agents can message immediately.
 
     const senderTrustLevel = await getAgentTrustLevel(senderAgent, db)
     const receiverTrustLevel = await getAgentTrustLevel(receiverAgent, db)
 
-    // L2+ required to send messages
+    // L1+ has send_message permission
     if (!checkPermission(senderTrustLevel, 'send_message')) {
       return NextResponse.json({
-        error: 'Sender agent does not have permission to send messages. L2+ required.',
+        error: 'Sender agent does not have permission to send messages. L1+ required.',
         sender_trust_level: senderTrustLevel,
-        sender_trust_label: (TRUST_LEVEL_LABELS as any)[senderTrustLevel],
-        required: 'L2 — Verified',
+        sender_trust_label: TRUST_LEVEL_LABELS[senderTrustLevel],
+        required: 'L1 — Registered',
       }, { status: 403 })
     }
 
@@ -152,27 +156,28 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Payment security flow (if message contains a payment) ───────────────
+    // Payment within messages still requires L3 (wallet bound)
 
     let payment_result = null
     if (payment_amount && payment_amount > 0) {
       const wallet = payment_wallet || ''
       const chain = payment_chain || 'solana'
 
-      // Check trust level allows payments
+      // Check trust level allows payments — L3+ required
       if (!checkPermission(senderTrustLevel, 'make_payment')) {
         return NextResponse.json({
-          error: 'Sender agent does not have permission to make payments. L3+ required.',
+          error: 'Sender agent does not have permission to make payments. L3+ (wallet bound) required.',
           sender_trust_level: senderTrustLevel,
-          sender_trust_label: (TRUST_LEVEL_LABELS as any)[senderTrustLevel],
-          required: 'L3 — Trusted',
+          sender_trust_label: TRUST_LEVEL_LABELS[senderTrustLevel],
+          required: 'L3 — Secured',
         }, { status: 403 })
       }
 
-      // Check spending authority (daily limit)
-      const dailyLimit = getSpendingLimit(senderTrustLevel)
+      // Check spending authority — use the effective limit (lower of trust default OR user's custom limit)
+      const dailyLimit = await getEffectiveSpendingLimit(msg.from_agent, senderTrustLevel)
       if (payment_amount > dailyLimit) {
         return NextResponse.json({
-          error: `Payment amount ($${payment_amount}) exceeds daily spending limit ($${dailyLimit}) for trust level ${(TRUST_LEVEL_LABELS as any)[senderTrustLevel]}`,
+          error: `Payment amount ($${payment_amount}) exceeds daily spending limit ($${dailyLimit}) for trust level ${TRUST_LEVEL_LABELS[senderTrustLevel]}`,
           sender_trust_level: senderTrustLevel,
           spending_limit: dailyLimit,
         }, { status: 403 })

@@ -60,48 +60,50 @@ EXTRACT_AGENT_ID_VECTORS = [
 # These are the boundary values where off-by-one or float comparison bugs appear
 LEVEL_FROM_SCORE_VECTORS = [
     # (trust_score, entity_verified, expected_level, description)
-    (0.0, False, 0, "zero score, no entity -> L0"),
-    (0.0, True, 0, "zero score, with entity -> L0"),
+    # New model: fallback uses scores as rough estimate, minimum L1
+    (0.0, False, 1, "zero score, no entity -> L1 (minimum in new model)"),
+    (0.0, True, 4, "zero score, with entity -> L4 (entity trumps)"),
     (0.39, False, 1, "just below 0.4, no entity -> L1"),
-    (0.39, True, 1, "just below 0.4, with entity -> L1"),
+    (0.39, True, 4, "just below 0.4, with entity -> L4 (entity trumps)"),
     (0.4, False, 2, "exactly 0.4, no entity -> L2"),
-    (0.4, True, 2, "exactly 0.4, with entity -> L2"),
+    (0.4, True, 4, "exactly 0.4, with entity -> L4 (entity trumps)"),
     (0.69, False, 2, "just below 0.7, no entity -> L2"),
-    (0.69, True, 2, "just below 0.7, with entity -> L2"),
+    (0.69, True, 4, "just below 0.7, with entity -> L4 (entity trumps)"),
     (0.7, False, 3, "exactly 0.7, no entity -> L3"),
-    (0.7, True, 3, "exactly 0.7, with entity -> L3"),
+    (0.7, True, 4, "exactly 0.7, with entity -> L4 (entity trumps)"),
     (0.89, False, 3, "just below 0.9, no entity -> L3"),
-    (0.89, True, 3, "just below 0.9, with entity -> L3"),
-    (0.9, False, 3, "exactly 0.9, no entity -> L3 (entity required for L4)"),
+    (0.89, True, 4, "just below 0.9, with entity -> L4 (entity trumps)"),
+    (0.9, False, 3, "exactly 0.9, no entity -> L3"),
     (0.9, True, 4, "exactly 0.9, with entity -> L4"),
-    (1.0, False, 3, "max score, no entity -> L3 (entity required for L4)"),
+    (1.0, False, 3, "max score, no entity -> L3"),
     (1.0, True, 4, "max score, with entity -> L4"),
 ]
 
 # Permissions: level -> sorted list of permissions
 # Both runtimes MUST produce exactly this
 EXPECTED_PERMISSIONS = {
-    0: [],
-    1: ["read", "discover"],
-    2: ["read", "discover", "verify", "send_message", "connect"],
+    1: ["read", "discover", "verify", "send_message", "connect"],
+    2: ["read", "discover", "verify", "send_message", "connect",
+        "challenge_response", "handle_data"],
     3: [
         "read", "discover", "verify", "send_message", "connect",
-        "handle_data", "access_paid_service", "make_payment",
+        "challenge_response", "handle_data",
+        "make_payment", "access_paid_service",
     ],
     4: [
         "read", "discover", "verify", "send_message", "connect",
-        "handle_data", "access_paid_service", "make_payment",
+        "challenge_response", "handle_data",
+        "make_payment", "access_paid_service",
         "sign_contract", "manage_funds", "full_autonomy",
     ],
 }
 
 # Spending limits: level -> USD
 EXPECTED_SPENDING_LIMITS = {
-    0: 0,
     1: 0,
     2: 0,
-    3: 100,
-    4: 10000,
+    3: 10000,
+    4: 100000,
 }
 
 
@@ -164,7 +166,7 @@ def test_permissions_match():
     failed = 0
 
     print("\n-- Test: PERMISSIONS cross-runtime match --\n")
-    for level in range(5):
+    for level in range(1, 5):
         tl = TrustLevel(level)
         py_perms = list(PERMISSIONS.get(tl, []))
         expected = EXPECTED_PERMISSIONS[level]
@@ -188,7 +190,7 @@ def test_spending_limits_match():
     failed = 0
 
     print("\n-- Test: SPENDING_LIMITS cross-runtime match --\n")
-    for level in range(5):
+    for level in range(1, 5):
         tl = TrustLevel(level)
         py_limit = SPENDING_LIMITS.get(tl, 0)
         expected = EXPECTED_SPENDING_LIMITS[level]
@@ -307,8 +309,9 @@ def test_json_serialization_determinism():
         trust_level=3,
         trust_score=0.85,
         permissions=["read", "discover", "verify", "send_message", "connect",
-                      "handle_data", "access_paid_service", "make_payment"],
-        spending_limit=100,
+                      "challenge_response", "handle_data",
+                      "make_payment", "access_paid_service"],
+        spending_limit=10000,
         did_resolution_status="live",
         entity_verified=True,
         execution_timestamp="2026-03-26T12:00:00Z",
@@ -342,10 +345,10 @@ def test_json_serialization_determinism():
         '"entity_verified":true,'
         '"execution_timestamp":"2026-03-26T12:00:00Z",'
         '"permissions":["read","discover","verify","send_message","connect",'
-        '"handle_data","access_paid_service","make_payment"],'
+        '"challenge_response","handle_data","make_payment","access_paid_service"],'
         '"pinned_public_key":"abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",'
         '"scope":"payments:read",'
-        '"spending_limit":100,'
+        '"spending_limit":10000,'
         '"trust_level":3,'
         '"trust_score":0.85,'
         '"verified":true}'
@@ -414,12 +417,12 @@ def run_tests():
         print(f"    ({score}, {entity_str}) -> {expected_level}")
 
     print("\n  -- PERMISSIONS --")
-    for level in range(5):
+    for level in range(1, 5):
         perms = json.dumps(EXPECTED_PERMISSIONS[level])
         print(f"    L{level}: {perms}")
 
     print("\n  -- SPENDING_LIMITS --")
-    for level in range(5):
+    for level in range(1, 5):
         print(f"    L{level}: {EXPECTED_SPENDING_LIMITS[level]}")
 
     return total_failed == 0

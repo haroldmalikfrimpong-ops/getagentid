@@ -149,7 +149,7 @@ async def main():
 
     # --- Unverified agent is blocked at the tool level -----------------------
     print("=" * 60)
-    print("UNVERIFIED AGENT — tool call should be blocked")
+    print("UNTRUSTED AGENT — tool call should be blocked")
     print("=" * 60)
 
     ctx_bad = AgentIdentityContext(

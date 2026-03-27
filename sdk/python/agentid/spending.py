@@ -132,7 +132,7 @@ class SpendingClient:
         daily_limit = balance.get("daily_limit", 0)
         spent_today = balance.get("spent_today", 0)
         remaining = balance.get("remaining_daily_limit", 0)
-        trust_level = balance.get("trust_level", 0)
+        trust_level = balance.get("trust_level", 1)
 
         authorized = amount > 0 and amount <= remaining and trust_level >= 3
         reason = None

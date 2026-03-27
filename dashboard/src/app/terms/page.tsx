@@ -42,7 +42,7 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-lg font-bold text-white mb-3">6. Trust Levels</h2>
-              <p>AgentID assigns trust levels (L0-L4) to agents based on verification history, time active, and entity binding. Trust levels are calculated automatically. AgentID reserves the right to adjust trust scoring algorithms.</p>
+              <p>AgentID assigns trust levels (L1-L4) to agents based on security capabilities set up: Ed25519 key binding, wallet binding, and entity verification. Trust levels are calculated automatically. AgentID reserves the right to adjust trust level criteria.</p>
             </section>
 
             <section>

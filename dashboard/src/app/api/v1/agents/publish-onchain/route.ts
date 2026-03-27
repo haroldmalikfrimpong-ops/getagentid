@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       agent_id: agent.agent_id,
       owner: agent.owner,
       public_key: (agent.public_key || '').substring(0, 128),
-      trust_level: agent.trust_level ?? 0,
+      trust_level: agent.trust_level ?? 1,
       registered_at: agent.created_at,
       certificate_hash: agent.certificate ? sha256(agent.certificate) : null,
     }

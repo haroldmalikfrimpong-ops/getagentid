@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
     // ── Fetch agents ──
     const { data: agents, error: agentsError } = await db
       .from('agents')
-      .select('agent_id, name, platform, trust_score, verified, active, created_at, last_active, certificate, user_id')
+      .select('agent_id, name, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, ed25519_key, wallet_address')
       .eq('user_id', userId)
       .order('created_at')
 
@@ -213,6 +213,8 @@ export async function GET(req: NextRequest) {
         owner_email_verified: emailVerified,
         created_at: agent.created_at,
         successful_verifications: successfulVer,
+        ed25519_key: agent.ed25519_key ?? null,
+        wallet_address: agent.wallet_address ?? null,
       }
 
       const trustLevel = calculateTrustLevel(trustData)
@@ -246,11 +248,10 @@ export async function GET(req: NextRequest) {
 
     // ── Trust level distribution ──
     const trustDistribution: Record<string, number> = {
-      'L0 — Unverified': 0,
-      'L1 — Basic': 0,
+      'L1 — Registered': 0,
       'L2 — Verified': 0,
-      'L3 — Trusted': 0,
-      'L4 — Full Authority': 0,
+      'L3 — Secured': 0,
+      'L4 — Certified': 0,
     }
     for (const agent of agentInventory) {
       const label = TRUST_LEVEL_LABELS[agent.trust_level]
@@ -302,14 +303,15 @@ export async function GET(req: NextRequest) {
         })
       }
 
-      // Low trust level for active agents
-      if (agent.active && agent.trust_level <= TrustLevel.L0_UNVERIFIED) {
+      // Low trust level for active agents — all registered agents are L1+ now
+      // No L0 exists in the new model, so this check flags agents that somehow have no level
+      if (agent.active && agent.trust_level < TrustLevel.L1_REGISTERED) {
         riskFlags.push({
           agent_id: agent.agent_id,
           agent_name: agent.name,
           severity: 'medium',
           type: 'low_trust_level',
-          message: 'Active agent at L0 (Unverified). No permissions granted.',
+          message: 'Active agent below L1. This should not happen — investigate.',
         })
       }
 
@@ -325,7 +327,7 @@ export async function GET(req: NextRequest) {
       }
 
       // No entity verification for L3+ agents
-      if (agent.trust_level >= TrustLevel.L3_TRUSTED && !agent.entity_verified) {
+      if (agent.trust_level >= TrustLevel.L3_SECURED && !agent.entity_verified) {
         riskFlags.push({
           agent_id: agent.agent_id,
           agent_name: agent.name,

@@ -63,14 +63,14 @@ const DEFAULT_DUPLICATE_WINDOW_MINUTES = 10
 
 /** Per-recipient daily limits by trust level (USD). */
 const RECIPIENT_DAILY_LIMITS: Record<number, number> = {
-  [TrustLevel.L3_TRUSTED]: 50,
-  [TrustLevel.L4_FULL_AUTHORITY]: 1000,
+  [TrustLevel.L3_SECURED]: 500,
+  [TrustLevel.L4_CERTIFIED]: 10000,
 }
 
 /** Dual-approval thresholds by trust level (USD). Payments above this need owner sign-off. */
 const DUAL_APPROVAL_THRESHOLDS: Record<number, number> = {
-  [TrustLevel.L3_TRUSTED]: 50,
-  [TrustLevel.L4_FULL_AUTHORITY]: 5000,
+  [TrustLevel.L3_SECURED]: 500,
+  [TrustLevel.L4_CERTIFIED]: 50000,
 }
 
 /** Owner has 1 hour to approve or deny a pending payment. */
@@ -365,8 +365,8 @@ export async function isDuplicatePayment(
 /**
  * Check if a payment would exceed the per-recipient daily limit.
  *
- * L3 agents: $50/day per recipient.
- * L4 agents: $1000/day per recipient.
+ * L3 agents: $500/day per recipient.
+ * L4 agents: $10,000/day per recipient.
  */
 export async function checkRecipientDailyLimit(
   agentId: string,
@@ -414,8 +414,8 @@ export async function checkRecipientDailyLimit(
 /**
  * Determine if a payment requires explicit owner approval.
  *
- * L3: any payment over $50 needs owner sign-off.
- * L4: any payment over $5000 needs owner sign-off.
+ * L3: any payment over $500 needs owner sign-off.
+ * L4: any payment over $50,000 needs owner sign-off.
  */
 export function requiresDualApproval(trustLevel: number, amount: number): boolean {
   const threshold = DUAL_APPROVAL_THRESHOLDS[trustLevel]

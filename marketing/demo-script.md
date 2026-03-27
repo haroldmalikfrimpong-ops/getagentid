@@ -35,7 +35,7 @@ curl https://some-agent.example.com/api/data
 
 ```bash
 curl -X POST https://getagentid.dev/api/v1/agents/register \
-  -H "Authorization: Bearer sk_live_..." \
+  -H "Authorization: Bearer agentid_sk_your_api_key_here" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "ResearchBot",
@@ -107,7 +107,7 @@ Show the response:
 
 ```bash
 curl -X POST https://getagentid.dev/api/v1/agents/connect \
-  -H "Authorization: Bearer sk_live_..." \
+  -H "Authorization: Bearer agentid_sk_your_api_key_here" \
   -H "Content-Type: application/json" \
   -d '{
     "from_agent": "ag_7Kx9mP2vLqW4",

@@ -57,16 +57,54 @@ print(msg.trust_check)
 # → TRUSTED — both agents verified. Safe to exchange data.
 ```
 
+## Trust Levels (L1-L4)
+
+Every agent starts at L1. Levels are based on what security capabilities you set up:
+
+| Level | Name | What you do | Unlocks |
+|-------|------|-------------|---------|
+| L1 | Registered | Register an agent | read, discover, verify, send_message, connect |
+| L2 | Verified | Bind an Ed25519 key | challenge_response, handle_data |
+| L3 | Secured | Bind a crypto wallet | make_payment, access_paid_service ($10,000/day default) |
+| L4 | Certified | Complete entity verification | sign_contract, manage_funds, full_autonomy ($100,000/day default) |
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| `GET` | `/api/v1` | API health check |
+| `POST` | `/api/v1/auth` | Authenticate / get token |
+| `POST` | `/api/v1/keys` | Create API key |
+| `DELETE` | `/api/v1/keys` | Revoke API key |
 | `POST` | `/api/v1/agents/register` | Register a new agent |
 | `POST` | `/api/v1/agents/verify` | Verify an agent (public) |
 | `GET` | `/api/v1/agents/discover` | Search agents by capability |
 | `POST` | `/api/v1/agents/connect` | Send verified message between agents |
 | `POST` | `/api/v1/agents/message` | Respond to a message |
 | `GET` | `/api/v1/agents/inbox` | Get pending messages |
+| `GET` | `/api/v1/agents/trust-level` | Get agent trust level (public) |
+| `POST` | `/api/v1/agents/bind-ed25519` | Bind Ed25519 key to agent |
+| `POST` | `/api/v1/agents/bind-wallet` | Bind crypto wallet to agent |
+| `GET` | `/api/v1/agents/wallet` | Get agent wallet info |
+| `GET` | `/api/v1/agents/balance` | Get agent wallet balance |
+| `POST` | `/api/v1/agents/challenge` | Create cryptographic challenge |
+| `POST` | `/api/v1/agents/challenge/verify` | Verify challenge response |
+| `POST` | `/api/v1/agents/spend` | Record agent spending |
+| `GET` | `/api/v1/agents/spending-history` | Get spending history |
+| `POST` | `/api/v1/agents/pay` | Agent-to-human crypto payment |
+| `GET` | `/api/v1/agents/pay` | Get payment history |
+| `POST` | `/api/v1/agents/payment-settings` | Update payment settings |
+| `GET` | `/api/v1/agents/payment-settings` | Get payment settings |
+| `GET` | `/api/v1/agents/behaviour` | Get agent behaviour profile |
+| `POST` | `/api/v1/agents/publish-onchain` | Publish agent identity on-chain |
+| `GET` | `/api/v1/reports/compliance` | EU AI Act compliance report |
+| `GET` | `/api/v1/webhooks` | List webhooks |
+| `POST` | `/api/v1/webhooks` | Create webhook |
+| `PUT` | `/api/v1/webhooks` | Update webhook |
+| `POST` | `/api/v1/webhook` | Stripe webhook handler |
+| `POST` | `/api/v1/checkout` | Create Stripe checkout session |
+| `POST` | `/api/v1/waitlist` | Join waitlist |
+| `POST` | `/api/v1/admin` | Admin actions |
 
 ## Works With
 
@@ -96,9 +134,9 @@ Agent A → AgentID API → Verify → Agent B
 
 | Tier | Price | Agents | Verifications |
 |------|-------|--------|---------------|
-| Free | $0 | 5 | 1,000/month |
-| Startup | $49/mo | 50 | 50,000/month |
-| Enterprise | Custom | Unlimited | Unlimited |
+| Free | $0 | 100 | 10,000/month |
+| Pro | $99/mo | 500 | 100,000/month |
+| Enterprise | $5,000/mo | Unlimited | Unlimited |
 
 ## Tech Stack
 

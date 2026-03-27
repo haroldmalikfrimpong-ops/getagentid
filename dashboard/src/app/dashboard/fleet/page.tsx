@@ -43,7 +43,6 @@ type SortKey = 'name' | 'trust_level' | 'last_verified'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const TRUST_COLORS: Record<number, { bg: string; text: string; border: string; glow: string }> = {
-  0: { bg: 'rgba(107,114,128,0.1)',  text: '#9ca3af', border: 'rgba(107,114,128,0.25)', glow: 'rgba(107,114,128,0.15)' },
   1: { bg: 'rgba(59,130,246,0.1)',   text: '#60a5fa', border: 'rgba(59,130,246,0.25)',  glow: 'rgba(59,130,246,0.15)' },
   2: { bg: 'rgba(34,197,94,0.1)',    text: '#4ade80', border: 'rgba(34,197,94,0.25)',   glow: 'rgba(34,197,94,0.15)' },
   3: { bg: 'rgba(168,85,247,0.1)',   text: '#c084fc', border: 'rgba(168,85,247,0.25)',  glow: 'rgba(168,85,247,0.15)' },
@@ -1047,7 +1046,7 @@ export default function FleetPage() {
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono text-gray-600 uppercase tracking-wider">Trust:</span>
               <div className="flex gap-1">
-                {[0, 1, 2, 3, 4].map(level => {
+                {[1, 2, 3, 4].map(level => {
                   const colors = TRUST_COLORS[level]
                   const active = trustFilters.has(level)
                   return (
@@ -1186,7 +1185,7 @@ export default function FleetPage() {
               <AgentRow
                 key={agent.agent_id}
                 agent={agent}
-                trustLevel={trustLevels.get(agent.agent_id) ?? TrustLevel.L0_UNVERIFIED}
+                trustLevel={trustLevels.get(agent.agent_id) ?? TrustLevel.L1_REGISTERED}
                 certStatus={getCertStatus(agent)}
                 status={statuses.get(agent.agent_id) ?? 'inactive'}
                 lastVerification={lastVerifications.get(agent.agent_id) ?? null}

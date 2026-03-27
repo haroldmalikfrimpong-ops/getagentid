@@ -114,26 +114,38 @@ export async function detectAnomalies(agentId: string): Promise<AnomalyAlert[]> 
     getRecentActivity(agentId),
   ])
 
-  // 1. Frequency spike — more than 3x average in the last hour
+  // 1. Frequency spike — ratio-based but with MINIMUM absolute thresholds
+  // An agent making 4 calls when its baseline is 0.01 is NOT an attack — it's normal use.
+  // Only flag as HIGH when the absolute count is genuinely concerning.
+  const MIN_CALLS_FOR_LOW = 10       // at least 10 calls/hr before any flag
+  const MIN_CALLS_FOR_MEDIUM = 25    // at least 25 calls/hr for medium
+  const MIN_CALLS_FOR_HIGH = 50      // at least 50 calls/hr for high (actual abuse)
+
   if (profile.avg_api_calls_per_hour > 0) {
     const ratio = recentActivity.lastHourCount / profile.avg_api_calls_per_hour
-    if (ratio >= FREQUENCY_SPIKE_MULTIPLIER) {
+    const count = recentActivity.lastHourCount
+
+    if (ratio >= FREQUENCY_SPIKE_MULTIPLIER && count >= MIN_CALLS_FOR_LOW) {
+      let severity: AnomalyAlert['severity'] = 'low'
+      if (ratio >= 10 && count >= MIN_CALLS_FOR_HIGH) severity = 'high'
+      else if (ratio >= 5 && count >= MIN_CALLS_FOR_MEDIUM) severity = 'medium'
+
       alerts.push({
         agent_id: agentId,
         type: 'frequency_spike',
-        severity: ratio >= 10 ? 'high' : ratio >= 5 ? 'medium' : 'low',
-        description: `API call rate is ${Math.round(ratio)}x the baseline average (${recentActivity.lastHourCount} calls in the last hour vs avg ${profile.avg_api_calls_per_hour}/hr)`,
+        severity,
+        description: `API call rate is ${Math.round(ratio)}x the baseline average (${count} calls in the last hour vs avg ${profile.avg_api_calls_per_hour}/hr)`,
         detected_at: detectedAt,
-        current_value: recentActivity.lastHourCount,
+        current_value: count,
         baseline_value: profile.avg_api_calls_per_hour,
       })
     }
-  } else if (recentActivity.lastHourCount > 5) {
-    // No baseline yet but sudden burst of activity
+  } else if (recentActivity.lastHourCount > MIN_CALLS_FOR_MEDIUM) {
+    // No baseline yet but genuinely high volume
     alerts.push({
       agent_id: agentId,
       type: 'frequency_spike',
-      severity: 'medium',
+      severity: recentActivity.lastHourCount >= MIN_CALLS_FOR_HIGH ? 'high' : 'medium',
       description: `${recentActivity.lastHourCount} API calls in the last hour from an agent with no prior baseline`,
       detected_at: detectedAt,
       current_value: recentActivity.lastHourCount,

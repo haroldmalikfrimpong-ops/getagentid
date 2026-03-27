@@ -89,7 +89,7 @@ def publish_agent_identity(
         agent_id:      The agent's unique identifier (e.g. ``agent_abc123``).
         owner:         Owner name or email.
         public_key:    The agent's public key (PEM or hex).
-        trust_level:   Integer trust level (0-4).
+        trust_level:   Integer trust level (1-4).
         certificate:   The agent's certificate string.
         registered_at: ISO timestamp of original registration (defaults to now).
         keypair_path:  Override path to the registry keypair JSON file.
