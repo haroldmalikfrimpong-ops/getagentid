@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -20,6 +20,20 @@ function SignOutIcon() {
 
 // ─── Nav ─────────────────────────────────────────────────────────────────────
 function Navbar({ userName, avatarUrl, onSignOut }: { userName: string; avatarUrl?: string; onSignOut: () => void }) {
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  const isActive = (path: string) => pathname === path
+
+  const navLinks = [
+    { href: '/dashboard',           label: 'Dashboard' },
+    { href: '/dashboard/fleet',     label: 'Fleet' },
+    { href: '/dashboard/audit',     label: 'Audit' },
+    { href: '/dashboard/reports',   label: 'Reports' },
+    { href: '/dashboard/webhooks',  label: 'Webhooks' },
+    { href: '/dashboard/keys',      label: 'API Keys' },
+    { href: '/registry',            label: 'Registry' },
+    { href: '/docs',                label: 'Docs' },
+  ]
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3"
       style={{
@@ -27,7 +41,24 @@ function Navbar({ userName, avatarUrl, onSignOut }: { userName: string; avatarUr
         backdropFilter: 'blur(20px)',
         borderBottom:   '1px solid rgba(255,255,255,0.05)',
       }}>
-      <a href="/" className="text-lg font-black holo-gradient">AgentID</a>
+      <div className="flex items-center gap-6">
+        <a href="/" className="text-lg font-black holo-gradient">AgentID</a>
+        <div className="flex gap-1">
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              style={isActive(link.href)
+                ? { background: 'rgba(0,212,255,0.08)', color: '#00d4ff' }
+                : { color: '#6b7280' }
+              }
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      </div>
       <div className="flex items-center gap-3">
         {avatarUrl ? (
           <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full border border-white/10" />
@@ -45,6 +76,96 @@ function Navbar({ userName, avatarUrl, onSignOut }: { userName: string; avatarUr
         </button>
       </div>
     </nav>
+  )
+}
+
+// ─── Getting Started Onboarding ──────────────────────────────────────────────
+function GettingStarted({ agents }: { agents: any[] }) {
+  // Compute step completion
+  const hasAgents     = agents.length > 0
+  const hasEd25519    = agents.some((a: any) => a.ed25519_key)
+  const hasWallet     = agents.some((a: any) => a.wallet_address)
+  const hasEntity     = false // entity_verified is on the profile, not agent — we assume false here
+
+  // Determine the highest trust level across all agents
+  const maxLevel = agents.reduce((max: number, a: any) => {
+    const level = a.wallet_address ? 3 : a.ed25519_key ? 2 : 1
+    return Math.max(max, level)
+  }, 0)
+
+  // Hide if user has reached L3+
+  if (maxLevel >= 3) return null
+  // Hide if no agents yet (the empty state handles that)
+  if (!hasAgents) return null
+
+  const steps = [
+    { done: hasAgents,  label: `Register an agent (done — you have ${agents.length} agent${agents.length !== 1 ? 's' : ''})`, href: null },
+    { done: hasEd25519, label: 'Bind an Ed25519 key (makes your agent L2 — Verified)', href: null, note: 'Use the "Bind Key" button on your agent card' },
+    { done: hasWallet,  label: 'Bind a wallet (makes your agent L3 — Secured, enables payments)', href: null, note: 'Use the "Bind Wallet" button on your agent card' },
+    { done: hasEntity,  label: 'Complete entity verification (L4 — Certified, full authority)', href: 'mailto:verify@getagentid.dev?subject=Entity%20Verification%20Request', note: 'Contact us to verify your organization' },
+  ]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="rounded-2xl p-5 mb-6"
+      style={{
+        background: 'rgba(0,212,255,0.02)',
+        border: '1px solid rgba(0,212,255,0.08)',
+      }}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-6 h-6 rounded-lg flex items-center justify-center text-sm"
+          style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.15)' }}>
+          <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h3 className="text-sm font-bold text-white">Getting Started with AgentID</h3>
+      </div>
+
+      <div className="space-y-3">
+        {steps.map((step, i) => (
+          <div key={i} className="flex items-start gap-3">
+            {/* Check / number */}
+            <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono ${
+              step.done
+                ? 'bg-green-500/15 text-green-400 border border-green-500/25'
+                : 'bg-white/5 text-gray-500 border border-white/10'
+            }`}>
+              {step.done ? (
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                i + 1
+              )}
+            </div>
+            <div className="flex-1">
+              <span className={`text-xs ${step.done ? 'text-gray-400 line-through' : 'text-gray-300'}`}>
+                {step.label}
+              </span>
+              {!step.done && step.note && (
+                <div className="text-[10px] text-gray-600 mt-0.5">{step.note}</div>
+              )}
+              {!step.done && step.href && (
+                <a href={step.href} className="inline-block mt-1 text-[10px] text-cyan-500 hover:text-cyan-300 transition-colors font-mono">
+                  Start this step →
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <p className="text-[10px] text-gray-600 font-mono">
+          Each level unlocks new capabilities. L3 enables payments. L4 enables full autonomy.
+        </p>
+      </div>
+    </motion.div>
   )
 }
 
@@ -215,6 +336,19 @@ export default function DashboardPage() {
   const [upgrading, setUpgrading]     = useState(false)
   const router = useRouter()
 
+  const loadData = useCallback(async () => {
+    try {
+      const [agentsRes, eventsRes, txRes] = await Promise.all([
+        supabase.from('agents').select('*').order('created_at'),
+        supabase.from('agent_events').select('*').order('created_at', { ascending: false }).limit(50),
+        supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(20),
+      ])
+      if (agentsRes.data) setAgents(agentsRes.data)
+      if (eventsRes.data) setEvents(eventsRes.data)
+      if (txRes.data) setTransactions(txRes.data)
+    } catch (e) { console.error(e) }
+  }, [])
+
   useEffect(() => {
     const clock = setInterval(() => setTime(
       new Date().toLocaleTimeString('en-GB', { hour12: false })
@@ -249,20 +383,7 @@ export default function DashboardPage() {
     })
 
     return () => { clearInterval(clock); subscription.unsubscribe() }
-  }, [])
-
-  async function loadData() {
-    try {
-      const [agentsRes, eventsRes, txRes] = await Promise.all([
-        supabase.from('agents').select('*').order('created_at'),
-        supabase.from('agent_events').select('*').order('created_at', { ascending: false }).limit(50),
-        supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(20),
-      ])
-      if (agentsRes.data) setAgents(agentsRes.data)
-      if (eventsRes.data) setEvents(eventsRes.data)
-      if (txRes.data) setTransactions(txRes.data)
-    } catch (e) { console.error(e) }
-  }
+  }, [loadData, router])
 
   async function loadProfile() {
     const { data } = await supabase.from('profiles').select('*').single()
@@ -401,6 +522,9 @@ export default function DashboardPage() {
           onUpgrade={handleUpgrade}
         />
 
+        {/* ── Getting Started ── */}
+        <GettingStarted agents={agents} />
+
         {/* ── Stats ── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -437,7 +561,7 @@ export default function DashboardPage() {
             className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-10"
           >
             {agents.map((agent, i) => (
-              <AgentPassport key={agent.agent_id} agent={agent} index={i} />
+              <AgentPassport key={agent.agent_id} agent={agent} index={i} onAgentUpdated={loadData} />
             ))}
           </motion.div>
         )}

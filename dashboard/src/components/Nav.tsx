@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 export default function Nav() {
   const [user, setUser] = useState<any>(null)
   const pathname = usePathname()
+  const router = useRouter()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -25,6 +26,31 @@ export default function Nav() {
   const userName   = user?.user_metadata?.user_name || user?.user_metadata?.full_name || user?.email || ''
   const avatarUrl  = user?.user_metadata?.avatar_url
 
+  // Always-visible links (redirect to /login if not logged in)
+  const publicLinks = [
+    { href: '/dashboard',             label: 'Dashboard' },
+    { href: '/dashboard/fleet',       label: 'Fleet' },
+    { href: '/dashboard/audit',       label: 'Audit' },
+    { href: '/dashboard/reports',     label: 'Reports' },
+    { href: '/registry',              label: 'Registry' },
+    { href: '/docs',                  label: 'Docs' },
+  ]
+
+  // Only shown when logged in
+  const authLinks = [
+    { href: '/dashboard/keys',        label: 'API Keys' },
+  ]
+
+  function handleNavClick(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
+    // Public routes don't need auth
+    if (href === '/registry' || href === '/docs') return
+    // If not logged in, redirect to login
+    if (!user) {
+      e.preventDefault()
+      router.push('/login')
+    }
+  }
+
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3"
@@ -37,30 +63,35 @@ export default function Nav() {
       <div className="flex items-center gap-6">
         <a href="/" className="text-lg font-black holo-gradient">AgentID</a>
 
-        {user && (
-          <div className="flex gap-1">
-            {[
-              { href: '/dashboard',             label: 'Dashboard' },
-              { href: '/dashboard/fleet',      label: 'Fleet' },
-              { href: '/dashboard/connections', label: 'Connections' },
-              { href: '/dashboard/keys',       label: 'API Keys' },
-              { href: '/registry',             label: 'Registry' },
-              { href: '/docs',                 label: 'Docs' },
-            ].map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                style={isActive(link.href)
-                  ? { background: 'rgba(0,212,255,0.08)', color: '#00d4ff' }
-                  : { color: '#6b7280' }
-                }
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-        )}
+        <div className="flex gap-1">
+          {publicLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              onClick={(e) => handleNavClick(e, link.href)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              style={isActive(link.href)
+                ? { background: 'rgba(0,212,255,0.08)', color: '#00d4ff' }
+                : { color: '#6b7280' }
+              }
+            >
+              {link.label}
+            </a>
+          ))}
+          {user && authLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              style={isActive(link.href)
+                ? { background: 'rgba(0,212,255,0.08)', color: '#00d4ff' }
+                : { color: '#6b7280' }
+              }
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

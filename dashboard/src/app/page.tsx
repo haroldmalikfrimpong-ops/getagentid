@@ -90,6 +90,15 @@ export default function LandingPage() {
           <a href="#how" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
             How It Works
           </a>
+          <a href={loggedIn ? '/dashboard/fleet' : '/login'} className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
+            Fleet
+          </a>
+          <a href={loggedIn ? '/dashboard/audit' : '/login'} className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
+            Audit
+          </a>
+          <a href={loggedIn ? '/dashboard/reports' : '/login'} className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
+            Reports
+          </a>
           <a href="/registry" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
             Registry
           </a>
