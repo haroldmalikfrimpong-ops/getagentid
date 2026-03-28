@@ -107,6 +107,9 @@ export async function GET(req: NextRequest) {
       .order('timestamp', { ascending: false })
       .limit(10)
 
+    // Cryptographic scarring: lifetime negative events
+    const scarring_score = (negativeSignals ?? 0)
+
     // Behavioural risk score
     let behaviour_risk_score = 0
     try {
@@ -115,6 +118,14 @@ export async function GET(req: NextRequest) {
     } catch {
       // Non-blocking
     }
+
+    // Active delegation count
+    const { count: activeDelegationCount } = await db
+      .from('agent_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('message_type', 'delegation')
+      .eq('status', 'active')
+      .or(`from_agent.eq.${agent_id},to_agent.eq.${agent_id}`)
 
     // DID
     const did = `did:web:getagentid.dev:agent:${agent_id}`
@@ -141,9 +152,18 @@ export async function GET(req: NextRequest) {
         spending_limit,
         certificate_valid,
       },
+      authorization: {
+        trust_level,
+        trust_level_label: TRUST_LEVEL_LABELS[trust_level],
+        permissions,
+        effective_spending_limit: spending_limit,
+        active_delegation_count: activeDelegationCount ?? 0,
+        scarring_score,
+      },
       verification_count: verificationCount ?? 0,
       negative_signals: negativeSignals ?? 0,
       resolved_signals: resolvedSignals ?? 0,
+      scarring_score,
       receipts: receipts || [],
       behaviour_risk_score,
       generated_at,

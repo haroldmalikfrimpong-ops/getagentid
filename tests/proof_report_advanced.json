@@ -1,0 +1,1606 @@
+{
+  "title": "AgentID Advanced Proof Report",
+  "version": "1.0.0",
+  "suite": "advanced",
+  "api_base": "https://www.getagentid.dev/api/v1",
+  "generated_at": "2026-03-27T04:40:57.455507+00:00",
+  "summary": {
+    "total_tests": 16,
+    "passed": 15,
+    "failed": 1,
+    "hash_receipts": 8,
+    "blockchain_receipts": 8,
+    "solana_explorer_links": [
+      "https://explorer.solana.com/tx/XgUQ1JTznVgL7NWDpUgbmpyYk4h48K7HTDuU11tYtH5TWZQjKcbc47Bra2dihAqPKvfkRH8uxHu3KsrgKncaifj?cluster=devnet",
+      "https://explorer.solana.com/tx/tHRKsY5vQ6V9JEE4HD3e8WhdhmAXWcrHTz9XWYFZW9sJctgdgiz1j29w7MpNh44AFCVyUzyPNRwTKv1vQYRyVPx?cluster=devnet",
+      "https://explorer.solana.com/tx/iqwS6jipQERXB2Th8QtDyiLtXQXhLUfjDV5u21JA9TxopZfHACUDx8AenwiYVM7Jc1aKsMkA5KQjNi8VtNbyNQT?cluster=devnet",
+      "https://explorer.solana.com/tx/EzsfC3zKCqJBgRF58mGwigbirW6gFuVPoBPTZHDdz5opaPHUXYtjpcUBpHmDQ5a5v952tXw2YypBz3vT56esHsy?cluster=devnet",
+      "https://explorer.solana.com/tx/4T6JnuJbsAm2r2T6vb7JcjAyQbXZ76bzXAHRcH1TLBa3hENHL8kUUSQNEtroPYAtdMzZqCTeHqQnKWEiC9FNMqCM?cluster=devnet",
+      "https://explorer.solana.com/tx/62D1ejA38ZB5kFNPR8KnE2fXuPihCUXXBMbqEno6bnTtd6fQdZ7EBqWeRh6E3jMVkgDtXkNw48mtaZ43L8AJQbpB?cluster=devnet",
+      "https://explorer.solana.com/tx/4MzFwz7E7HZGCDK7PZBW3uQGwanjkFe6z1EjHvCtA9sUE6RXeKy8xTY7umZ823gUHCbh6QbvfFaUPC2gk72Urw7W?cluster=devnet",
+      "https://explorer.solana.com/tx/4ULAUANy3JAcF5nPMjzYJBsXXihwTkf2RE5s94i3PRGkQguDjVh6zUfBmBmqjcwBKqwcNwyLVgSPrP29JB3zLB96?cluster=devnet"
+    ]
+  },
+  "established_agents_used": {
+    "trading_bot": "agent_c5460451b4344268",
+    "billionmaker": "agent_9ba9aa4a929f4ca7",
+    "social_bot": "agent_326b59a61add4c43"
+  },
+  "registered_agents": {
+    "ProofAlpha-Adv": "agent_3b3accc7b7083ff0",
+    "ProofBeta-Adv": "agent_8432911f6cc9c048"
+  },
+  "ed25519_key_bound": "6a4313c8a612efe7288baadecb4473e100fc049af328f5d610dd59f856ef1bac",
+  "derived_solana_address": "89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q",
+  "tests": [
+    {
+      "test_number": 1,
+      "name": "Bind Ed25519 key",
+      "group": "KEY BINDING & LEVELING UP",
+      "passed": true,
+      "details": "Ed25519 key bound to Trading Bot\n  ed25519_key in response: ...\n  solana_address: 89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q\n  Private key saved for tests 3, 5, 6",
+      "timestamp": "2026-03-27T04:39:27.984762+00:00",
+      "data": {
+        "agent_id": "agent_c5460451b4344268",
+        "ed25519_public_key": "6a4313c8a612efe7288baadecb4473e100fc049af328f5d610dd59f856ef1bac",
+        "solana_address": "89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q",
+        "solana_explorer_url": "https://explorer.solana.com/address/89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q?cluster=devnet",
+        "certificate": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkFnZW50SUQtRWQyNTUxOSJ9.eyJpc3MiOiJodHRwczovL2dldGFnZW50aWQuZGV2Iiwic3ViIjoiYWdlbnRfYzU0NjA0NTFiNDM0NDI2OCIsInR5cGUiOiJlZDI1NTE5LWJpbmRpbmciLCJlZDI1NTE5X3B1YmxpY19rZXkiOiI2YTQzMTNjOGE2MTJlZmU3Mjg4YmFhZGVjYjQ0NzNlMTAwZmMwNDlhZjMyOGY1ZDYxMGRkNTlmODU2ZWYxYmFjIiwib3duZXIiOiJNYWxpayIsImNhcGFiaWxpdGllcyI6WyJ0cmFkaW5nIiwiZ29sZC1zaWduYWxzIiwiY3J5cHRvIl0sInRydXN0X3Njb3JlIjowLjk0LCJpYXQiOjE3NzQ1ODYzNjYsImV4cCI6MTgwNjEyMjM2Nn0.m-IrwzeNMFlpV8HlkId1SGo1pO30zM9DhRmlbY-REeM",
+        "issued_at": "2026-03-27T04:39:26.000Z",
+        "expires_at": "2027-03-27T04:39:26.000Z",
+        "receipt": {
+          "hash": {
+            "receipt_id": "83a76cfa-552f-4989-b13d-59d1b52502e9",
+            "action": "ed25519_bound",
+            "agent_id": "agent_c5460451b4344268",
+            "timestamp": "2026-03-27T04:39:26.523Z",
+            "data_hash": "c53825e74c7b7f57a031b22cf4e97ec4e4eb2b3ae853f2dc98fa77df0e04971a",
+            "signature": "d01d3839883452af9c5190defb4115facc31c28bd0e10d21c24e5694e049245d"
+          },
+          "blockchain": {
+            "tx_hash": "XgUQ1JTznVgL7NWDpUgbmpyYk4h48K7HTDuU11tYtH5TWZQjKcbc47Bra2dihAqPKvfkRH8uxHu3KsrgKncaifj",
+            "cluster": "devnet",
+            "explorer_url": "https://explorer.solana.com/tx/XgUQ1JTznVgL7NWDpUgbmpyYk4h48K7HTDuU11tYtH5TWZQjKcbc47Bra2dihAqPKvfkRH8uxHu3KsrgKncaifj?cluster=devnet",
+            "block_time": 1774586367,
+            "memo": "{\"protocol\":\"agentid\",\"version\":1,\"receipt_id\":\"83a76cfa-552f-4989-b13d-59d1b52502e9\",\"action\":\"ed25519_bound\",\"agent_id\":\"agent_c5460451b4344268\",\"data_hash\":\"c53825e74c7b7f57a031b22cf4e97ec4e4eb2b3ae853f2dc98fa77df0e04971a\",\"timestamp\":\"2026-03-27T04:39:26.523Z\"}"
+          }
+        }
+      }
+    },
+    {
+      "test_number": 2,
+      "name": "Verify L2",
+      "group": "KEY BINDING & LEVELING UP",
+      "passed": true,
+      "details": "Trading Bot verification:\n  trust_level: 3 (L3 \u2014 Secured)\n  trust_score: 0.94\n  ed25519_key present: no\n  L2 check: PASS - L2 or higher",
+      "timestamp": "2026-03-27T04:39:32.515231+00:00",
+      "data": {
+        "verified": true,
+        "agent_id": "agent_c5460451b4344268",
+        "name": "Trading Bot",
+        "description": "Gold signal copier + crypto strategy on Bybit",
+        "owner": "Malik",
+        "capabilities": [
+          "trading",
+          "gold-signals",
+          "crypto"
+        ],
+        "platform": "telegram",
+        "trust_score": 0.94,
+        "trust_level": 3,
+        "trust_level_label": "L3 \u2014 Secured",
+        "permissions": [
+          "read",
+          "discover",
+          "verify",
+          "send_message",
+          "connect",
+          "challenge_response",
+          "handle_data",
+          "make_payment",
+          "access_paid_service"
+        ],
+        "spending_limit": 10000,
+        "certificate_valid": true,
+        "active": true,
+        "created_at": "2026-03-18T04:51:32.970563+00:00",
+        "last_active": "2026-03-27T04:37:20.25+00:00",
+        "wallet": {
+          "wallet_address": "H9h6L8C3YWU2YpGYaR2KzbosQWi42dmLenZdYyVUTxdi",
+          "chain": "solana",
+          "bound_at": "2026-03-27T03:16:30.915+00:00"
+        },
+        "solana_wallet": {
+          "solana_address": "89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q",
+          "cluster": "devnet",
+          "explorer_url": "https://explorer.solana.com/address/89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q?cluster=devnet"
+        },
+        "receipt": {
+          "hash": {
+            "receipt_id": "5dc16c37-bd5d-49c8-83bb-71ebae805848",
+            "action": "verification",
+            "agent_id": "agent_c5460451b4344268",
+            "timestamp": "2026-03-27T04:39:31.303Z",
+            "data_hash": "71756a1663330ff0cb6701dc308fbd9cf060f059f04fd75afde8dbde3f236c18",
+            "signature": "707017169feb87a42133d499c2fc4dcada6b48918733d769e6ba89004805926b"
+          },
+          "blockchain": {
+            "tx_hash": "tHRKsY5vQ6V9JEE4HD3e8WhdhmAXWcrHTz9XWYFZW9sJctgdgiz1j29w7MpNh44AFCVyUzyPNRwTKv1vQYRyVPx",
+            "cluster": "devnet",
+            "explorer_url": "https://explorer.solana.com/tx/tHRKsY5vQ6V9JEE4HD3e8WhdhmAXWcrHTz9XWYFZW9sJctgdgiz1j29w7MpNh44AFCVyUzyPNRwTKv1vQYRyVPx?cluster=devnet",
+            "block_time": 1774586372,
+            "memo": "{\"protocol\":\"agentid\",\"version\":1,\"receipt_id\":\"5dc16c37-bd5d-49c8-83bb-71ebae805848\",\"action\":\"verification\",\"agent_id\":\"agent_c5460451b4344268\",\"data_hash\":\"71756a1663330ff0cb6701dc308fbd9cf060f059f04fd75afde8dbde3f236c18\",\"timestamp\":\"2026-03-27T04:39:31.303Z\"}"
+          }
+        },
+        "level_up": {
+          "current_level": 3,
+          "next_level": 4,
+          "requirements": [
+            "Complete entity verification"
+          ],
+          "met": {
+            "entity_verified": false
+          }
+        },
+        "message": "Agent verified"
+      }
+    },
+    {
+      "test_number": 3,
+      "name": "Bind wallet",
+      "group": "KEY BINDING & LEVELING UP",
+      "passed": true,
+      "details": "Wallet bound to Trading Bot\n  wallet_address: 89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q\n  chain: solana\n  wallet_bound: ",
+      "timestamp": "2026-03-27T04:39:36.133247+00:00",
+      "data": {
+        "bound": true,
+        "agent_id": "agent_c5460451b4344268",
+        "wallet_address": "89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q",
+        "chain": "solana"
+      }
+    },
+    {
+      "test_number": 4,
+      "name": "Verify L3",
+      "group": "KEY BINDING & LEVELING UP",
+      "passed": true,
+      "details": "Trading Bot verification:\n  trust_level: 3 (L3 \u2014 Secured)\n  trust_score: 0.94\n  spending_limit: $10000\n  L3 check: PASS - L3 or higher\n  trust-level endpoint:\n    trust_level: 3\n    spending_limit: $10000",
+      "timestamp": "2026-03-27T04:39:42.722216+00:00",
+      "data": {
+        "verified": true,
+        "agent_id": "agent_c5460451b4344268",
+        "name": "Trading Bot",
+        "description": "Gold signal copier + crypto strategy on Bybit",
+        "owner": "Malik",
+        "capabilities": [
+          "trading",
+          "gold-signals",
+          "crypto"
+        ],
+        "platform": "telegram",
+        "trust_score": 0.94,
+        "trust_level": 3,
+        "trust_level_label": "L3 \u2014 Secured",
+        "permissions": [
+          "read",
+          "discover",
+          "verify",
+          "send_message",
+          "connect",
+          "challenge_response",
+          "handle_data",
+          "make_payment",
+          "access_paid_service"
+        ],
+        "spending_limit": 10000,
+        "certificate_valid": true,
+        "active": true,
+        "created_at": "2026-03-18T04:51:32.970563+00:00",
+        "last_active": "2026-03-27T04:39:30.268+00:00",
+        "wallet": {
+          "wallet_address": "89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q",
+          "chain": "solana",
+          "bound_at": "2026-03-27T04:39:35.646+00:00"
+        },
+        "solana_wallet": {
+          "solana_address": "89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q",
+          "cluster": "devnet",
+          "explorer_url": "https://explorer.solana.com/address/89oYHi5P9geikFnWqhZuvPYY44vKwVtXPjrRiNafCG5q?cluster=devnet"
+        },
+        "receipt": {
+          "hash": {
+            "receipt_id": "0acd5b4a-e142-43ce-9326-19d04cbf51b4",
+            "action": "verification",
+            "agent_id": "agent_c5460451b4344268",
+            "timestamp": "2026-03-27T04:39:39.534Z",
+            "data_hash": "20d7a1d0580a2b0c9644be39dc4d8eb3ab5855a155654a12a7656fd4087ff0c9",
+            "signature": "66219e34a52e4ecabcb7e9ead2ebc53bb5b3c68f003dd4a734ae47ef580001fd"
+          },
+          "blockchain": {
+            "tx_hash": "iqwS6jipQERXB2Th8QtDyiLtXQXhLUfjDV5u21JA9TxopZfHACUDx8AenwiYVM7Jc1aKsMkA5KQjNi8VtNbyNQT",
+            "cluster": "devnet",
+            "explorer_url": "https://explorer.solana.com/tx/iqwS6jipQERXB2Th8QtDyiLtXQXhLUfjDV5u21JA9TxopZfHACUDx8AenwiYVM7Jc1aKsMkA5KQjNi8VtNbyNQT?cluster=devnet",
+            "block_time": 1774586380,
+            "memo": "{\"protocol\":\"agentid\",\"version\":1,\"receipt_id\":\"0acd5b4a-e142-43ce-9326-19d04cbf51b4\",\"action\":\"verification\",\"agent_id\":\"agent_c5460451b4344268\",\"data_hash\":\"20d7a1d0580a2b0c9644be39dc4d8eb3ab5855a155654a12a7656fd4087ff0c9\",\"timestamp\":\"2026-03-27T04:39:39.534Z\"}"
+          }
+        },
+        "level_up": {
+          "current_level": 3,
+          "next_level": 4,
+          "requirements": [
+            "Complete entity verification"
+          ],
+          "met": {
+            "entity_verified": false
+          }
+        },
+        "message": "Agent verified"
+      }
+    },
+    {
+      "test_number": 5,
+      "name": "Challenge-response (valid)",
+      "group": "CHALLENGE-RESPONSE",
+      "passed": true,
+      "details": "Challenge-response PASSED\n  challenge: da33b3c5e16f7694ffe05d4e5be57f7d...\n  challenge_passed: True\n  Agent identity cryptographically proven",
+      "timestamp": "2026-03-27T04:39:48.320065+00:00",
+      "data": {
+        "verified": true,
+        "challenge_passed": true,
+        "agent_id": "agent_c5460451b4344268",
+        "active": true,
+        "message": "Agent proved possession of private key"
+      }
+    },
+    {
+      "test_number": 6,
+      "name": "Challenge-response (fake)",
+      "group": "CHALLENGE-RESPONSE",
+      "passed": true,
+      "details": "Impersonation correctly DETECTED\n  challenge_passed: false\n  Fake key was rejected -- identity system works",
+      "timestamp": "2026-03-27T04:39:53.070360+00:00",
+      "data": {
+        "verified": false,
+        "challenge_passed": false,
+        "agent_id": "agent_c5460451b4344268",
+        "active": true,
+        "message": "Signature verification failed"
+      }
+    },
+    {
+      "test_number": 7,
+      "name": "Data transfer with receipt",
+      "group": "DATA PIPELINE",
+      "passed": true,
+      "details": "Data sent successfully: message_id=33\n  Hash receipt: yes\n  Blockchain receipt: yes\n  Sender trust level: 3\n  Receiver trust level: 1",
+      "timestamp": "2026-03-27T04:39:57.744140+00:00",
+      "data": {
+        "message_id": 33,
+        "status": "pending",
+        "sender": {
+          "agent_id": "agent_c5460451b4344268",
+          "name": "Trading Bot",
+          "verified": true,
+          "trust_level": 3,
+          "trust_label": "L3 \u2014 Secured",
+          "risk_score": 10
+        },
+        "receiver": {
+          "agent_id": "agent_9ba9aa4a929f4ca7",
+          "name": "BillionmakerHQ",
+          "verified": true,
+          "trust_level": 1,
+          "trust_label": "L1 \u2014 Registered"
+        },
+        "trust_check": {
+          "both_verified": true,
+          "sender_verified": true,
+          "receiver_verified": true,
+          "sender_trust_level": 3,
+          "receiver_trust_level": 1,
+          "recommendation": "TRUSTED \u2014 both agents verified. Safe to exchange data."
+        },
+        "receipt": {
+          "hash": {
+            "receipt_id": "e1d0c751-4ddc-4e08-a610-07d4b0f57838",
+            "action": "connection",
+            "agent_id": "agent_c5460451b4344268",
+            "timestamp": "2026-03-27T04:39:56.868Z",
+            "data_hash": "61376bf3adca894ebb84ef703712ca90a820f83569ac875fd79729036fff2cab",
+            "signature": "da7c72233061d04a8a56c7d45c69e048113e25aab014347d8b298fe5214657e3"
+          },
+          "blockchain": {
+            "tx_hash": "EzsfC3zKCqJBgRF58mGwigbirW6gFuVPoBPTZHDdz5opaPHUXYtjpcUBpHmDQ5a5v952tXw2YypBz3vT56esHsy",
+            "explorer_url": "https://explorer.solana.com/tx/EzsfC3zKCqJBgRF58mGwigbirW6gFuVPoBPTZHDdz5opaPHUXYtjpcUBpHmDQ5a5v952tXw2YypBz3vT56esHsy?cluster=devnet"
+          }
+        },
+        "blockchain_receipt": {
+          "tx_hash": "EzsfC3zKCqJBgRF58mGwigbirW6gFuVPoBPTZHDdz5opaPHUXYtjpcUBpHmDQ5a5v952tXw2YypBz3vT56esHsy",
+          "explorer_url": "https://explorer.solana.com/tx/EzsfC3zKCqJBgRF58mGwigbirW6gFuVPoBPTZHDdz5opaPHUXYtjpcUBpHmDQ5a5v952tXw2YypBz3vT56esHsy?cluster=devnet"
+        },
+        "sender_trust_level": 3,
+        "sender_risk_score": 10
+      }
+    },
+    {
+      "test_number": 8,
+      "name": "5-agent chain",
+      "group": "DATA PIPELINE",
+      "passed": true,
+      "details": "5-agent chain results:\n      ProofAlpha-Adv -> agent_3b3accc7b7083ff0 (L1)\n       ProofBeta-Adv -> agent_8432911f6cc9c048 (L1)\n  Hop 1: Trading Bot -> BillionmakerHQ: OK (msg=34)\n  Hop 2: BillionmakerHQ -> 1Stop Social Bot: OK (msg=35)\n  Hop 3: 1Stop Social Bot -> ProofAlpha-Adv: OK (msg=36)\n  Hop 4: ProofAlpha-Adv -> ProofBeta-Adv: OK (msg=37)",
+      "timestamp": "2026-03-27T04:40:24.304855+00:00",
+      "data": null
+    },
+    {
+      "test_number": 9,
+      "name": "Unregistered agent rejection",
+      "group": "DATA PIPELINE",
+      "passed": true,
+      "details": "Fake agent correctly REJECTED\n  Status: 403\n  Error: You do not own the sending agent\n  message_id: (none -- correct)",
+      "timestamp": "2026-03-27T04:40:26.604753+00:00",
+      "data": {
+        "error": "You do not own the sending agent"
+      }
+    },
+    {
+      "test_number": 10,
+      "name": "Spending limit check",
+      "group": "PAYMENTS",
+      "passed": true,
+      "details": "Trading Bot spending limit:\n  trust_level: 3 (L3 \u2014 Secured)\n  spending_limit: $10000\n  permissions: ['read', 'discover', 'verify', 'send_message', 'connect', 'challenge_response', 'handle_data', 'make_payment', 'access_paid_service']\n  $10,000 check: PASS",
+      "timestamp": "2026-03-27T04:40:29.362957+00:00",
+      "data": {
+        "agent_id": "agent_c5460451b4344268",
+        "name": "Trading Bot",
+        "trust_level": 3,
+        "trust_level_label": "L3 \u2014 Secured",
+        "permissions": [
+          "read",
+          "discover",
+          "verify",
+          "send_message",
+          "connect",
+          "challenge_response",
+          "handle_data",
+          "make_payment",
+          "access_paid_service"
+        ],
+        "spending_limit": 10000,
+        "level_up_requirements": {
+          "current_level": 3,
+          "next_level": 4,
+          "requirements": [
+            "Complete entity verification"
+          ],
+          "met": {
+            "entity_verified": false
+          }
+        },
+        "trust_score_breakdown": {
+          "trust_score": 0.94,
+          "verified": true,
+          "certificate_valid": true,
+          "entity_verified": false,
+          "owner_email_verified": true,
+          "days_active": 8,
+          "successful_verifications": 30,
+          "active": true
+        }
+      }
+    },
+    {
+      "test_number": 11,
+      "name": "Payment intent",
+      "group": "PAYMENTS",
+      "passed": true,
+      "details": "Payment response (403):\n  Error/message: \n  Full response: {\"status\": \"denied\", \"reason\": \"Agent not found\", \"from_agent_id\": \"agent_c5460451b4344268\", \"to_agent_id\": \"agent_9ba9aa4a929f4ca7\", \"amount\": 5, \"chain\": \"solana\", \"trust_level\": 1, \"daily_limit\": 0, \"spent_today\": 0, \"remaining_daily_limit\": 0}\n  NOTE: May fail if receiver needs L3 or if payment endpoint has preconditions",
+      "timestamp": "2026-03-27T04:40:31.941955+00:00",
+      "data": {
+        "status": "denied",
+        "reason": "Agent not found",
+        "from_agent_id": "agent_c5460451b4344268",
+        "to_agent_id": "agent_9ba9aa4a929f4ca7",
+        "amount": 5,
+        "chain": "solana",
+        "trust_level": 1,
+        "daily_limit": 0,
+        "spent_today": 0,
+        "remaining_daily_limit": 0
+      }
+    },
+    {
+      "test_number": 12,
+      "name": "Wallet allowlist",
+      "group": "PAYMENTS",
+      "passed": false,
+      "details": "Allowlist test:\n  Add status: 400 (Wallet address is already on the allowlist)\n  GET status: 200\n  Found: True\n  Full add response: {\"error\": \"Wallet address is already on the allowlist\"}\n  Full get response: {\"allowlist\": {\"count\": 1, \"wallets\": [{\"id\": \"145cff8b-0336-4572-989a-d79e4f8eaf69\", \"user_id\": \"425a50cf-bfba-4949-8c6b-7edb17a7bde2\", \"wallet_address\": \"FaJPwFXiAhtxayJJ2TbJtNjzwjzaZnTG327FtfhxQT3g\", \"chain\": \"solana\", \"label\": \"Test wallet\", \"created_at\": \"2026-03-27T03:17:32.618644+00:00\"}]}, \"",
+      "timestamp": "2026-03-27T04:40:36.117145+00:00",
+      "data": {
+        "allowlist": {
+          "count": 1,
+          "wallets": [
+            {
+              "id": "145cff8b-0336-4572-989a-d79e4f8eaf69",
+              "user_id": "425a50cf-bfba-4949-8c6b-7edb17a7bde2",
+              "wallet_address": "FaJPwFXiAhtxayJJ2TbJtNjzwjzaZnTG327FtfhxQT3g",
+              "chain": "solana",
+              "label": "Test wallet",
+              "created_at": "2026-03-27T03:17:32.618644+00:00"
+            }
+          ]
+        },
+        "frozen_agents": {
+          "count": 0,
+          "agent_ids": []
+        },
+        "pending_approvals": {
+          "count": 0,
+          "payments": []
+        }
+      }
+    },
+    {
+      "test_number": 13,
+      "name": "Freeze & unfreeze",
+      "group": "PAYMENTS",
+      "passed": true,
+      "details": "Freeze/Unfreeze Trading Bot:\n  Freeze: 200 (All payments for this agent have been frozen.)\n  Was frozen: False\n  Unfreeze: 200 (Payments for this agent have been unfrozen.)\n  Still frozen after unfreeze: False\n  Both operations succeeded: True",
+      "timestamp": "2026-03-27T04:40:44.788827+00:00",
+      "data": {
+        "freeze": {
+          "success": true,
+          "action": "freeze",
+          "agent_id": "agent_c5460451b4344268",
+          "message": "All payments for this agent have been frozen."
+        },
+        "unfreeze": {
+          "success": true,
+          "action": "unfreeze",
+          "agent_id": "agent_c5460451b4344268",
+          "message": "Payments for this agent have been unfrozen."
+        }
+      }
+    },
+    {
+      "test_number": 14,
+      "name": "Behavioural profile",
+      "group": "BEHAVIOURAL & COMPLIANCE",
+      "passed": true,
+      "details": "Behavioural profile for Trading Bot:\n  risk_score: 10\n  anomalies: 1\n  avg_verifications_per_day: 1\n  typical_active_hours: [2, 23]\n  typical_actions: ['limit_placed', 'trade_opened', 'verified', 'message_sent', 'trade_closed', 'challenge_issued', 'challenge_failed', 'ed25519_bound', 'wallet_bound', 'challenge_passed']\n  Profile completeness: COMPLETE\n  All profile keys: ['agent_id', 'avg_verifications_per_day', 'avg_api_calls_per_hour', 'typical_active_hours', 'typical_actions', 'last_updated']",
+      "timestamp": "2026-03-27T04:40:47.432402+00:00",
+      "data": {
+        "profile": {
+          "agent_id": "agent_c5460451b4344268",
+          "avg_verifications_per_day": 1,
+          "avg_api_calls_per_hour": 0.26,
+          "typical_active_hours": [
+            2,
+            23
+          ],
+          "typical_actions": [
+            "limit_placed",
+            "trade_opened",
+            "verified",
+            "message_sent",
+            "trade_closed",
+            "challenge_issued",
+            "challenge_failed",
+            "ed25519_bound",
+            "wallet_bound",
+            "challenge_passed"
+          ],
+          "last_updated": "2026-03-27T04:40:46.783Z"
+        },
+        "anomalies": [
+          {
+            "agent_id": "agent_c5460451b4344268",
+            "type": "frequency_spike",
+            "severity": "low",
+            "description": "API call rate is 54x the baseline average (14 calls in the last hour vs avg 0.26/hr)",
+            "detected_at": "2026-03-27T04:40:46.631Z",
+            "current_value": 14,
+            "baseline_value": 0.26
+          }
+        ],
+        "risk_score": 10
+      }
+    },
+    {
+      "test_number": 15,
+      "name": "Compliance report",
+      "group": "BEHAVIOURAL & COMPLIANCE",
+      "passed": true,
+      "details": "EU AI Act Readiness Score: 49.59%\n  Total agents: 41\n  Compliant agents: 0\n  Valid certificates: 41/41\n  Entity verification: 0/41\n  Audit trail: 20/41\n  Trading Bot not individually listed (using aggregate data)",
+      "timestamp": "2026-03-27T04:40:56.417040+00:00",
+      "data": {
+        "report": {
+          "generated_at": "2026-03-27T04:40:49.074Z",
+          "period_start": "2026-02-25T04:40:49.074Z",
+          "period_end": "2026-03-27T04:40:49.074Z",
+          "user_id": "425a50cf-bfba-4949-8c6b-7edb17a7bde2",
+          "version": "1.0.0"
+        },
+        "agent_inventory": [
+          {
+            "agent_id": "agent_c5460451b4344268",
+            "name": "Trading Bot",
+            "platform": "telegram",
+            "trust_level": 3,
+            "trust_level_label": "L3 \u2014 Secured",
+            "trust_score": 0.94,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-18T04:51:32.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T04:39:38.576714+00:00",
+            "active": true,
+            "created_at": "2026-03-18T04:51:32.970563+00:00",
+            "spending_limit": 10000
+          },
+          {
+            "agent_id": "agent_9ba9aa4a929f4ca7",
+            "name": "BillionmakerHQ",
+            "platform": "telegram",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0.94,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-18T04:51:34.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-22T23:59:36.263732+00:00",
+            "active": true,
+            "created_at": "2026-03-18T04:51:34.316684+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_326b59a61add4c43",
+            "name": "1Stop Social Bot",
+            "platform": "telegram",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0.94,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-18T04:51:34.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-18T04:51:34.794056+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_58e4dc0d6130468b",
+            "name": "Gmail Budget Agent",
+            "platform": "local",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0.94,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-18T04:51:35.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-18T04:51:35.235778+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_6dd0f4c5df1e7430",
+            "name": "ResearchBot",
+            "platform": "langchain",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-22T23:51:05.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-22T23:51:05.798644+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_9d2321871041e521",
+            "name": "Scout",
+            "platform": "sales-workforce",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-24T04:43:17.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-25T01:20:45.491569+00:00",
+            "active": true,
+            "created_at": "2026-03-24T04:43:17.512408+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_363a44f9eba6954f",
+            "name": "Analyst",
+            "platform": "sales-workforce",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-24T04:43:20.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-25T01:20:47.248413+00:00",
+            "active": true,
+            "created_at": "2026-03-24T04:43:20.36092+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_9e0332864554b7ee",
+            "name": "Designer",
+            "platform": "sales-workforce",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-24T04:43:22.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-25T01:20:48.752388+00:00",
+            "active": true,
+            "created_at": "2026-03-24T04:43:22.711467+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_4582885f33c4dd0c",
+            "name": "Copywriter",
+            "platform": "sales-workforce",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-24T04:43:25.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-25T01:20:50.073117+00:00",
+            "active": true,
+            "created_at": "2026-03-24T04:43:25.484328+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_3ea8539725d5775e",
+            "name": "Messenger",
+            "platform": "sales-workforce",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-24T04:43:27.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-25T01:20:51.429711+00:00",
+            "active": true,
+            "created_at": "2026-03-24T04:43:28.072361+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_4731240dc8457d14",
+            "name": "Closer",
+            "platform": "sales-workforce",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-24T04:43:30.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-25T01:20:52.33967+00:00",
+            "active": true,
+            "created_at": "2026-03-24T04:43:30.482158+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_0a14d38401f1f812",
+            "name": "Manager",
+            "platform": "sales-workforce",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-24T04:43:32.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-25T01:20:53.485167+00:00",
+            "active": true,
+            "created_at": "2026-03-24T04:43:32.652544+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_c6b1039b05a397e7",
+            "name": "Scout",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:19:33.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:19:33.727956+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_abece8e43c5dc61e",
+            "name": "Analyst",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:19:35.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:19:35.835335+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_0a3b403f81b2357c",
+            "name": "Designer",
+            "platform": "node",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:19:37.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:19:38.031874+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_34dc55844dd99aed",
+            "name": "Trader",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:19:39.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:19:40.073136+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_72ddd0310fdf0f55",
+            "name": "Manager",
+            "platform": "node",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:19:41.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:19:41.830239+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_a5be6ae057b485b5",
+            "name": "Scout",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:27:34.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:27:34.714351+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_e03e8575bc8714f8",
+            "name": "Analyst",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:27:37.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:27:37.366136+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_ccb8644586510c5e",
+            "name": "Designer",
+            "platform": "node",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:27:39.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:27:39.497897+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_a97cc99dcd2f9174",
+            "name": "Trader",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:27:41.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:27:41.973993+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_859b645b01e6d73f",
+            "name": "Manager",
+            "platform": "node",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:27:44.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T00:27:44.145818+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_e3266b9a37345bdf",
+            "name": "Scout",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:41:15.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T00:41:26.408068+00:00",
+            "active": true,
+            "created_at": "2026-03-27T00:41:15.802507+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_5374f2b845a00701",
+            "name": "Analyst",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:41:18.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T00:41:31.811723+00:00",
+            "active": true,
+            "created_at": "2026-03-27T00:41:18.257089+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_1c1a8b000f3aca77",
+            "name": "Designer",
+            "platform": "node",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:41:19.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T00:41:37.065151+00:00",
+            "active": true,
+            "created_at": "2026-03-27T00:41:20.048568+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_c6175a93f007b653",
+            "name": "Trader",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:41:21.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T00:41:41.666554+00:00",
+            "active": true,
+            "created_at": "2026-03-27T00:41:21.872134+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_afdcbc2164d65fee",
+            "name": "Manager",
+            "platform": "node",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T00:41:23.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T00:41:46.40688+00:00",
+            "active": true,
+            "created_at": "2026-03-27T00:41:23.780704+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_3c71bf1631f4378e",
+            "name": "ProofAlpha",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T01:03:47.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T01:03:56.528651+00:00",
+            "active": true,
+            "created_at": "2026-03-27T01:03:48.186109+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_8c2f4ca1f19d7489",
+            "name": "ProofBeta",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T01:03:51.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T01:04:02.124864+00:00",
+            "active": true,
+            "created_at": "2026-03-27T01:03:51.458414+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_d0a771d5ecaac081",
+            "name": "ProofAlpha",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T02:41:55.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T02:42:03.618547+00:00",
+            "active": true,
+            "created_at": "2026-03-27T02:41:55.24644+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_6ded98706ed7ff36",
+            "name": "ProofBeta",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T02:41:58.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T02:42:09.227051+00:00",
+            "active": true,
+            "created_at": "2026-03-27T02:41:58.326338+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_a329ccec8f9126ce",
+            "name": "ProofAlpha-Adv",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T02:54:42.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T02:54:42.20709+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_a22262e3876719b8",
+            "name": "ProofBeta-Adv",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T02:54:44.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T02:54:44.993918+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_3595f6bb50ac49d5",
+            "name": "ProofAlpha-Adv",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T02:58:20.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T02:58:20.23233+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_d2285a7db4959063",
+            "name": "ProofBeta-Adv",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T02:58:22.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T02:58:22.725009+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_4b971ea341a87682",
+            "name": "ProofAlpha-Adv",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T03:16:58.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T03:16:58.874432+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_71e80fe512c37da3",
+            "name": "ProofBeta-Adv",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T03:17:01.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T03:17:01.496552+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_b45e9db77f512d84",
+            "name": "ProofAlpha",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T04:37:01.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T04:37:10.669056+00:00",
+            "active": true,
+            "created_at": "2026-03-27T04:37:01.970422+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_db1015ce520b1c78",
+            "name": "ProofBeta",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T04:37:04.000Z",
+            "entity_verified": false,
+            "last_verification": "2026-03-27T04:37:15.805066+00:00",
+            "active": true,
+            "created_at": "2026-03-27T04:37:04.703283+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_3b3accc7b7083ff0",
+            "name": "ProofAlpha-Adv",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T04:40:00.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T04:40:00.248311+00:00",
+            "spending_limit": 0
+          },
+          {
+            "agent_id": "agent_8432911f6cc9c048",
+            "name": "ProofBeta-Adv",
+            "platform": "python",
+            "trust_level": 1,
+            "trust_level_label": "L1 \u2014 Registered",
+            "trust_score": 0,
+            "certificate_valid": true,
+            "certificate_expires_at": "2027-03-27T04:40:02.000Z",
+            "entity_verified": false,
+            "last_verification": null,
+            "active": true,
+            "created_at": "2026-03-27T04:40:02.715613+00:00",
+            "spending_limit": 0
+          }
+        ],
+        "verification_summary": {
+          "total_verifications": 92,
+          "successful": 92,
+          "failed": 0,
+          "success_rate": 100
+        },
+        "trust_level_distribution": {
+          "L1 \u2014 Registered": 40,
+          "L2 \u2014 Verified": 0,
+          "L3 \u2014 Secured": 1,
+          "L4 \u2014 Certified": 0
+        },
+        "spending_summary": {
+          "total_spend": 0,
+          "currency": "USD",
+          "by_agent": [
+            {
+              "agent_id": "agent_c5460451b4344268",
+              "agent_name": "Trading Bot",
+              "total": 0,
+              "daily_limit": 10000
+            },
+            {
+              "agent_id": "agent_9ba9aa4a929f4ca7",
+              "agent_name": "BillionmakerHQ",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_326b59a61add4c43",
+              "agent_name": "1Stop Social Bot",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_58e4dc0d6130468b",
+              "agent_name": "Gmail Budget Agent",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_6dd0f4c5df1e7430",
+              "agent_name": "ResearchBot",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_9d2321871041e521",
+              "agent_name": "Scout",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_363a44f9eba6954f",
+              "agent_name": "Analyst",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_9e0332864554b7ee",
+              "agent_name": "Designer",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_4582885f33c4dd0c",
+              "agent_name": "Copywriter",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_3ea8539725d5775e",
+              "agent_name": "Messenger",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_4731240dc8457d14",
+              "agent_name": "Closer",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_0a14d38401f1f812",
+              "agent_name": "Manager",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_c6b1039b05a397e7",
+              "agent_name": "Scout",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_abece8e43c5dc61e",
+              "agent_name": "Analyst",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_0a3b403f81b2357c",
+              "agent_name": "Designer",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_34dc55844dd99aed",
+              "agent_name": "Trader",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_72ddd0310fdf0f55",
+              "agent_name": "Manager",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_a5be6ae057b485b5",
+              "agent_name": "Scout",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_e03e8575bc8714f8",
+              "agent_name": "Analyst",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_ccb8644586510c5e",
+              "agent_name": "Designer",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_a97cc99dcd2f9174",
+              "agent_name": "Trader",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_859b645b01e6d73f",
+              "agent_name": "Manager",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_e3266b9a37345bdf",
+              "agent_name": "Scout",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_5374f2b845a00701",
+              "agent_name": "Analyst",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_1c1a8b000f3aca77",
+              "agent_name": "Designer",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_c6175a93f007b653",
+              "agent_name": "Trader",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_afdcbc2164d65fee",
+              "agent_name": "Manager",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_3c71bf1631f4378e",
+              "agent_name": "ProofAlpha",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_8c2f4ca1f19d7489",
+              "agent_name": "ProofBeta",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_d0a771d5ecaac081",
+              "agent_name": "ProofAlpha",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_6ded98706ed7ff36",
+              "agent_name": "ProofBeta",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_a329ccec8f9126ce",
+              "agent_name": "ProofAlpha-Adv",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_a22262e3876719b8",
+              "agent_name": "ProofBeta-Adv",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_3595f6bb50ac49d5",
+              "agent_name": "ProofAlpha-Adv",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_d2285a7db4959063",
+              "agent_name": "ProofBeta-Adv",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_4b971ea341a87682",
+              "agent_name": "ProofAlpha-Adv",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_71e80fe512c37da3",
+              "agent_name": "ProofBeta-Adv",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_b45e9db77f512d84",
+              "agent_name": "ProofAlpha",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_db1015ce520b1c78",
+              "agent_name": "ProofBeta",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_3b3accc7b7083ff0",
+              "agent_name": "ProofAlpha-Adv",
+              "total": 0,
+              "daily_limit": 0
+            },
+            {
+              "agent_id": "agent_8432911f6cc9c048",
+              "agent_name": "ProofBeta-Adv",
+              "total": 0,
+              "daily_limit": 0
+            }
+          ]
+        },
+        "risk_flags": [
+          {
+            "agent_id": "agent_c5460451b4344268",
+            "agent_name": "Trading Bot",
+            "severity": "high",
+            "type": "missing_entity_verification",
+            "message": "High-trust agent without entity verification. Required for L4 and EU AI Act compliance."
+          }
+        ],
+        "eu_ai_act_readiness": {
+          "score": 49.59,
+          "total_agents": 41,
+          "compliant_agents": 0,
+          "requirements": {
+            "valid_certificates": {
+              "met": 41,
+              "total": 41
+            },
+            "entity_verification": {
+              "met": 0,
+              "total": 41
+            },
+            "audit_trail": {
+              "met": 20,
+              "total": 41
+            }
+          }
+        }
+      }
+    },
+    {
+      "test_number": 16,
+      "name": "Receipt collection",
+      "group": "BEHAVIOURAL & COMPLIANCE",
+      "passed": true,
+      "details": "RECEIPT SUMMARY (Basic + Advanced):\n  Basic suite receipts: 8\n  Advanced suite receipts: 8\n  Total hash receipts: 16\n  Total blockchain receipts: 16\n  Total Solana Explorer links: 16\n  Solana Explorer links:\n    1. https://explorer.solana.com/tx/4ULAUANy3JAcF5nPMjzYJBsXXihwTkf2RE5s94i3PRGkQguDjVh6zUfBmBmqjcwBKqwcNwyLVgSPrP29JB3zLB96?cluster=devnet\n    2. https://explorer.solana.com/tx/EzsfC3zKCqJBgRF58mGwigbirW6gFuVPoBPTZHDdz5opaPHUXYtjpcUBpHmDQ5a5v952tXw2YypBz3vT56esHsy?cluster=devnet\n    3. https://explorer.solana.com/tx/4ig8cSXCMe1DmVYfvXGMmQKveBP3se4cyVhTysKEacDTTJycX8ZXdKQUduySFu22asxxf4SXi5T3FuDYHBNb5QG8?cluster=devnet\n    4. https://explorer.solana.com/tx/XZbzpyS9WzCyAG9BefxdKLEioCJgcb9Jogr7cMMxgndiJewK43RGnZsqgUm6aeppcaUjuGx1qrn4gYiJB7HeomL?cluster=devnet\n    5. https://explorer.solana.com/tx/rfdX9N1qTv6E3sSHT92ZrT14LWuXHwiJzpk99tsS6D5NLtJKLSNUaoWdrvqDjfuaNPeRa6TeWtHZhzubyd2P1mA?cluster=devnet\n    6. https://explorer.solana.com/tx/5zqGkRnmKFfcL2RPS4QApmjYqBUGpHwa9MTsep7n2TWXPQjz3a8bTXpa5jEn9sbXEYvv46n3xkEkwFZkLiR3doJs?cluster=devnet\n    7. https://explorer.solana.com/tx/4T6JnuJbsAm2r2T6vb7JcjAyQbXZ76bzXAHRcH1TLBa3hENHL8kUUSQNEtroPYAtdMzZqCTeHqQnKWEiC9FNMqCM?cluster=devnet\n    8. https://explorer.solana.com/tx/tHRKsY5vQ6V9JEE4HD3e8WhdhmAXWcrHTz9XWYFZW9sJctgdgiz1j29w7MpNh44AFCVyUzyPNRwTKv1vQYRyVPx?cluster=devnet\n    9. https://explorer.solana.com/tx/4MzFwz7E7HZGCDK7PZBW3uQGwanjkFe6z1EjHvCtA9sUE6RXeKy8xTY7umZ823gUHCbh6QbvfFaUPC2gk72Urw7W?cluster=devnet\n    10. https://explorer.solana.com/tx/2gkg32vcDkwQk37zJz5qMBdCNZaRYHacWC62651HF5iQB4AqPaz2QKDXRu8bHiJoz3BKgf7M7exQHiR8yAkrC3Db?cluster=devnet\n    11. https://explorer.solana.com/tx/iqwS6jipQERXB2Th8QtDyiLtXQXhLUfjDV5u21JA9TxopZfHACUDx8AenwiYVM7Jc1aKsMkA5KQjNi8VtNbyNQT?cluster=devnet\n    12. https://explorer.solana.com/tx/XgUQ1JTznVgL7NWDpUgbmpyYk4h48K7HTDuU11tYtH5TWZQjKcbc47Bra2dihAqPKvfkRH8uxHu3KsrgKncaifj?cluster=devnet\n    13. https://explorer.solana.com/tx/65aQgPpp7tSxYk1YLAhzry4TNs1U9WDiP8xqqS31YBKQZSkDVcPMoChNWp23Xn5HeSBPoKmKHd44r87Wi9NTt8yZ?cluster=devnet\n    14. https://explorer.solana.com/tx/62D1ejA38ZB5kFNPR8KnE2fXuPihCUXXBMbqEno6bnTtd6fQdZ7EBqWeRh6E3jMVkgDtXkNw48mtaZ43L8AJQbpB?cluster=devnet\n    15. https://explorer.solana.com/tx/2z9HEtebjbUVAnWVYN4euDNEkDDSZfE89p61PNiCm9NmwaXc46CsYZcSEPAihda2ZDWS5VQdWUKYjkexUzNBdadZ?cluster=devnet\n  Advanced suite receipt sources:\n    - bind-ed25519:TradingBot (blockchain=yes)\n    - verify:TradingBot-L2-check (blockchain=yes)\n    - verify:TradingBot-L3-check (blockchain=yes)\n    - data-pipeline:TradingBot->Billionmaker (blockchain=yes)\n    - chain-hop-1:Trading Bot->BillionmakerHQ (blockchain=yes)\n    - chain-hop-2:BillionmakerHQ->1Stop Social Bot (blockchain=yes)\n    - chain-hop-3:1Stop Social Bot->ProofAlpha-Adv (blockchain=yes)\n    - chain-hop-4:ProofAlpha-Adv->ProofBeta-Adv (blockchain=yes)",
+      "timestamp": "2026-03-27T04:40:57.455331+00:00",
+      "data": {
+        "basic_receipts": 8,
+        "advanced_receipts": 8,
+        "total_receipts": 16,
+        "blockchain_receipts": 16,
+        "solana_links": [
+          "https://explorer.solana.com/tx/4ULAUANy3JAcF5nPMjzYJBsXXihwTkf2RE5s94i3PRGkQguDjVh6zUfBmBmqjcwBKqwcNwyLVgSPrP29JB3zLB96?cluster=devnet",
+          "https://explorer.solana.com/tx/EzsfC3zKCqJBgRF58mGwigbirW6gFuVPoBPTZHDdz5opaPHUXYtjpcUBpHmDQ5a5v952tXw2YypBz3vT56esHsy?cluster=devnet",
+          "https://explorer.solana.com/tx/4ig8cSXCMe1DmVYfvXGMmQKveBP3se4cyVhTysKEacDTTJycX8ZXdKQUduySFu22asxxf4SXi5T3FuDYHBNb5QG8?cluster=devnet",
+          "https://explorer.solana.com/tx/XZbzpyS9WzCyAG9BefxdKLEioCJgcb9Jogr7cMMxgndiJewK43RGnZsqgUm6aeppcaUjuGx1qrn4gYiJB7HeomL?cluster=devnet",
+          "https://explorer.solana.com/tx/rfdX9N1qTv6E3sSHT92ZrT14LWuXHwiJzpk99tsS6D5NLtJKLSNUaoWdrvqDjfuaNPeRa6TeWtHZhzubyd2P1mA?cluster=devnet",
+          "https://explorer.solana.com/tx/5zqGkRnmKFfcL2RPS4QApmjYqBUGpHwa9MTsep7n2TWXPQjz3a8bTXpa5jEn9sbXEYvv46n3xkEkwFZkLiR3doJs?cluster=devnet",
+          "https://explorer.solana.com/tx/4T6JnuJbsAm2r2T6vb7JcjAyQbXZ76bzXAHRcH1TLBa3hENHL8kUUSQNEtroPYAtdMzZqCTeHqQnKWEiC9FNMqCM?cluster=devnet",
+          "https://explorer.solana.com/tx/tHRKsY5vQ6V9JEE4HD3e8WhdhmAXWcrHTz9XWYFZW9sJctgdgiz1j29w7MpNh44AFCVyUzyPNRwTKv1vQYRyVPx?cluster=devnet",
+          "https://explorer.solana.com/tx/4MzFwz7E7HZGCDK7PZBW3uQGwanjkFe6z1EjHvCtA9sUE6RXeKy8xTY7umZ823gUHCbh6QbvfFaUPC2gk72Urw7W?cluster=devnet",
+          "https://explorer.solana.com/tx/2gkg32vcDkwQk37zJz5qMBdCNZaRYHacWC62651HF5iQB4AqPaz2QKDXRu8bHiJoz3BKgf7M7exQHiR8yAkrC3Db?cluster=devnet",
+          "https://explorer.solana.com/tx/iqwS6jipQERXB2Th8QtDyiLtXQXhLUfjDV5u21JA9TxopZfHACUDx8AenwiYVM7Jc1aKsMkA5KQjNi8VtNbyNQT?cluster=devnet",
+          "https://explorer.solana.com/tx/XgUQ1JTznVgL7NWDpUgbmpyYk4h48K7HTDuU11tYtH5TWZQjKcbc47Bra2dihAqPKvfkRH8uxHu3KsrgKncaifj?cluster=devnet",
+          "https://explorer.solana.com/tx/65aQgPpp7tSxYk1YLAhzry4TNs1U9WDiP8xqqS31YBKQZSkDVcPMoChNWp23Xn5HeSBPoKmKHd44r87Wi9NTt8yZ?cluster=devnet",
+          "https://explorer.solana.com/tx/62D1ejA38ZB5kFNPR8KnE2fXuPihCUXXBMbqEno6bnTtd6fQdZ7EBqWeRh6E3jMVkgDtXkNw48mtaZ43L8AJQbpB?cluster=devnet",
+          "https://explorer.solana.com/tx/2z9HEtebjbUVAnWVYN4euDNEkDDSZfE89p61PNiCm9NmwaXc46CsYZcSEPAihda2ZDWS5VQdWUKYjkexUzNBdadZ?cluster=devnet",
+          "https://explorer.solana.com/tx/34SF3EgyRhR3WTG8vkd8P5FrQMGSbvjYQG71HLENrsoEzuF6j8xmTGkrAv8unak6JHnivCmLqTUos9fE8Ypiy9Nu?cluster=devnet"
+        ]
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "source": "bind-ed25519:TradingBot",
+      "collected_at": "2026-03-27T04:39:27.984725+00:00",
+      "hash": {
+        "receipt_id": "83a76cfa-552f-4989-b13d-59d1b52502e9",
+        "action": "ed25519_bound",
+        "agent_id": "agent_c5460451b4344268",
+        "timestamp": "2026-03-27T04:39:26.523Z",
+        "data_hash": "c53825e74c7b7f57a031b22cf4e97ec4e4eb2b3ae853f2dc98fa77df0e04971a",
+        "signature": "d01d3839883452af9c5190defb4115facc31c28bd0e10d21c24e5694e049245d"
+      },
+      "blockchain": {
+        "tx_hash": "XgUQ1JTznVgL7NWDpUgbmpyYk4h48K7HTDuU11tYtH5TWZQjKcbc47Bra2dihAqPKvfkRH8uxHu3KsrgKncaifj",
+        "cluster": "devnet",
+        "explorer_url": "https://explorer.solana.com/tx/XgUQ1JTznVgL7NWDpUgbmpyYk4h48K7HTDuU11tYtH5TWZQjKcbc47Bra2dihAqPKvfkRH8uxHu3KsrgKncaifj?cluster=devnet",
+        "block_time": 1774586367,
+        "memo": "{\"protocol\":\"agentid\",\"version\":1,\"receipt_id\":\"83a76cfa-552f-4989-b13d-59d1b52502e9\",\"action\":\"ed25519_bound\",\"agent_id\":\"agent_c5460451b4344268\",\"data_hash\":\"c53825e74c7b7f57a031b22cf4e97ec4e4eb2b3ae853f2dc98fa77df0e04971a\",\"timestamp\":\"2026-03-27T04:39:26.523Z\"}"
+      }
+    },
+    {
+      "source": "verify:TradingBot-L2-check",
+      "collected_at": "2026-03-27T04:39:32.515131+00:00",
+      "hash": {
+        "receipt_id": "5dc16c37-bd5d-49c8-83bb-71ebae805848",
+        "action": "verification",
+        "agent_id": "agent_c5460451b4344268",
+        "timestamp": "2026-03-27T04:39:31.303Z",
+        "data_hash": "71756a1663330ff0cb6701dc308fbd9cf060f059f04fd75afde8dbde3f236c18",
+        "signature": "707017169feb87a42133d499c2fc4dcada6b48918733d769e6ba89004805926b"
+      },
+      "blockchain": {
+        "tx_hash": "tHRKsY5vQ6V9JEE4HD3e8WhdhmAXWcrHTz9XWYFZW9sJctgdgiz1j29w7MpNh44AFCVyUzyPNRwTKv1vQYRyVPx",
+        "cluster": "devnet",
+        "explorer_url": "https://explorer.solana.com/tx/tHRKsY5vQ6V9JEE4HD3e8WhdhmAXWcrHTz9XWYFZW9sJctgdgiz1j29w7MpNh44AFCVyUzyPNRwTKv1vQYRyVPx?cluster=devnet",
+        "block_time": 1774586372,
+        "memo": "{\"protocol\":\"agentid\",\"version\":1,\"receipt_id\":\"5dc16c37-bd5d-49c8-83bb-71ebae805848\",\"action\":\"verification\",\"agent_id\":\"agent_c5460451b4344268\",\"data_hash\":\"71756a1663330ff0cb6701dc308fbd9cf060f059f04fd75afde8dbde3f236c18\",\"timestamp\":\"2026-03-27T04:39:31.303Z\"}"
+      }
+    },
+    {
+      "source": "verify:TradingBot-L3-check",
+      "collected_at": "2026-03-27T04:39:40.613890+00:00",
+      "hash": {
+        "receipt_id": "0acd5b4a-e142-43ce-9326-19d04cbf51b4",
+        "action": "verification",
+        "agent_id": "agent_c5460451b4344268",
+        "timestamp": "2026-03-27T04:39:39.534Z",
+        "data_hash": "20d7a1d0580a2b0c9644be39dc4d8eb3ab5855a155654a12a7656fd4087ff0c9",
+        "signature": "66219e34a52e4ecabcb7e9ead2ebc53bb5b3c68f003dd4a734ae47ef580001fd"
+      },
+      "blockchain": {
+        "tx_hash": "iqwS6jipQERXB2Th8QtDyiLtXQXhLUfjDV5u21JA9TxopZfHACUDx8AenwiYVM7Jc1aKsMkA5KQjNi8VtNbyNQT",
+        "cluster": "devnet",
+        "explorer_url": "https://explorer.solana.com/tx/iqwS6jipQERXB2Th8QtDyiLtXQXhLUfjDV5u21JA9TxopZfHACUDx8AenwiYVM7Jc1aKsMkA5KQjNi8VtNbyNQT?cluster=devnet",
+        "block_time": 1774586380,
+        "memo": "{\"protocol\":\"agentid\",\"version\":1,\"receipt_id\":\"0acd5b4a-e142-43ce-9326-19d04cbf51b4\",\"action\":\"verification\",\"agent_id\":\"agent_c5460451b4344268\",\"data_hash\":\"20d7a1d0580a2b0c9644be39dc4d8eb3ab5855a155654a12a7656fd4087ff0c9\",\"timestamp\":\"2026-03-27T04:39:39.534Z\"}"
+      }
+    },
+    {
+      "source": "data-pipeline:TradingBot->Billionmaker",
+      "collected_at": "2026-03-27T04:39:57.744046+00:00",
+      "hash": {
+        "receipt_id": "e1d0c751-4ddc-4e08-a610-07d4b0f57838",
+        "action": "connection",
+        "agent_id": "agent_c5460451b4344268",
+        "timestamp": "2026-03-27T04:39:56.868Z",
+        "data_hash": "61376bf3adca894ebb84ef703712ca90a820f83569ac875fd79729036fff2cab",
+        "signature": "da7c72233061d04a8a56c7d45c69e048113e25aab014347d8b298fe5214657e3"
+      },
+      "blockchain": {
+        "tx_hash": "EzsfC3zKCqJBgRF58mGwigbirW6gFuVPoBPTZHDdz5opaPHUXYtjpcUBpHmDQ5a5v952tXw2YypBz3vT56esHsy",
+        "explorer_url": "https://explorer.solana.com/tx/EzsfC3zKCqJBgRF58mGwigbirW6gFuVPoBPTZHDdz5opaPHUXYtjpcUBpHmDQ5a5v952tXw2YypBz3vT56esHsy?cluster=devnet"
+      }
+    },
+    {
+      "source": "chain-hop-1:Trading Bot->BillionmakerHQ",
+      "collected_at": "2026-03-27T04:40:09.265416+00:00",
+      "hash": {
+        "receipt_id": "22d3e524-24cf-480c-ac6f-b4cd646ef40e",
+        "action": "connection",
+        "agent_id": "agent_c5460451b4344268",
+        "timestamp": "2026-03-27T04:40:08.221Z",
+        "data_hash": "1fea2cc9cab576d17308b0005e1e5a40cafdcbae9334eb8f0574290aa1632c19",
+        "signature": "b42cce5f8fa2bd10c1a2a132c6cf88ee2e8fd10c411946fb08cdeea04a67bb14"
+      },
+      "blockchain": {
+        "tx_hash": "4T6JnuJbsAm2r2T6vb7JcjAyQbXZ76bzXAHRcH1TLBa3hENHL8kUUSQNEtroPYAtdMzZqCTeHqQnKWEiC9FNMqCM",
+        "explorer_url": "https://explorer.solana.com/tx/4T6JnuJbsAm2r2T6vb7JcjAyQbXZ76bzXAHRcH1TLBa3hENHL8kUUSQNEtroPYAtdMzZqCTeHqQnKWEiC9FNMqCM?cluster=devnet"
+      }
+    },
+    {
+      "source": "chain-hop-2:BillionmakerHQ->1Stop Social Bot",
+      "collected_at": "2026-03-27T04:40:14.286546+00:00",
+      "hash": {
+        "receipt_id": "cf5e981b-33aa-4fdd-b10d-6b13f34f5ebc",
+        "action": "connection",
+        "agent_id": "agent_9ba9aa4a929f4ca7",
+        "timestamp": "2026-03-27T04:40:13.139Z",
+        "data_hash": "a345be200bb3527b8cb8d081642519a8120ec9aa1da00a12cc4dcee960ce1db2",
+        "signature": "0f327f5227e63f4c42932eb60fa41374f59f96312056327ae4c656327c6e83d5"
+      },
+      "blockchain": {
+        "tx_hash": "62D1ejA38ZB5kFNPR8KnE2fXuPihCUXXBMbqEno6bnTtd6fQdZ7EBqWeRh6E3jMVkgDtXkNw48mtaZ43L8AJQbpB",
+        "explorer_url": "https://explorer.solana.com/tx/62D1ejA38ZB5kFNPR8KnE2fXuPihCUXXBMbqEno6bnTtd6fQdZ7EBqWeRh6E3jMVkgDtXkNw48mtaZ43L8AJQbpB?cluster=devnet"
+      }
+    },
+    {
+      "source": "chain-hop-3:1Stop Social Bot->ProofAlpha-Adv",
+      "collected_at": "2026-03-27T04:40:19.390568+00:00",
+      "hash": {
+        "receipt_id": "76f0cb40-f332-41f8-8359-edba2587bb40",
+        "action": "connection",
+        "agent_id": "agent_326b59a61add4c43",
+        "timestamp": "2026-03-27T04:40:17.952Z",
+        "data_hash": "af8036eeef64c2b5a0978ccff8ee1ada30304ec64248a0718cfcb138033e24d0",
+        "signature": "123c4c44e0d54c5c4c9bd47c542ebe312cb7f0df2aa98d9ad7c394e814d9b029"
+      },
+      "blockchain": {
+        "tx_hash": "4MzFwz7E7HZGCDK7PZBW3uQGwanjkFe6z1EjHvCtA9sUE6RXeKy8xTY7umZ823gUHCbh6QbvfFaUPC2gk72Urw7W",
+        "explorer_url": "https://explorer.solana.com/tx/4MzFwz7E7HZGCDK7PZBW3uQGwanjkFe6z1EjHvCtA9sUE6RXeKy8xTY7umZ823gUHCbh6QbvfFaUPC2gk72Urw7W?cluster=devnet"
+      }
+    },
+    {
+      "source": "chain-hop-4:ProofAlpha-Adv->ProofBeta-Adv",
+      "collected_at": "2026-03-27T04:40:24.304807+00:00",
+      "hash": {
+        "receipt_id": "fed98017-e353-40a1-be88-997876a2e842",
+        "action": "connection",
+        "agent_id": "agent_3b3accc7b7083ff0",
+        "timestamp": "2026-03-27T04:40:23.370Z",
+        "data_hash": "407d026197c28ebc88ecb7dafe36160a648ed05bc656bf0823d8921758c805f4",
+        "signature": "34d89fca28e740875c17c24aa659df552021b8173efa5f5f504e1ec3c289e7bb"
+      },
+      "blockchain": {
+        "tx_hash": "4ULAUANy3JAcF5nPMjzYJBsXXihwTkf2RE5s94i3PRGkQguDjVh6zUfBmBmqjcwBKqwcNwyLVgSPrP29JB3zLB96",
+        "explorer_url": "https://explorer.solana.com/tx/4ULAUANy3JAcF5nPMjzYJBsXXihwTkf2RE5s94i3PRGkQguDjVh6zUfBmBmqjcwBKqwcNwyLVgSPrP29JB3zLB96?cluster=devnet"
+      }
+    }
+  ]
+}

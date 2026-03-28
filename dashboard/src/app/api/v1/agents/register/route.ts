@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     // Parse body
     const body = await req.json()
-    const { name, description, capabilities, platform, endpoint, model_version, prompt_hash } = body
+    const { name, description, capabilities, platform, endpoint, model_version, prompt_hash, social_links } = body
 
     if (!name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 })
@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
       user_id: auth.user_id,
       ...(model_version && { model_version }),
       ...(prompt_hash && { prompt_hash }),
+      ...(social_links && { social_links }),
     })
 
     if (dbError) {

@@ -97,6 +97,12 @@ Every agent starts at L1. Levels are based on what security capabilities you set
 | `GET` | `/api/v1/agents/payment-settings` | Get payment settings |
 | `GET` | `/api/v1/agents/behaviour` | Get agent behaviour profile |
 | `POST` | `/api/v1/agents/publish-onchain` | Publish agent identity on-chain |
+| `POST` | `/api/v1/agents/credentials` | Attach verifiable credential |
+| `GET` | `/api/v1/agents/credentials` | List agent credentials (public) |
+| `GET` | `/api/v1/agents/credibility-packet` | Signed portable trust resume (public) |
+| `POST` | `/api/v1/agents/delegate` | Create scoped delegation between agents |
+| `GET` | `/api/v1/agents/delegations` | List active delegations |
+| `POST` | `/api/v1/agents/update-metadata` | Update model version / prompt hash |
 | `GET` | `/api/v1/reports/compliance` | EU AI Act compliance report |
 | `GET` | `/api/v1/webhooks` | List webhooks |
 | `POST` | `/api/v1/webhooks` | Create webhook |
@@ -118,6 +124,8 @@ Every agent builds a **behavioural baseline** from 30 days of activity. When beh
 | **Unusual hours** | Activity outside the agent's typical operating window |
 | **New actions** | Agent performs action types never seen in its history |
 | **Trust drop** | Trust level or score decreases — possible compromise |
+| **Payload drift** | Message payload structure changes significantly from baseline |
+| **Model changed** | Underlying LLM model or system prompt hash changes — detects supply chain attacks |
 
 Each anomaly carries a severity (`low`, `medium`, `high`) and feeds into a **risk score** (0-100) that other agents can check before interacting.
 
@@ -129,6 +137,87 @@ print(check.anomalies)       # Active alerts
 ```
 
 **Why this matters:** Certificates prove who an agent is. Behavioural fingerprinting proves it's still acting like itself. A stolen credential with altered behaviour gets flagged. This is a layer most identity systems don't have.
+
+## DID Support
+
+Every agent gets a W3C-compatible Decentralized Identifier on registration:
+
+```
+did:web:getagentid.dev:agent:agent_abc123
+```
+
+This makes AgentID interoperable with the entire decentralized identity ecosystem — W3C DID Core, did:web, did:key, and any system that resolves DIDs.
+
+## Verifiable Credentials
+
+Third parties can attach qualification credentials to any agent:
+
+```python
+client.agents.attach_credential("agent_abc123", {
+    "type": "gdpr-compliant",
+    "issuer": "compliance-authority",
+    "expires_at": "2027-12-31T23:59:59Z"
+})
+
+# Discover agents by credential
+agents = client.agents.discover(credential_type="gdpr-compliant")
+```
+
+Identity answers "who is this agent?" — credentials answer "is this agent qualified?"
+
+## Delegation Chains
+
+Agents can delegate scoped authority to other agents with signed JWT proofs:
+
+```python
+client.agents.delegate(
+    from_agent="agent_coordinator",
+    to_agent="agent_specialist",
+    scope=["send_message", "make_payment"],
+    expires_at="2026-12-31T23:59:59Z",
+    max_spend=5000
+)
+```
+
+Delegations enforce `effectiveAuthority = min(delegation_scope, trust_level)` — a delegation can never grant more power than the agent already has.
+
+## Credibility Packets
+
+Portable, signed trust resumes that any system can verify offline:
+
+```python
+packet = client.agents.credibility_packet("agent_abc123")
+print(packet.signature)           # HMAC-SHA256 signed
+print(packet.verification_count)  # Lifetime verifications
+print(packet.negative_signals)    # Historical incidents
+print(packet.resolved_signals)    # Recovered incidents
+print(packet.scarring_score)      # Permanent trust scars
+```
+
+An agent with resolved incidents is MORE trustworthy than one with zero history. Silence is suspicious.
+
+## Cryptographic Scarring
+
+When an agent gets flagged (anomaly, revoked connection, failed verification), the incident is permanently recorded. Recovery costs more than first-time trust:
+
+- `negative_signals` — lifetime count of all incidents
+- `resolved_signals` — recovered incidents (trust positive)
+- `scarring_score` — permanent record, never fully heals
+
+This prevents agents from gaming the system by cycling through good and bad behaviour.
+
+## Negative Signal Tracking
+
+Full audit trail of every negative event across the platform:
+
+| Event | When it fires |
+|-------|--------------|
+| `verification_failed` | Certificate invalid, agent inactive, admin unverify |
+| `anomaly_detected` | Behavioural anomaly on verify, connect, or behaviour check |
+| `connection_revoked` | High-risk anomaly blocks connection, admin deactivate |
+| `incident_resolved` | Payment approved, agent unfrozen, admin re-verify |
+| `api_key_created` | New API key generated |
+| `api_key_revoked` | API key revoked |
 
 ## Works With
 
@@ -169,8 +258,27 @@ Agent A → AgentID API → Verify → Agent B
 - **Database:** Supabase (PostgreSQL + Row Level Security)
 - **Auth:** Supabase Auth + GitHub OAuth
 - **Payments:** Stripe
-- **SDK:** Python (httpx)
-- **Crypto:** ECDSA P-256 keypairs, JWT certificates
+- **SDK:** Python (httpx), Node.js (planned)
+- **Crypto:** ECDSA P-256 + Ed25519 keypairs, JWT certificates, HMAC-SHA256 receipts
+- **Blockchain:** Solana (Ed25519 identity, on-chain registry, dual receipts)
+- **Identity:** W3C DID (did:web), Verifiable Credentials, delegation proofs
+- **Security:** Behavioural fingerprinting, cryptographic scarring, negative signal tracking
+
+## Test Suite
+
+32 tests against the live API — 100% passing:
+
+| Group | Tests | Status |
+|-------|-------|--------|
+| Identity | 3 | Passing |
+| Trust & Registry | 3 | Passing |
+| Communication | 4 | Passing |
+| Security | 4 | Passing |
+| Compliance | 2 | Passing |
+| DID & Credentials | 4 | Passing |
+| Signals & Credibility | 4 | Passing |
+| Delegation & Metadata | 4 | Passing |
+| Advanced Security | 4 | Passing |
 
 ## License
 

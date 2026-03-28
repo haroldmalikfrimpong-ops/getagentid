@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const db = getServiceClient()
     let query = db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, created_at, last_active, ed25519_key, wallet_address, wallet_chain, credentials')
+      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, created_at, last_active, ed25519_key, wallet_address, wallet_chain, credentials, social_links')
       .eq('active', true)
       .limit(Math.min(limit, 100))
 
@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
           supported_key_types.push(walletKeyType)
         }
       }
+      const socialLinks = a.social_links as any
       return {
         agent_id: a.agent_id,
         did,
@@ -73,6 +74,12 @@ export async function GET(req: NextRequest) {
         last_active: a.last_active,
         credentials: a.credentials || [],
         supported_key_types,
+        social_links: a.social_links || null,
+        social_verified: {
+          github_linked: !!socialLinks?.github,
+          x_linked: !!socialLinks?.x,
+          website_linked: !!socialLinks?.website,
+        },
       }
     })
 

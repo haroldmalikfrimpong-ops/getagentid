@@ -22,15 +22,31 @@ class Agents:
         self._client = client
 
     def register(self, name: str, description: str = "", capabilities: list = None,
-                 platform: str = None, endpoint: str = None) -> AgentResult:
-        """Register a new agent and get its certificate."""
-        res = self._client._post("/agents/register", {
+                 platform: str = None, endpoint: str = None,
+                 social_links: dict = None) -> AgentResult:
+        """Register a new agent and get its certificate.
+
+        Args:
+            name: The agent's display name.
+            description: Optional description of the agent.
+            capabilities: Optional list of capability strings.
+            platform: Optional platform identifier.
+            endpoint: Optional endpoint URL.
+            social_links: Optional dict with github, x, and/or website URLs.
+
+        Returns:
+            AgentResult with agent_id, certificate, keys, trust info.
+        """
+        data = {
             "name": name,
             "description": description,
             "capabilities": capabilities or [],
             "platform": platform,
             "endpoint": endpoint,
-        })
+        }
+        if social_links is not None:
+            data["social_links"] = social_links
+        res = self._client._post("/agents/register", data)
         return AgentResult(res)
 
     def verify(self, agent_id: str) -> AgentResult:
@@ -275,22 +291,26 @@ class Agents:
         return AgentResult(res)
 
     def update_metadata(self, agent_id: str, model_version: str = None,
-                        prompt_hash: str = None) -> AgentResult:
-        """Update model_version and/or prompt_hash for an agent.
+                        prompt_hash: str = None,
+                        social_links: dict = None) -> AgentResult:
+        """Update model_version, prompt_hash, and/or social_links for an agent.
 
         Args:
             agent_id: The agent's unique identifier.
             model_version: Optional LLM model version string.
             prompt_hash: Optional SHA-256 hash of the system prompt.
+            social_links: Optional dict with github, x, and/or website URLs.
 
         Returns:
-            AgentResult with agent_id, model_version, prompt_hash, changes.
+            AgentResult with agent_id, model_version, prompt_hash, social_links, changes.
         """
         data = {"agent_id": agent_id}
         if model_version is not None:
             data["model_version"] = model_version
         if prompt_hash is not None:
             data["prompt_hash"] = prompt_hash
+        if social_links is not None:
+            data["social_links"] = social_links
         res = self._client._post("/agents/update-metadata", data)
         return AgentResult(res)
 

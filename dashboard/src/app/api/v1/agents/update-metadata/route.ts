@@ -22,14 +22,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { agent_id, model_version, prompt_hash } = body
+    const { agent_id, model_version, prompt_hash, social_links } = body
 
     if (!agent_id) {
       return NextResponse.json({ error: 'agent_id is required' }, { status: 400 })
     }
 
-    if (!model_version && !prompt_hash) {
-      return NextResponse.json({ error: 'At least one of model_version or prompt_hash is required' }, { status: 400 })
+    if (!model_version && !prompt_hash && !social_links) {
+      return NextResponse.json({ error: 'At least one of model_version, prompt_hash, or social_links is required' }, { status: 400 })
     }
 
     const db = getServiceClient()
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     // Verify caller owns this agent
     const { data: agent, error: fetchError } = await db
       .from('agents')
-      .select('agent_id, user_id, model_version, prompt_hash')
+      .select('agent_id, user_id, model_version, prompt_hash, social_links')
       .eq('agent_id', agent_id)
       .single()
 
@@ -86,6 +86,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (social_links !== undefined) {
+      const previousLinks = (agent as any).social_links || null
+      updates.social_links = social_links
+
+      if (JSON.stringify(previousLinks) !== JSON.stringify(social_links)) {
+        events.push({
+          agent_id,
+          event_type: 'social_links_changed',
+          data: {
+            previous: previousLinks,
+            current: social_links,
+          },
+        })
+      }
+    }
+
     // Apply update
     const { error: updateError } = await db
       .from('agents')
@@ -107,6 +123,7 @@ export async function POST(req: NextRequest) {
       agent_id,
       model_version: model_version !== undefined ? model_version : agent.model_version,
       prompt_hash: prompt_hash !== undefined ? prompt_hash : agent.prompt_hash,
+      social_links: social_links !== undefined ? social_links : (agent as any).social_links || null,
       changes: events.map((e) => ({
         type: e.event_type,
         previous: e.data.previous,

@@ -201,13 +201,14 @@ async function publishMemoToSolana(
 export async function createDualReceipt(
   action: ReceiptAction,
   agentId: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  authContext?: { trust_level?: number; permissions?: string[]; delegation_proof?: string }
 ): Promise<DualReceipt> {
   // 1. Hash receipt (instant, always works)
   const hashReceipt = createHashReceipt(action, agentId, data)
 
   // 2. On-chain memo (best-effort)
-  const memoPayload = JSON.stringify({
+  const memoData: Record<string, unknown> = {
     protocol: 'agentid',
     version: 1,
     receipt_id: hashReceipt.receipt_id,
@@ -215,7 +216,11 @@ export async function createDualReceipt(
     agent_id: agentId,
     data_hash: hashReceipt.data_hash,
     timestamp: hashReceipt.timestamp,
-  })
+  }
+  if (authContext) {
+    memoData.auth_context = authContext
+  }
+  const memoPayload = JSON.stringify(memoData)
 
   const blockchainReceipt = await publishMemoToSolana(memoPayload)
 
@@ -234,7 +239,7 @@ export async function createDualReceipt(
       explorer_url: blockchainReceipt?.explorer_url || null,
       block_time: blockchainReceipt?.block_time || null,
       memo: blockchainReceipt?.memo || null,
-      raw_data: data,
+      raw_data: authContext ? { ...data, auth_context: authContext } : data,
     })
   } catch (err: any) {
     // Non-blocking — receipt was already created in memory

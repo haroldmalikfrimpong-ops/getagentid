@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage } from '@/lib/usage'
+import { calculateTrustLevel, checkPermission, TRUST_LEVEL_LABELS, PERMISSIONS, type AgentTrustData, type Action } from '@/lib/trust-levels'
 import crypto from 'crypto'
 
 /**
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
     // Verify to_agent exists and is active
     const { data: toAgent, error: toError } = await db
       .from('agents')
-      .select('agent_id, name, owner, active')
+      .select('agent_id, name, owner, active, user_id, trust_score, verified, certificate, created_at, ed25519_key, wallet_address')
       .eq('agent_id', to_agent)
       .eq('active', true)
       .single()
@@ -92,6 +93,69 @@ export async function POST(req: NextRequest) {
     // Cannot delegate to self
     if (from_agent === to_agent) {
       return NextResponse.json({ error: 'Cannot delegate to the same agent' }, { status: 400 })
+    }
+
+    // ── effectiveAuthority check ─────────────────────────────────────────────
+    // A delegation can NEVER grant more power than the delegatee already has.
+    // Calculate the delegatee's trust level and verify each scope action.
+
+    // Check certificate validity for delegatee
+    let delegateeCertValid = false
+    if (toAgent.certificate) {
+      try {
+        const parts = toAgent.certificate.split('.')
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString())
+          delegateeCertValid = payload.exp > Math.floor(Date.now() / 1000)
+        }
+      } catch {}
+    }
+
+    // Count successful verifications for delegatee
+    const { count: delegateeVerifCount } = await db
+      .from('agent_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('agent_id', to_agent)
+      .eq('event_type', 'verified')
+
+    // Get delegatee owner profile
+    const { data: delegateeOwnerProfile } = await db
+      .from('profiles')
+      .select('email_verified, entity_verified')
+      .eq('id', toAgent.user_id)
+      .single()
+
+    const delegateeTrustData: AgentTrustData = {
+      trust_score: toAgent.trust_score ?? 0,
+      verified: toAgent.verified ?? false,
+      certificate_valid: delegateeCertValid,
+      entity_verified: delegateeOwnerProfile?.entity_verified === true,
+      owner_email_verified: delegateeOwnerProfile?.email_verified === true,
+      created_at: toAgent.created_at,
+      successful_verifications: delegateeVerifCount ?? 0,
+      ed25519_key: toAgent.ed25519_key ?? null,
+      wallet_address: toAgent.wallet_address ?? null,
+    }
+
+    const delegateeTrustLevel = calculateTrustLevel(delegateeTrustData)
+
+    // Check each scope action against the delegatee's trust level
+    const deniedActions: string[] = []
+    for (const action of scope) {
+      if (!checkPermission(delegateeTrustLevel, action as Action)) {
+        deniedActions.push(action)
+      }
+    }
+
+    if (deniedActions.length > 0) {
+      return NextResponse.json({
+        error: 'Delegation exceeds delegatee authority',
+        message: `The delegatee (${toAgent.name}) at ${TRUST_LEVEL_LABELS[delegateeTrustLevel]} lacks permissions: ${deniedActions.join(', ')}`,
+        delegatee_trust_level: delegateeTrustLevel,
+        delegatee_trust_label: TRUST_LEVEL_LABELS[delegateeTrustLevel],
+        delegatee_permissions: PERMISSIONS[delegateeTrustLevel],
+        denied_actions: deniedActions,
+      }, { status: 400 })
     }
 
     // Build the delegation proof JWT

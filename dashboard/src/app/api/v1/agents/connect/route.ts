@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage } from '@/lib/usage'
 import { notifyAgentConnect } from '@/lib/notify'
-import { calculateTrustLevel, checkPermission, TRUST_LEVEL_LABELS, type AgentTrustData } from '@/lib/trust-levels'
+import { calculateTrustLevel, checkPermission, TRUST_LEVEL_LABELS, PERMISSIONS, type AgentTrustData } from '@/lib/trust-levels'
 import { quickAnomalyCheck, calculateRiskScore, type AnomalyAlert } from '@/lib/behaviour'
 import { createDualReceipt } from '@/lib/receipts'
 import { sendWebhook } from '@/lib/webhooks'
@@ -218,7 +218,7 @@ export async function POST(req: NextRequest) {
         sender_trust_level: senderTrustLevel,
         receiver_trust_level: receiverTrustLevel,
         both_verified: senderVerified && receiverVerified,
-      })
+      }, { trust_level: senderTrustLevel, permissions: PERMISSIONS[senderTrustLevel] })
     } catch {
       // Never block on receipt creation failure
     }

@@ -36,3 +36,4 @@ out/
 credentials.json
 token.json
 *.db
+applications/

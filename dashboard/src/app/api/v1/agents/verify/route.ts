@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const db = getServiceClient()
     const { data: agent, error } = await db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, wallet_address, wallet_chain, wallet_bound_at, solana_address, ed25519_key, model_version, prompt_hash')
+      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, wallet_address, wallet_chain, wallet_bound_at, solana_address, ed25519_key, model_version, prompt_hash, social_links')
       .eq('agent_id', agent_id)
       .single()
 
@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
       trust_level_label,
       certificate_valid,
       verified_by: userId || 'anonymous',
-    })
+    }, { trust_level, permissions })
 
     // Build DID and supported key types
     const did = `did:web:getagentid.dev:agent:${agent.agent_id}`
@@ -258,6 +258,13 @@ export async function POST(req: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('agent_id', agent_id)
       .eq('event_type', 'incident_resolved')
+
+    // Cryptographic scarring: count ALL lifetime negative events (demotions)
+    // This is the total historical count, not windowed — scars never fully heal
+    const scarring_score = (negativeSignals ?? 0)
+    const trust_note = scarring_score > 0
+      ? `Agent has ${scarring_score} historical incidents — elevated scrutiny applied`
+      : undefined
 
     // Get last 10 negative events with resolution status for incident history
     const { data: incidentEvents } = await db
@@ -298,7 +305,15 @@ export async function POST(req: NextRequest) {
       supported_key_types,
       negative_signals: negativeSignals ?? 0,
       resolved_signals: resolvedSignals ?? 0,
+      scarring_score,
+      ...(trust_note && { trust_note }),
       incident_history,
+      social_links: agent.social_links || null,
+      social_verified: {
+        github_linked: !!(agent.social_links as any)?.github,
+        x_linked: !!(agent.social_links as any)?.x,
+        website_linked: !!(agent.social_links as any)?.website,
+      },
       wallet,
       solana_wallet,
       receipt,
