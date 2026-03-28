@@ -1,0 +1,107 @@
+{
+  "spec": "AgentID Trust Level Constraint Mapping v0.1",
+  "spec_id": "ACI-AGENTID-1",
+  "author": "AgentID (@haroldmalikfrimpong-ops)",
+  "date": "2026-03-28",
+  "vectors": [
+    {
+      "id": "agentid-vec-001",
+      "scenario": "L1 agent connects to another agent",
+      "agent_trust_level": 1,
+      "action": "connect",
+      "expected_result": "permit",
+      "constraint_evaluations": [
+        { "facet": "scope", "limit": ["read","discover","verify","send_message","connect"], "actual": "connect", "delta": 0, "result": "permit" },
+        { "facet": "spend", "limit": 0, "actual": 0, "delta": 0, "result": "permit" },
+        { "facet": "reputation", "limit": 50, "actual": 0, "delta": 50, "result": "permit" }
+      ]
+    },
+    {
+      "id": "agentid-vec-002",
+      "scenario": "L1 agent attempts payment — denied (no scope)",
+      "agent_trust_level": 1,
+      "action": "make_payment",
+      "expected_result": "deny",
+      "constraint_evaluations": [
+        { "facet": "scope", "limit": ["read","discover","verify","send_message","connect"], "actual": "make_payment", "delta": -1, "result": "deny" }
+      ]
+    },
+    {
+      "id": "agentid-vec-003",
+      "scenario": "L3 agent pays $50 — within default limit",
+      "agent_trust_level": 3,
+      "action": "make_payment",
+      "amount_usd": 50,
+      "expected_result": "permit",
+      "constraint_evaluations": [
+        { "facet": "scope", "limit": ["read","discover","verify","send_message","connect","challenge_response","handle_data","make_payment","access_paid_service"], "actual": "make_payment", "delta": 0, "result": "permit" },
+        { "facet": "spend", "limit": 10000, "actual": 50, "delta": 9950, "result": "permit" },
+        { "facet": "reversibility", "limit": "allowlisted", "actual": "wallet_on_allowlist", "delta": 0, "result": "permit" }
+      ]
+    },
+    {
+      "id": "agentid-vec-004",
+      "scenario": "L3 agent pays $10,001 — exceeds default daily limit",
+      "agent_trust_level": 3,
+      "action": "make_payment",
+      "amount_usd": 10001,
+      "expected_result": "deny",
+      "constraint_evaluations": [
+        { "facet": "scope", "limit": ["read","discover","verify","send_message","connect","challenge_response","handle_data","make_payment","access_paid_service"], "actual": "make_payment", "delta": 0, "result": "permit" },
+        { "facet": "spend", "limit": 10000, "actual": 10001, "delta": -1, "result": "deny" }
+      ]
+    },
+    {
+      "id": "agentid-vec-005",
+      "scenario": "L3 agent pays $600 to new wallet — denied by cooling period",
+      "agent_trust_level": 3,
+      "action": "make_payment",
+      "amount_usd": 600,
+      "expected_result": "deny",
+      "constraint_evaluations": [
+        { "facet": "scope", "limit": "make_payment in permissions", "actual": "make_payment", "delta": 0, "result": "permit" },
+        { "facet": "spend", "limit": 10000, "actual": 600, "delta": 9400, "result": "permit" },
+        { "facet": "reversibility", "limit": "24h cooling period", "actual": "wallet_first_seen_2h_ago", "delta": -22, "result": "deny" }
+      ]
+    },
+    {
+      "id": "agentid-vec-006",
+      "scenario": "L3 agent pays $600 — dual approval required",
+      "agent_trust_level": 3,
+      "action": "make_payment",
+      "amount_usd": 600,
+      "expected_result": "flag",
+      "constraint_evaluations": [
+        { "facet": "scope", "limit": "make_payment in permissions", "actual": "make_payment", "delta": 0, "result": "permit" },
+        { "facet": "spend", "limit": 10000, "actual": 600, "delta": 9400, "result": "permit" },
+        { "facet": "reversibility", "limit": "dual_approval_threshold=500", "actual": 600, "delta": -100, "result": "flag" }
+      ],
+      "note": "Action proceeds only after owner confirms within 1-hour deadline"
+    },
+    {
+      "id": "agentid-vec-007",
+      "scenario": "L2 agent with behavioural anomaly attempts connect — denied",
+      "agent_trust_level": 2,
+      "action": "connect",
+      "expected_result": "deny",
+      "constraint_evaluations": [
+        { "facet": "scope", "limit": "connect in permissions", "actual": "connect", "delta": 0, "result": "permit" },
+        { "facet": "reputation", "limit": 50, "actual": 75, "delta": -25, "result": "deny" }
+      ]
+    },
+    {
+      "id": "agentid-vec-008",
+      "scenario": "L3 agent with user-lowered limit of $100 tries $200 — denied",
+      "agent_trust_level": 3,
+      "action": "make_payment",
+      "amount_usd": 200,
+      "user_custom_limit": 100,
+      "expected_result": "deny",
+      "constraint_evaluations": [
+        { "facet": "scope", "limit": "make_payment in permissions", "actual": "make_payment", "delta": 0, "result": "permit" },
+        { "facet": "spend", "limit": 100, "actual": 200, "delta": -100, "result": "deny" }
+      ],
+      "note": "Effective limit = min(trust_default=$10000, user_custom=$100) = $100. Owner controls their own agent."
+    }
+  ]
+}
