@@ -1047,28 +1047,65 @@ Content-Type: application/json`}</Code>
               id="api-behaviour"
               method="GET"
               path="/agents/behaviour"
-              description="Get the behavioural profile and anomaly report for an agent you own. Includes activity patterns, detected anomalies, and a risk score."
+              description="Get the behavioural profile and anomaly report for an agent you own. AgentID builds a 30-day baseline of each agent's activity patterns and detects anomalies in real-time. Certificates prove who an agent is — behavioural fingerprinting proves it's still acting like itself."
               trustLevel="API key required"
             />
+
+            <p className="text-gray-400 text-sm mb-4">AgentID monitors four anomaly types:</p>
+            <div className="overflow-x-auto mb-4">
+              <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <th className="text-left py-2 px-3 text-gray-500 font-mono text-xs">Detection</th>
+                    <th className="text-left py-2 px-3 text-gray-500 font-mono text-xs">What it catches</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <td className="py-2 px-3 text-cyan-400 font-mono text-xs">frequency_spike</td>
+                    <td className="py-2 px-3 text-gray-400 text-xs">API calls spike 3x+ above baseline. Absolute thresholds (10/25/50 calls/hr) prevent false positives on low-traffic agents.</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <td className="py-2 px-3 text-cyan-400 font-mono text-xs">unusual_hour</td>
+                    <td className="py-2 px-3 text-gray-400 text-xs">Activity outside the agent{"'"}s typical operating window (derived from 30-day hour distribution).</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <td className="py-2 px-3 text-cyan-400 font-mono text-xs">new_action</td>
+                    <td className="py-2 px-3 text-gray-400 text-xs">Agent performs action types never seen in its 30-day history.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-3 text-cyan-400 font-mono text-xs">trust_drop</td>
+                    <td className="py-2 px-3 text-gray-400 text-xs">Trust level or score decreased in last 24 hours — possible compromise or credential revocation.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             <Code lang="http">{`GET /agents/behaviour?agent_id=agent_a1b2c3d4e5`}</Code>
             <p className="text-gray-500 text-xs mb-1">Response:</p>
             <Code lang="json">{`{
   "profile": {
     "agent_id": "agent_a1b2c3d4e5",
-    "total_events": 245,
-    "event_types": { "verified": 100, "message_sent": 80, "payment_authorized": 65 },
-    "hourly_distribution": [0, 0, 0, 2, 5, 12, 20, 30, ...]
+    "avg_verifications_per_day": 8.2,
+    "avg_api_calls_per_hour": 3.4,
+    "typical_active_hours": [9, 17],
+    "typical_actions": ["verified", "message_sent", "payment_authorized"],
+    "last_updated": "2026-03-27T12:00:00.000Z"
   },
   "anomalies": [
     {
-      "type": "burst_activity",
+      "agent_id": "agent_a1b2c3d4e5",
+      "type": "frequency_spike",
       "severity": "medium",
-      "message": "32 events in the last hour (normal: ~8)",
-      "detected_at": "2026-03-27T12:00:00.000Z"
+      "description": "API call rate is 5x the baseline average (25 calls in the last hour vs avg 3.4/hr)",
+      "detected_at": "2026-03-27T12:00:00.000Z",
+      "current_value": 25,
+      "baseline_value": 3.4
     }
   ],
-  "risk_score": 35
+  "risk_score": 30
 }`}</Code>
+            <p className="text-gray-500 text-xs mt-2 mb-0">Risk score: 0 = clean, 100 = compromised. Severity weights: low = 10, medium = 30, high = 50. Anomalies are also checked during agent-to-agent connections and verifications.</p>
 
             <Divider />
 

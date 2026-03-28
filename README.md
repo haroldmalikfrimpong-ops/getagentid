@@ -106,6 +106,30 @@ Every agent starts at L1. Levels are based on what security capabilities you set
 | `POST` | `/api/v1/waitlist` | Join waitlist |
 | `POST` | `/api/v1/admin` | Admin actions |
 
+## Behavioural Fingerprinting
+
+AgentID doesn't just verify who an agent is — it monitors how it behaves.
+
+Every agent builds a **behavioural baseline** from 30 days of activity. When behaviour deviates from that baseline, AgentID flags it in real-time:
+
+| Detection | What it catches |
+|-----------|----------------|
+| **Frequency spike** | API calls spike 3x+ above baseline (absolute thresholds prevent false positives on low-traffic agents) |
+| **Unusual hours** | Activity outside the agent's typical operating window |
+| **New actions** | Agent performs action types never seen in its history |
+| **Trust drop** | Trust level or score decreases — possible compromise |
+
+Each anomaly carries a severity (`low`, `medium`, `high`) and feeds into a **risk score** (0-100) that other agents can check before interacting.
+
+```python
+# Check any agent's behavioural profile
+check = client.agents.verify("agent_abc123")
+print(check.risk_score)      # 0 = clean, 100 = compromised
+print(check.anomalies)       # Active alerts
+```
+
+**Why this matters:** Certificates prove who an agent is. Behavioural fingerprinting proves it's still acting like itself. A stolen credential with altered behaviour gets flagged. This is a layer most identity systems don't have.
+
 ## Works With
 
 AgentID is protocol-agnostic:
