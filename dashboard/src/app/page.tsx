@@ -557,17 +557,17 @@ export default function LandingPage() {
               Verified. Signed. On-chain.
             </h2>
             <p className="text-gray-500 max-w-lg mx-auto">
-              AgentID is live on encrypted relays, interoperable with multiple identity systems, and verified across Python and TypeScript.
+              3 specs ratified. Infrastructure phase complete. Founding member of the Agent Identity Working Group with unanimous ratification across transport, identity resolution, and entity verification.
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               {
-                title: 'A2A Protocol',
-                desc: 'Proposed as the identity verification layer for Google\'s Agent-to-Agent protocol. Founding member of the Agent Identity Working Group.',
+                title: 'WG Founding Member',
+                desc: 'Founding member of the Agent Identity Working Group. 3 specs ratified unanimously. Infrastructure phase complete. Cited in published academic paper.',
                 accent: '#4285F4',
-                tag: 'STANDARD',
+                tag: 'RATIFIED',
               },
               {
                 title: 'Encrypted Relay',
