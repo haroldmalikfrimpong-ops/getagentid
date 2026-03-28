@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const db = getServiceClient()
     const { data: agent, error } = await db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, wallet_address, wallet_chain, wallet_bound_at, solana_address, ed25519_key')
+      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, wallet_address, wallet_chain, wallet_bound_at, solana_address, ed25519_key, model_version, prompt_hash')
       .eq('agent_id', agent_id)
       .single()
 
@@ -131,7 +131,19 @@ export async function POST(req: NextRequest) {
     // Update last_active
     await db.from('agents').update({ last_active: new Date().toISOString() }).eq('agent_id', agent_id)
 
-    // Log verification event
+    // Log verification event — including negative signal if cert invalid or agent inactive
+    if (!certificate_valid || !agent.active) {
+      await db.from('agent_events').insert({
+        agent_id,
+        event_type: 'verification_failed',
+        data: {
+          reason: !certificate_valid ? 'certificate_invalid' : 'agent_inactive',
+          certificate_valid,
+          active: agent.active,
+          verified_by: userId || 'anonymous',
+        },
+      })
+    }
     await db.from('agent_events').insert({
       agent_id,
       event_type: 'verified',
@@ -164,7 +176,19 @@ export async function POST(req: NextRequest) {
       behaviour_warnings = await quickAnomalyCheck(agent_id)
       behaviour_risk_score = calculateRiskScore(behaviour_warnings)
 
-      // Fire webhook for high-severity anomalies
+      // Log anomaly_detected event and fire webhook for high-severity anomalies
+      if (behaviour_warnings.length > 0) {
+        await db.from('agent_events').insert({
+          agent_id,
+          event_type: 'anomaly_detected',
+          data: {
+            risk_score: behaviour_risk_score,
+            anomaly_count: behaviour_warnings.length,
+            types: behaviour_warnings.map((a) => a.type),
+            severities: behaviour_warnings.map((a) => a.severity),
+          },
+        })
+      }
       if (agent.user_id && behaviour_warnings.some((a) => a.severity === 'high')) {
         sendWebhook(agent.user_id, 'agent.behaviour_anomaly', {
           agent_id: agent.agent_id,
@@ -205,9 +229,57 @@ export async function POST(req: NextRequest) {
       verified_by: userId || 'anonymous',
     })
 
+    // Build DID and supported key types
+    const did = `did:web:getagentid.dev:agent:${agent.agent_id}`
+    const supported_key_types: string[] = ['ecdsa-p256']
+    if (agent.ed25519_key) supported_key_types.push('ed25519')
+    if (agent.wallet_address && agent.wallet_chain) {
+      const chainKeyTypes: Record<string, string> = {
+        ethereum: 'secp256k1',
+        polygon: 'secp256k1',
+        solana: 'ed25519',
+      }
+      const walletKeyType = chainKeyTypes[agent.wallet_chain]
+      if (walletKeyType && !supported_key_types.includes(walletKeyType)) {
+        supported_key_types.push(walletKeyType)
+      }
+    }
+
+    // Count negative signals (failed verifications, anomalies, revoked connections)
+    const { count: negativeSignals } = await db
+      .from('agent_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('agent_id', agent_id)
+      .in('event_type', ['verification_failed', 'anomaly_detected', 'connection_revoked'])
+
+    // Count resolved signals (recovered from incidents)
+    const { count: resolvedSignals } = await db
+      .from('agent_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('agent_id', agent_id)
+      .eq('event_type', 'incident_resolved')
+
+    // Get last 10 negative events with resolution status for incident history
+    const { data: incidentEvents } = await db
+      .from('agent_events')
+      .select('id, event_type, data, created_at')
+      .eq('agent_id', agent_id)
+      .in('event_type', ['verification_failed', 'anomaly_detected', 'connection_revoked', 'incident_resolved'])
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    const incident_history = (incidentEvents || []).map((e: any) => ({
+      event_id: e.id,
+      type: e.event_type,
+      data: e.data,
+      occurred_at: e.created_at,
+      resolved: e.event_type === 'incident_resolved',
+    }))
+
     return NextResponse.json({
       verified: certificate_valid && agent.active,
       agent_id: agent.agent_id,
+      did,
       name: agent.name,
       description: agent.description,
       owner: agent.owner,
@@ -223,6 +295,10 @@ export async function POST(req: NextRequest) {
       active: agent.active,
       created_at: agent.created_at,
       last_active: agent.last_active,
+      supported_key_types,
+      negative_signals: negativeSignals ?? 0,
+      resolved_signals: resolvedSignals ?? 0,
+      incident_history,
       wallet,
       solana_wallet,
       receipt,

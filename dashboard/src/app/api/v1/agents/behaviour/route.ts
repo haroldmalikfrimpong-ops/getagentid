@@ -46,6 +46,21 @@ export async function GET(req: NextRequest) {
 
     const risk_score = calculateRiskScore(anomalies)
 
+    // Log anomaly_detected event if anomalies found
+    if (anomalies.length > 0) {
+      await db.from('agent_events').insert({
+        agent_id: agentId,
+        event_type: 'anomaly_detected',
+        data: {
+          context: 'behaviour_check',
+          risk_score,
+          anomaly_count: anomalies.length,
+          types: anomalies.map((a: any) => a.type),
+          severities: anomalies.map((a: any) => a.severity),
+        },
+      })
+    }
+
     return NextResponse.json({
       profile,
       anomalies,

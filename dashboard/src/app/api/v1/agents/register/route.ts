@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     // Parse body
     const body = await req.json()
-    const { name, description, capabilities, platform, endpoint } = body
+    const { name, description, capabilities, platform, endpoint, model_version, prompt_hash } = body
 
     if (!name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 })
@@ -66,6 +66,8 @@ export async function POST(req: NextRequest) {
       verified: false,
       active: true,
       user_id: auth.user_id,
+      ...(model_version && { model_version }),
+      ...(prompt_hash && { prompt_hash }),
     })
 
     if (dbError) {
@@ -97,10 +99,14 @@ export async function POST(req: NextRequest) {
     // Level-up info so the user always knows what to do next
     const nextSteps = levelUpRequirements(initialTrustLevel)
 
+    // Build DID
+    const did = `did:web:getagentid.dev:agent:${agentId}`
+
     return NextResponse.json({
       agent_id: agentId,
       name,
       owner,
+      did,
       certificate: cert.certificate,
       public_key: publicKey,
       private_key: privateKey,

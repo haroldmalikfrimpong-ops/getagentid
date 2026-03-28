@@ -11,18 +11,27 @@ import { calculateTrustLevel, type AgentTrustData } from './trust-levels'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+export interface PayloadFingerprint {
+  common_keys: string[]         // most common payload keys/fields used
+  avg_payload_size: number      // average payload size in bytes
+  message_type_distribution: Record<string, number> // message_type -> count
+}
+
 export interface BehaviourProfile {
   agent_id: string
   avg_verifications_per_day: number
   avg_api_calls_per_hour: number
   typical_active_hours: [number, number] // e.g. [9, 17]
   typical_actions: string[] // most common event types
+  payload_fingerprint: PayloadFingerprint // semantic fingerprint of payloads
+  last_known_model_version: string | null
+  last_known_prompt_hash: string | null
   last_updated: string
 }
 
 export interface AnomalyAlert {
   agent_id: string
-  type: 'frequency_spike' | 'unusual_hour' | 'new_action' | 'trust_drop'
+  type: 'frequency_spike' | 'unusual_hour' | 'new_action' | 'trust_drop' | 'payload_drift' | 'model_changed'
   severity: 'low' | 'medium' | 'high'
   description: string
   detected_at: string
@@ -48,7 +57,7 @@ export async function buildProfile(agentId: string): Promise<BehaviourProfile> {
 
   const { data: events, error } = await db
     .from('agent_events')
-    .select('event_type, created_at')
+    .select('event_type, created_at, data')
     .eq('agent_id', agentId)
     .gte('created_at', since)
     .order('created_at', { ascending: true })
@@ -60,6 +69,9 @@ export async function buildProfile(agentId: string): Promise<BehaviourProfile> {
       avg_api_calls_per_hour: 0,
       typical_active_hours: [0, 23],
       typical_actions: [],
+      payload_fingerprint: { common_keys: [], avg_payload_size: 0, message_type_distribution: {} },
+      last_known_model_version: null,
+      last_known_prompt_hash: null,
       last_updated: new Date().toISOString(),
     }
   }
@@ -92,12 +104,60 @@ export async function buildProfile(agentId: string): Promise<BehaviourProfile> {
     .slice(0, 10)
     .map(([type]) => type)
 
+  // ── Semantic fingerprinting: analyse payload patterns ──────────────────
+  const keyCounts: Record<string, number> = {}
+  let totalPayloadSize = 0
+  let payloadCount = 0
+  const messageTypeDist: Record<string, number> = {}
+
+  for (const event of events) {
+    const data = event.data as any
+    if (data && typeof data === 'object') {
+      // Track payload keys
+      const keys = Object.keys(data)
+      for (const key of keys) {
+        keyCounts[key] = (keyCounts[key] || 0) + 1
+      }
+      // Track payload size
+      const size = JSON.stringify(data).length
+      totalPayloadSize += size
+      payloadCount++
+
+      // Track message type distribution
+      if (data.type || data.message_type) {
+        const mt = data.type || data.message_type
+        messageTypeDist[mt] = (messageTypeDist[mt] || 0) + 1
+      }
+    }
+  }
+
+  const commonKeys = Object.entries(keyCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([key]) => key)
+
+  const avgPayloadSize = payloadCount > 0 ? Math.round(totalPayloadSize / payloadCount) : 0
+
+  // ── Track last known model version and prompt hash ────────────────────
+  const { data: agentRow } = await db
+    .from('agents')
+    .select('model_version, prompt_hash')
+    .eq('agent_id', agentId)
+    .single()
+
   return {
     agent_id: agentId,
     avg_verifications_per_day: Math.round(avgVerificationsPerDay * 100) / 100,
     avg_api_calls_per_hour: Math.round(avgApiCallsPerHour * 100) / 100,
     typical_active_hours: [start, end],
     typical_actions: typicalActions,
+    payload_fingerprint: {
+      common_keys: commonKeys,
+      avg_payload_size: avgPayloadSize,
+      message_type_distribution: messageTypeDist,
+    },
+    last_known_model_version: agentRow?.model_version || null,
+    last_known_prompt_hash: agentRow?.prompt_hash || null,
     last_updated: new Date().toISOString(),
   }
 }
@@ -199,6 +259,44 @@ export async function detectAnomalies(agentId: string): Promise<AnomalyAlert[]> 
     })
   }
 
+  // 5. Payload drift — detect when payload structure changes significantly
+  if (profile.payload_fingerprint.common_keys.length > 0) {
+    const recentPayloadKeys = await getRecentPayloadKeys(agentId)
+    if (recentPayloadKeys.length > 0) {
+      const baselineKeys = new Set(profile.payload_fingerprint.common_keys)
+      const newKeys = recentPayloadKeys.filter((k) => !baselineKeys.has(k))
+      const driftRatio = baselineKeys.size > 0 ? newKeys.length / baselineKeys.size : 0
+
+      if (driftRatio >= 0.5) {
+        alerts.push({
+          agent_id: agentId,
+          type: 'payload_drift',
+          severity: driftRatio >= 0.8 ? 'high' : 'medium',
+          description: `Agent payload structure has drifted ${Math.round(driftRatio * 100)}% from baseline. ${newKeys.length} new keys detected: ${newKeys.slice(0, 5).join(', ')}`,
+          detected_at: detectedAt,
+          current_value: newKeys.length,
+          baseline_value: baselineKeys.size,
+        })
+      }
+    }
+  }
+
+  // 6. Model changed — detect when model_version or prompt_hash changes
+  if (profile.last_known_model_version || profile.last_known_prompt_hash) {
+    const modelChange = await checkModelChange(agentId, profile)
+    if (modelChange) {
+      alerts.push({
+        agent_id: agentId,
+        type: 'model_changed',
+        severity: 'medium',
+        description: modelChange.description,
+        detected_at: detectedAt,
+        current_value: 1,
+        baseline_value: 0,
+      })
+    }
+  }
+
   return alerts
 }
 
@@ -249,6 +347,59 @@ export async function quickAnomalyCheck(agentId: string): Promise<AnomalyAlert[]
 }
 
 // ── Internal helpers ────────────────────────────────────────────────────────
+
+async function getRecentPayloadKeys(agentId: string): Promise<string[]> {
+  const db = getServiceClient()
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+
+  const { data: events } = await db
+    .from('agent_events')
+    .select('data')
+    .eq('agent_id', agentId)
+    .gte('created_at', oneHourAgo)
+
+  const keySet = new Set<string>()
+  for (const event of events || []) {
+    const data = event.data as any
+    if (data && typeof data === 'object') {
+      for (const key of Object.keys(data)) {
+        keySet.add(key)
+      }
+    }
+  }
+  return Array.from(keySet)
+}
+
+async function checkModelChange(agentId: string, profile: BehaviourProfile): Promise<{ description: string } | null> {
+  const db = getServiceClient()
+
+  // Get the latest model_version_changed or prompt_hash_changed event
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const { data: changeEvents } = await db
+    .from('agent_events')
+    .select('event_type, data, created_at')
+    .eq('agent_id', agentId)
+    .in('event_type', ['model_version_changed', 'prompt_hash_changed'])
+    .gte('created_at', oneDayAgo)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (changeEvents && changeEvents.length > 0) {
+    const event = changeEvents[0]
+    const data = event.data as any
+    if (event.event_type === 'model_version_changed') {
+      return {
+        description: `Model version changed from "${data?.previous || 'unknown'}" to "${data?.current || 'unknown'}" in the last 24 hours`,
+      }
+    }
+    if (event.event_type === 'prompt_hash_changed') {
+      return {
+        description: `Prompt hash changed from "${data?.previous || 'unknown'}" to "${data?.current || 'unknown'}" in the last 24 hours`,
+      }
+    }
+  }
+  return null
+}
 
 async function getRecentActivity(agentId: string) {
   const db = getServiceClient()

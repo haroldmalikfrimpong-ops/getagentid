@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authenticateRequest } from '@/lib/api-auth'
+import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import {
   addToAllowlist,
   removeFromAllowlist,
@@ -118,6 +118,14 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: e.message }, { status: 400 })
         }
 
+        // Log freeze event
+        const db = getServiceClient()
+        await db.from('agent_events').insert({
+          agent_id,
+          event_type: 'anomaly_detected',
+          data: { context: 'payment_freeze', reason: 'Owner froze payments', action: 'freeze' },
+        })
+
         await trackUsage(auth.user_id, 'payment_settings')
 
         return NextResponse.json({
@@ -142,6 +150,14 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: e.message }, { status: 400 })
         }
 
+        // Log incident resolved — agent recovered from freeze
+        const dbUnfreeze = getServiceClient()
+        await dbUnfreeze.from('agent_events').insert({
+          agent_id,
+          event_type: 'incident_resolved',
+          data: { context: 'payment_unfreeze', reason: 'Owner unfroze payments', action: 'unfreeze' },
+        })
+
         await trackUsage(auth.user_id, 'payment_settings')
 
         return NextResponse.json({
@@ -165,6 +181,14 @@ export async function POST(req: NextRequest) {
         } catch (e: any) {
           return NextResponse.json({ error: e.message }, { status: 400 })
         }
+
+        // Log incident resolved — payment approved after review
+        const dbApprove = getServiceClient()
+        await dbApprove.from('agent_events').insert({
+          agent_id: payment_id,
+          event_type: 'incident_resolved',
+          data: { context: 'payment_approval', reason: 'Owner approved pending payment', payment_id },
+        })
 
         await trackUsage(auth.user_id, 'payment_settings')
 

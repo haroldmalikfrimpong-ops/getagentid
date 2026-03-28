@@ -23,21 +23,48 @@ export async function POST(req: NextRequest) {
 
     if (action === 'verify_agent') {
       await db.from('agents').update({ verified: true, trust_score: 0.94 }).eq('agent_id', agent_id)
+      await db.from('agent_events').insert({
+        agent_id,
+        event_type: 'incident_resolved',
+        data: { context: 'admin_verify', reason: 'Admin verified agent', admin_id: ADMIN_ID },
+      })
       return NextResponse.json({ success: true, message: `Agent ${agent_id} verified` })
     }
 
     if (action === 'unverify_agent') {
       await db.from('agents').update({ verified: false, trust_score: 0 }).eq('agent_id', agent_id)
+      await db.from('agent_events').insert({
+        agent_id,
+        event_type: 'verification_failed',
+        data: { context: 'admin_unverify', reason: 'Admin unverified agent', admin_id: ADMIN_ID },
+      })
       return NextResponse.json({ success: true, message: `Agent ${agent_id} unverified` })
     }
 
     if (action === 'delete_agent') {
       await db.from('agents').update({ active: false }).eq('agent_id', agent_id)
+      await db.from('agent_events').insert({
+        agent_id,
+        event_type: 'connection_revoked',
+        data: { context: 'admin_delete', reason: 'Admin deactivated agent', admin_id: ADMIN_ID },
+      })
       return NextResponse.json({ success: true, message: `Agent ${agent_id} deactivated` })
     }
 
     if (action === 'ban_user') {
+      // Get all agent IDs for this user before banning
+      const { data: userAgents } = await db.from('agents').select('agent_id').eq('user_id', user_id)
       await db.from('agents').update({ active: false }).eq('user_id', user_id)
+      // Log event for each agent
+      if (userAgents && userAgents.length > 0) {
+        await db.from('agent_events').insert(
+          userAgents.map((a: any) => ({
+            agent_id: a.agent_id,
+            event_type: 'connection_revoked',
+            data: { context: 'admin_ban', reason: 'Admin banned user — all agents deactivated', admin_id: ADMIN_ID },
+          }))
+        )
+      }
       return NextResponse.json({ success: true, message: `User ${user_id} banned — all agents deactivated` })
     }
 

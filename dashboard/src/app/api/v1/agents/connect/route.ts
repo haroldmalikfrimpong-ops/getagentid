@@ -125,8 +125,36 @@ export async function POST(req: NextRequest) {
       sender_behaviour_warnings = await quickAnomalyCheck(from_agent)
       sender_risk_score = calculateRiskScore(sender_behaviour_warnings)
 
+      // Log anomaly if any detected
+      if (sender_behaviour_warnings.length > 0) {
+        await db.from('agent_events').insert({
+          agent_id: from_agent,
+          event_type: 'anomaly_detected',
+          data: {
+            context: 'connect',
+            target_agent: to_agent,
+            risk_score: sender_risk_score,
+            anomaly_count: sender_behaviour_warnings.length,
+            types: sender_behaviour_warnings.map((a) => a.type),
+            severities: sender_behaviour_warnings.map((a) => a.severity),
+          },
+        })
+      }
+
       // Block connection if high-risk anomaly detected
       if (sender_behaviour_warnings.some((a) => a.severity === 'high')) {
+        // Log connection_revoked event
+        await db.from('agent_events').insert({
+          agent_id: from_agent,
+          event_type: 'connection_revoked',
+          data: {
+            target_agent: to_agent,
+            risk_score: sender_risk_score,
+            reason: 'High-risk behavioural anomaly detected',
+            anomalies: sender_behaviour_warnings.filter((a) => a.severity === 'high').map((a) => a.type),
+          },
+        })
+
         // Fire webhook to alert agent owner
         if (senderAgent.user_id) {
           sendWebhook(senderAgent.user_id, 'agent.connection_blocked', {

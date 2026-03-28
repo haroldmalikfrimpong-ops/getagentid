@@ -162,13 +162,16 @@ class Agents:
         ).json()
         return AgentResult(res)
 
-    def discover(self, capability: str = None, owner: str = None, limit: int = 20) -> list:
-        """Search for agents by capability or owner."""
+    def discover(self, capability: str = None, owner: str = None,
+                 credential_type: str = None, limit: int = 20) -> list:
+        """Search for agents by capability, owner, or credential type."""
         params = {"limit": limit}
         if capability:
             params["capability"] = capability
         if owner:
             params["owner"] = owner
+        if credential_type:
+            params["credential_type"] = credential_type
         res = httpx.get(
             f"{self._client._base_url}/agents/discover",
             params=params,
@@ -176,6 +179,120 @@ class Agents:
             follow_redirects=True,
         ).json()
         return [AgentResult(a) for a in res.get("agents", [])]
+
+    def attach_credential(self, agent_id: str, credential: dict) -> AgentResult:
+        """Attach a verifiable credential to an agent.
+
+        Args:
+            agent_id: The agent's unique identifier.
+            credential: Dict with type, issuer, issued_at, expires_at, signature.
+
+        Returns:
+            AgentResult with agent_id, credential, total_credentials.
+        """
+        res = self._client._post("/agents/credentials", {
+            "agent_id": agent_id,
+            "credential": credential,
+        })
+        return AgentResult(res)
+
+    def list_credentials(self, agent_id: str) -> AgentResult:
+        """List credentials for an agent. Public endpoint.
+
+        Args:
+            agent_id: The agent's unique identifier.
+
+        Returns:
+            AgentResult with agent_id, credentials, total, expired.
+        """
+        res = httpx.get(
+            f"{self._client._base_url}/agents/credentials",
+            params={"agent_id": agent_id},
+            timeout=10,
+            follow_redirects=True,
+        ).json()
+        return AgentResult(res)
+
+    def credibility_packet(self, agent_id: str) -> AgentResult:
+        """Get a signed credibility packet (trust resume) for an agent.
+
+        Public endpoint — returns a portable, HMAC-signed bundle containing
+        the agent's identity, trust level, verification count, receipts,
+        and behavioural risk score.
+
+        Args:
+            agent_id: The agent's unique identifier.
+
+        Returns:
+            AgentResult with identity, trust, verification_count, receipts, signature.
+        """
+        res = httpx.get(
+            f"{self._client._base_url}/agents/credibility-packet",
+            params={"agent_id": agent_id},
+            timeout=15,
+            follow_redirects=True,
+        ).json()
+        return AgentResult(res)
+
+    def delegate(self, from_agent: str, to_agent: str, scope: list,
+                 expires_at: str, max_spend: float = None) -> AgentResult:
+        """Create a signed delegation from one agent to another.
+
+        Args:
+            from_agent: The delegator agent_id (must be owned by caller).
+            to_agent: The delegatee agent_id.
+            scope: List of allowed actions e.g. ["send_message", "make_payment"].
+            expires_at: ISO timestamp when delegation expires.
+            max_spend: Optional spending limit for the delegatee.
+
+        Returns:
+            AgentResult with delegation_id, delegation_proof, scope, expires_at.
+        """
+        data = {
+            "from_agent": from_agent,
+            "to_agent": to_agent,
+            "scope": scope,
+            "expires_at": expires_at,
+        }
+        if max_spend is not None:
+            data["max_spend"] = max_spend
+        res = self._client._post("/agents/delegate", data)
+        return AgentResult(res)
+
+    def list_delegations(self, agent_id: str) -> AgentResult:
+        """List active delegations for an agent.
+
+        Requires API key auth. Returns delegations where agent is
+        either delegator or delegatee.
+
+        Args:
+            agent_id: The agent's unique identifier.
+
+        Returns:
+            AgentResult with delegations, active_count, total_count.
+        """
+        res = self._client._get(f"/agents/delegations?agent_id={agent_id}")
+        return AgentResult(res)
+
+    def update_metadata(self, agent_id: str, model_version: str = None,
+                        prompt_hash: str = None) -> AgentResult:
+        """Update model_version and/or prompt_hash for an agent.
+
+        Args:
+            agent_id: The agent's unique identifier.
+            model_version: Optional LLM model version string.
+            prompt_hash: Optional SHA-256 hash of the system prompt.
+
+        Returns:
+            AgentResult with agent_id, model_version, prompt_hash, changes.
+        """
+        data = {"agent_id": agent_id}
+        if model_version is not None:
+            data["model_version"] = model_version
+        if prompt_hash is not None:
+            data["prompt_hash"] = prompt_hash
+        res = self._client._post("/agents/update-metadata", data)
+        return AgentResult(res)
 
 
 class Client:

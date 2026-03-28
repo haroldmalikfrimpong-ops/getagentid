@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateApiKey, getServiceClient } from '@/lib/api-auth'
 import { createClient } from '@supabase/supabase-js'
+import { sendWebhook } from '@/lib/webhooks'
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,6 +38,13 @@ export async function POST(req: NextRequest) {
     if (dbError) {
       return NextResponse.json({ error: 'Failed to create API key' }, { status: 500 })
     }
+
+    // Log key creation event
+    await db.from('agent_events').insert({
+      agent_id: `user_${user.id}`,
+      event_type: 'api_key_created',
+      data: { key_prefix: prefix },
+    })
 
     // Return the key ONCE — it's never shown again
     return NextResponse.json({
@@ -80,7 +88,7 @@ export async function DELETE(req: NextRequest) {
     const db = getServiceClient()
     const { data: existing, error: lookupError } = await db
       .from('api_keys')
-      .select('id, user_id, active')
+      .select('id, user_id, active, key_prefix')
       .eq('id', key_id)
       .single()
 
@@ -105,6 +113,13 @@ export async function DELETE(req: NextRequest) {
     if (updateError) {
       return NextResponse.json({ error: 'Failed to revoke key' }, { status: 500 })
     }
+
+    // Log key revocation event
+    await db.from('agent_events').insert({
+      agent_id: `user_${user.id}`,
+      event_type: 'api_key_revoked',
+      data: { key_id, key_prefix: existing.key_prefix || 'unknown' },
+    })
 
     return NextResponse.json({ success: true, message: 'API key revoked' })
 
