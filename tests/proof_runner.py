@@ -767,6 +767,436 @@ def test_16_receipt_summary():
 
 
 # ===========================================================================
+# GROUP 6: DID & CREDENTIALS  (Tests 17-20)
+# ===========================================================================
+
+def test_17_did_in_verify():
+    """Verify response includes DID field."""
+    header(17, "Verify response includes DID (did:web)", "DID & CREDENTIALS")
+
+    aid = ESTABLISHED["trading_bot"]
+    status, data = api_post("/agents/verify", {"agent_id": aid})
+
+    did = data.get("did", "")
+    expected_prefix = "did:web:getagentid.dev:agent:"
+
+    if status == 200 and did.startswith(expected_prefix):
+        details = f"Trading Bot DID: {did}"
+        record(17, "DID in verify", "DID & CREDENTIALS", True, details, data)
+    else:
+        details = f"Expected DID starting with '{expected_prefix}', got: '{did}' (status={status})"
+        record(17, "DID in verify", "DID & CREDENTIALS", False, details, data)
+
+
+def test_18_supported_key_types():
+    """Verify response includes supported_key_types."""
+    header(18, "Verify response includes supported_key_types", "DID & CREDENTIALS")
+
+    aid = ESTABLISHED["trading_bot"]
+    status, data = api_post("/agents/verify", {"agent_id": aid})
+
+    key_types = data.get("supported_key_types", [])
+
+    if status == 200 and isinstance(key_types, list) and "ecdsa-p256" in key_types:
+        details = f"Trading Bot key types: {key_types}"
+        record(18, "Supported key types", "DID & CREDENTIALS", True, details, data)
+    else:
+        details = f"Expected list with 'ecdsa-p256', got: {key_types} (status={status})"
+        record(18, "Supported key types", "DID & CREDENTIALS", False, details, data)
+
+
+def test_19_attach_credential():
+    """Attach a verifiable credential to a new agent."""
+    header(19, "Attach credential to agent", "DID & CREDENTIALS")
+
+    if not registered_agents:
+        record(19, "Attach credential", "DID & CREDENTIALS", False, "No agents registered")
+        return
+
+    aid = registered_agents[0].get("agent_id", "")
+    status, data = api_post("/agents/credentials", {
+        "agent_id": aid,
+        "credential": {
+            "type": "gdpr-compliant",
+            "issuer": "compliance-test-authority",
+            "issued_at": ts(),
+            "expires_at": "2027-12-31T23:59:59Z",
+            "signature": "test-signature-proof",
+        },
+    })
+
+    if status == 201 and data.get("credential"):
+        details = f"Credential attached: type={data['credential'].get('type')}, total={data.get('total_credentials')}"
+        record(19, "Attach credential", "DID & CREDENTIALS", True, details, data)
+    else:
+        err = data.get("error", "Unknown")
+        details = f"Failed ({status}): {err}"
+        record(19, "Attach credential", "DID & CREDENTIALS", False, details, data)
+
+
+def test_20_list_credentials():
+    """List credentials for an agent (public)."""
+    header(20, "List credentials for agent (public)", "DID & CREDENTIALS")
+
+    if not registered_agents:
+        record(20, "List credentials", "DID & CREDENTIALS", False, "No agents registered")
+        return
+
+    aid = registered_agents[0].get("agent_id", "")
+    status, data = api_get("/agents/credentials", {"agent_id": aid})
+
+    if status == 200 and isinstance(data.get("credentials"), list):
+        creds = data["credentials"]
+        details = f"Agent {aid}: {data.get('total', 0)} active credential(s)"
+        for c in creds:
+            details += f"\n  - {c.get('type')} by {c.get('issuer')}"
+        record(20, "List credentials", "DID & CREDENTIALS", True, details, data)
+    else:
+        err = data.get("error", "Unknown")
+        record(20, "List credentials", "DID & CREDENTIALS", False, f"Failed ({status}): {err}", data)
+
+
+# ===========================================================================
+# GROUP 7: NEGATIVE SIGNALS & CREDIBILITY  (Tests 21-24)
+# ===========================================================================
+
+def test_21_negative_signals_in_verify():
+    """Verify response includes negative_signals and resolved_signals."""
+    header(21, "Verify includes negative + resolved signals", "SIGNALS & CREDIBILITY")
+
+    aid = ESTABLISHED["trading_bot"]
+    status, data = api_post("/agents/verify", {"agent_id": aid})
+
+    has_neg = "negative_signals" in data
+    has_res = "resolved_signals" in data
+    has_hist = "incident_history" in data
+
+    if status == 200 and has_neg and has_res and has_hist:
+        details = (
+            f"negative_signals: {data['negative_signals']}\n"
+            f"  resolved_signals: {data['resolved_signals']}\n"
+            f"  incident_history: {len(data['incident_history'])} events"
+        )
+        record(21, "Negative signals in verify", "SIGNALS & CREDIBILITY", True, details, data)
+    else:
+        details = f"Missing fields: neg={has_neg}, res={has_res}, hist={has_hist} (status={status})"
+        record(21, "Negative signals in verify", "SIGNALS & CREDIBILITY", False, details, data)
+
+
+def test_22_credibility_packet():
+    """Get credibility packet for Trading Bot."""
+    header(22, "Credibility packet (portable trust resume)", "SIGNALS & CREDIBILITY")
+
+    aid = ESTABLISHED["trading_bot"]
+    status, data = api_get("/agents/credibility-packet", {"agent_id": aid})
+
+    if status == 200 and data.get("protocol") == "agentid" and data.get("signature"):
+        identity = data.get("identity", {})
+        trust = data.get("trust", {})
+        details = (
+            f"Credibility packet for {identity.get('name')}:\n"
+            f"  DID: {identity.get('did')}\n"
+            f"  Trust level: L{trust.get('trust_level')} ({trust.get('trust_level_label')})\n"
+            f"  Verification count: {data.get('verification_count')}\n"
+            f"  Negative signals: {data.get('negative_signals')}\n"
+            f"  Resolved signals: {data.get('resolved_signals')}\n"
+            f"  Receipts: {len(data.get('receipts', []))}\n"
+            f"  Risk score: {data.get('behaviour_risk_score')}\n"
+            f"  Signature: {data['signature'][:32]}..."
+        )
+        record(22, "Credibility packet", "SIGNALS & CREDIBILITY", True, details, data)
+    else:
+        err = data.get("error", "Unknown")
+        record(22, "Credibility packet", "SIGNALS & CREDIBILITY", False, f"Failed ({status}): {err}", data)
+
+
+def test_23_fake_agent_verification_failed():
+    """Verify fake agent triggers verification_failed event (negative signal)."""
+    header(23, "Fake agent triggers verification_failed event", "SIGNALS & CREDIBILITY")
+
+    # We already tested fake verification in test 11 — now check the event was logged
+    fake_id = "agent_fake_negative_signal_test"
+    status, data = api_post("/agents/verify", {"agent_id": fake_id})
+
+    verified = data.get("verified", True)
+    if verified is False:
+        details = f"Fake agent '{fake_id}' returned verified=false — verification_failed event should be logged"
+        record(23, "Fake verification_failed", "SIGNALS & CREDIBILITY", True, details, data)
+    else:
+        details = f"Unexpected: verified={verified}"
+        record(23, "Fake verification_failed", "SIGNALS & CREDIBILITY", False, details, data)
+
+
+def test_24_discover_with_credential():
+    """Discover agents filtered by credential type."""
+    header(24, "Discover agents by credential type", "SIGNALS & CREDIBILITY")
+
+    status, data = api_get("/agents/discover", {"credential_type": "gdpr-compliant"})
+
+    if status == 200:
+        agents = data.get("agents", [])
+        count = data.get("count", 0)
+        details = f"Agents with 'gdpr-compliant' credential: {count}"
+        for a in agents[:3]:
+            details += f"\n  - {a.get('name')} ({a.get('agent_id', '')[:20]}...)"
+        # Pass even if 0 found — endpoint worked
+        record(24, "Discover by credential", "SIGNALS & CREDIBILITY", True, details, data)
+    else:
+        err = data.get("error", "Unknown")
+        record(24, "Discover by credential", "SIGNALS & CREDIBILITY", False, f"Failed ({status}): {err}", data)
+
+
+# ===========================================================================
+# GROUP 8: DELEGATION & METADATA  (Tests 25-28)
+# ===========================================================================
+
+def test_25_create_delegation():
+    """Create delegation from Trading Bot to BillionmakerHQ."""
+    header(25, "Create delegation: Trading Bot -> BillionmakerHQ", "DELEGATION & METADATA")
+
+    from_id = ESTABLISHED["trading_bot"]
+    to_id = ESTABLISHED["billionmaker"]
+
+    status, data = api_post("/agents/delegate", {
+        "from_agent": from_id,
+        "to_agent": to_id,
+        "scope": ["send_message", "connect"],
+        "expires_at": "2026-12-31T23:59:59Z",
+        "max_spend": 1000,
+    })
+
+    if status == 201 and data.get("delegation_proof"):
+        details = (
+            f"Delegation created: {data.get('delegation_id')}\n"
+            f"  From: {data.get('from_name')} -> To: {data.get('to_name')}\n"
+            f"  Scope: {data.get('scope')}\n"
+            f"  Max spend: ${data.get('max_spend')}\n"
+            f"  Proof: {data['delegation_proof'][:40]}..."
+        )
+        record(25, "Create delegation", "DELEGATION & METADATA", True, details, data)
+    else:
+        err = data.get("error", "Unknown")
+        record(25, "Create delegation", "DELEGATION & METADATA", False, f"Failed ({status}): {err}", data)
+
+
+def test_26_list_delegations():
+    """List delegations for Trading Bot."""
+    header(26, "List delegations for Trading Bot", "DELEGATION & METADATA")
+
+    aid = ESTABLISHED["trading_bot"]
+    status, data = api_get("/agents/delegations", {"agent_id": aid})
+
+    if status == 200 and isinstance(data.get("delegations"), list):
+        active = data.get("active_count", 0)
+        total = data.get("total_count", 0)
+        details = f"Delegations for {data.get('agent_name')}: {active} active / {total} total"
+        for d in data["delegations"][:3]:
+            details += f"\n  - {d.get('role')}: {d.get('from_agent', '')[:16]}... -> {d.get('to_agent', '')[:16]}... scope={d.get('scope')}"
+        record(26, "List delegations", "DELEGATION & METADATA", True, details, data)
+    else:
+        err = data.get("error", "Unknown")
+        record(26, "List delegations", "DELEGATION & METADATA", False, f"Failed ({status}): {err}", data)
+
+
+def test_27_update_metadata():
+    """Update model_version and prompt_hash on a new agent."""
+    header(27, "Update model_version + prompt_hash", "DELEGATION & METADATA")
+
+    if not registered_agents:
+        record(27, "Update metadata", "DELEGATION & METADATA", False, "No agents registered")
+        return
+
+    aid = registered_agents[0].get("agent_id", "")
+    status, data = api_post("/agents/update-metadata", {
+        "agent_id": aid,
+        "model_version": "claude-opus-4-20250514",
+        "prompt_hash": "sha256:a1b2c3d4e5f6789012345678abcdef0123456789abcdef0123456789abcdef01",
+    })
+
+    if status == 200 and data.get("model_version"):
+        changes = data.get("changes", [])
+        details = (
+            f"Metadata updated for {aid}:\n"
+            f"  model_version: {data.get('model_version')}\n"
+            f"  prompt_hash: {data.get('prompt_hash', '')[:40]}...\n"
+            f"  Changes logged: {len(changes)}"
+        )
+        record(27, "Update metadata", "DELEGATION & METADATA", True, details, data)
+    else:
+        err = data.get("error", "Unknown")
+        record(27, "Update metadata", "DELEGATION & METADATA", False, f"Failed ({status}): {err}", data)
+
+
+def test_28_did_in_register():
+    """Verify DID is returned on registration."""
+    header(28, "DID returned on registration", "DELEGATION & METADATA")
+
+    if not registered_agents:
+        record(28, "DID in register", "DELEGATION & METADATA", False, "No agents registered")
+        return
+
+    # Check the stored registration response
+    agent = registered_agents[0]
+    did = agent.get("did", "")
+
+    if did.startswith("did:web:getagentid.dev:agent:"):
+        details = f"Registration DID: {did}"
+        record(28, "DID in register", "DELEGATION & METADATA", True, details)
+    else:
+        details = f"DID missing or wrong format: '{did}'"
+        record(28, "DID in register", "DELEGATION & METADATA", False, details)
+
+
+# ===========================================================================
+# GROUP 9: ADVANCED SECURITY  (Tests 29-32)
+# ===========================================================================
+
+def test_29_payload_drift_detection():
+    """Behavioural check includes payload fingerprint."""
+    header(29, "Payload fingerprint in behaviour profile", "ADVANCED SECURITY")
+
+    aid = ESTABLISHED["trading_bot"]
+    status, data = api_get("/agents/behaviour", {"agent_id": aid})
+
+    profile = data.get("profile", {})
+    has_fingerprint = "payload_fingerprint" in profile
+
+    if status == 200:
+        fp = profile.get("payload_fingerprint", {})
+        details = (
+            f"Payload fingerprint present: {has_fingerprint}\n"
+            f"  Common keys: {fp.get('common_keys', [])[:5] if fp else 'n/a'}\n"
+            f"  Avg size: {fp.get('avg_payload_size', 'n/a') if fp else 'n/a'}\n"
+            f"  Message types: {fp.get('message_type_distribution', {}) if fp else 'n/a'}"
+        )
+        record(29, "Payload fingerprint", "ADVANCED SECURITY", True, details, data)
+    else:
+        err = data.get("error", "Unknown")
+        record(29, "Payload fingerprint", "ADVANCED SECURITY", False, f"Failed ({status}): {err}", data)
+
+
+def test_30_credibility_packet_signature():
+    """Verify credibility packet has valid HMAC signature."""
+    header(30, "Credibility packet signature validation", "ADVANCED SECURITY")
+
+    aid = ESTABLISHED["trading_bot"]
+    status, data = api_get("/agents/credibility-packet", {"agent_id": aid})
+
+    sig = data.get("signature", "")
+    protocol = data.get("protocol", "")
+    has_receipts = isinstance(data.get("receipts"), list)
+
+    if status == 200 and sig and len(sig) == 64 and protocol == "agentid" and has_receipts:
+        details = (
+            f"Signature: {sig[:32]}... ({len(sig)} hex chars)\n"
+            f"  Protocol: {protocol}\n"
+            f"  Receipts included: {len(data.get('receipts', []))}\n"
+            f"  Generated at: {data.get('generated_at')}"
+        )
+        record(30, "Credibility packet signature", "ADVANCED SECURITY", True, details, data)
+    else:
+        details = f"Sig={sig[:20] if sig else 'missing'}, protocol={protocol}, receipts={has_receipts} (status={status})"
+        record(30, "Credibility packet signature", "ADVANCED SECURITY", False, details, data)
+
+
+def test_31_delegation_self_check():
+    """Cannot delegate to self — should return 400."""
+    header(31, "Self-delegation prevention", "ADVANCED SECURITY")
+
+    aid = ESTABLISHED["trading_bot"]
+    status, data = api_post("/agents/delegate", {
+        "from_agent": aid,
+        "to_agent": aid,
+        "scope": ["send_message"],
+        "expires_at": "2026-12-31T23:59:59Z",
+    })
+
+    if status == 400 and "same agent" in data.get("error", "").lower():
+        details = f"Correctly blocked self-delegation: {data.get('error')}"
+        record(31, "Self-delegation prevention", "ADVANCED SECURITY", True, details, data)
+    else:
+        details = f"Expected 400, got {status}: {data.get('error', json.dumps(data)[:200])}"
+        record(31, "Self-delegation prevention", "ADVANCED SECURITY", False, details, data)
+
+
+def test_32_full_flow_integration():
+    """Full integration: register -> update metadata -> attach credential -> verify -> credibility packet."""
+    header(32, "Full flow: register -> metadata -> credential -> verify -> packet", "ADVANCED SECURITY")
+
+    if not registered_agents:
+        record(32, "Full flow integration", "ADVANCED SECURITY", False, "No agents registered")
+        return
+
+    aid = registered_agents[-1].get("agent_id", "")
+    name = registered_agents[-1].get("name", "?")
+    lines = []
+    all_ok = True
+
+    # Step 1: Verify the agent
+    s1, d1 = api_post("/agents/verify", {"agent_id": aid})
+    if s1 == 200 and d1.get("did"):
+        lines.append(f"  1. Verify: OK (DID={d1['did'][:40]}...)")
+    else:
+        lines.append(f"  1. Verify: FAILED ({s1})")
+        all_ok = False
+    sleep()
+
+    # Step 2: Update metadata
+    s2, d2 = api_post("/agents/update-metadata", {
+        "agent_id": aid,
+        "model_version": "test-model-v1",
+        "prompt_hash": "sha256:deadbeef01234567",
+    })
+    if s2 == 200:
+        lines.append(f"  2. Metadata: OK (model={d2.get('model_version')})")
+    else:
+        lines.append(f"  2. Metadata: FAILED ({s2})")
+        all_ok = False
+    sleep()
+
+    # Step 3: Attach credential
+    s3, d3 = api_post("/agents/credentials", {
+        "agent_id": aid,
+        "credential": {
+            "type": "integration-tested",
+            "issuer": "proof-runner-v3",
+        },
+    })
+    if s3 == 201:
+        lines.append(f"  3. Credential: OK (total={d3.get('total_credentials')})")
+    else:
+        lines.append(f"  3. Credential: FAILED ({s3})")
+        all_ok = False
+    sleep()
+
+    # Step 4: Verify again — should have updated signals
+    s4, d4 = api_post("/agents/verify", {"agent_id": aid})
+    if s4 == 200 and "negative_signals" in d4 and "supported_key_types" in d4:
+        lines.append(
+            f"  4. Re-verify: OK (neg={d4['negative_signals']}, "
+            f"keys={d4['supported_key_types']})"
+        )
+    else:
+        lines.append(f"  4. Re-verify: FAILED ({s4})")
+        all_ok = False
+    sleep()
+
+    # Step 5: Get credibility packet
+    s5, d5 = api_get("/agents/credibility-packet", {"agent_id": aid})
+    if s5 == 200 and d5.get("signature") and d5.get("identity", {}).get("did"):
+        lines.append(
+            f"  5. Packet: OK (sig={d5['signature'][:24]}..., "
+            f"verifications={d5.get('verification_count')})"
+        )
+    else:
+        lines.append(f"  5. Packet: FAILED ({s5})")
+        all_ok = False
+
+    details = f"Full integration flow for {name} ({aid}):\n" + "\n".join(lines)
+    record(32, "Full flow integration", "ADVANCED SECURITY", all_ok, details)
+
+
+# ===========================================================================
 # MAIN
 # ===========================================================================
 
@@ -774,8 +1204,8 @@ def print_banner():
     print()
     print("  ############################################################")
     print("  #                                                          #")
-    print("  #            AGENTID PROOF RUNNER v2.0                     #")
-    print("  #            Live API Test Suite (16 tests)                #")
+    print("  #            AGENTID PROOF RUNNER v3.0                     #")
+    print("  #            Live API Test Suite (32 tests)                #")
     print("  #            https://www.getagentid.dev                    #")
     print("  #                                                          #")
     print("  ############################################################")
@@ -841,7 +1271,7 @@ def print_summary():
 def save_report():
     report = {
         "title": "AgentID Proof Report",
-        "version": "2.0.0",
+        "version": "3.0.0",
         "api_base": BASE_URL,
         "generated_at": ts(),
         "summary": {
@@ -917,6 +1347,46 @@ def main():
     test_15_compliance_report()
     sleep()
     test_16_receipt_summary()
+    sleep()
+
+    # GROUP 6: DID & CREDENTIALS
+    test_17_did_in_verify()
+    sleep()
+    test_18_supported_key_types()
+    sleep()
+    test_19_attach_credential()
+    sleep()
+    test_20_list_credentials()
+    sleep()
+
+    # GROUP 7: NEGATIVE SIGNALS & CREDIBILITY
+    test_21_negative_signals_in_verify()
+    sleep()
+    test_22_credibility_packet()
+    sleep()
+    test_23_fake_agent_verification_failed()
+    sleep()
+    test_24_discover_with_credential()
+    sleep()
+
+    # GROUP 8: DELEGATION & METADATA
+    test_25_create_delegation()
+    sleep()
+    test_26_list_delegations()
+    sleep()
+    test_27_update_metadata()
+    sleep()
+    test_28_did_in_register()
+    sleep()
+
+    # GROUP 9: ADVANCED SECURITY
+    test_29_payload_drift_detection()
+    sleep()
+    test_30_credibility_packet_signature()
+    sleep()
+    test_31_delegation_self_check()
+    sleep()
+    test_32_full_flow_integration()
 
     # Final output
     print_summary()

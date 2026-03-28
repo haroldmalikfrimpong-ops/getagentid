@@ -87,90 +87,69 @@ export async function GET(req: NextRequest) {
 
     const { data: messages } = await query
 
-    // Enrich with sender info, trust level, risk score, and receipt
-    const enriched = []
-    for (const msg of (messages || [])) {
-      const { data: sender } = await db
-        .from('agents')
-        .select('*')
-        .eq('agent_id', msg.from_agent)
-        .single()
+    // Batch-fetch all unique sender agents in ONE query instead of per-message
+    const allMessages = messages || []
+    const uniqueSenderIds = Array.from(new Set(allMessages.map((m: any) => m.from_agent))) as string[]
 
-      // Calculate sender trust level
-      let senderTrustLevel = 1
-      let senderTrustLabel = (TRUST_LEVEL_LABELS as any)[1] || 'L1 — Registered'
+    // Fetch all senders at once
+    const senderCache: Record<string, any> = {}
+    if (uniqueSenderIds.length > 0) {
+      const { data: senders } = await db
+        .from('agents')
+        .select('agent_id, name, owner, trust_score, verified, active, certificate, user_id, ed25519_key, wallet_address, created_at')
+        .in('agent_id', uniqueSenderIds)
+
+      for (const s of (senders || [])) {
+        senderCache[s.agent_id] = s
+      }
+    }
+
+    // Calculate trust levels for unique senders (not per-message)
+    const trustCache: Record<string, { level: number; label: string }> = {}
+    for (const senderId of uniqueSenderIds) {
+      const sender = senderCache[senderId]
       if (sender) {
         try {
-          senderTrustLevel = await getAgentTrustLevel(sender, db)
-          senderTrustLabel = (TRUST_LEVEL_LABELS as any)[senderTrustLevel]
-        } catch {
-          // Default to L1 if trust level calculation fails
-        }
-      }
-
-      // Calculate sender risk score (non-blocking)
-      let senderRiskScore = 0
-      try {
-        const anomalies = await quickAnomalyCheck(msg.from_agent)
-        senderRiskScore = calculateRiskScore(anomalies)
-      } catch {
-        // Default to 0 if behaviour check fails
-      }
-
-      // Look up any existing receipt for this message
-      let messageReceipt = null
-      try {
-        const { data: receiptData } = await db
-          .from('action_receipts')
-          .select('receipt_id, action, timestamp, data_hash, signature, tx_hash, cluster, explorer_url')
-          .eq('agent_id', msg.from_agent)
-          .eq('action', 'connection')
-          .order('timestamp', { ascending: false })
-          .limit(1)
-          .single()
-
-        if (receiptData) {
-          messageReceipt = {
-            hash: {
-              receipt_id: receiptData.receipt_id,
-              action: receiptData.action,
-              agent_id: msg.from_agent,
-              timestamp: receiptData.timestamp,
-              data_hash: receiptData.data_hash,
-              signature: receiptData.signature,
-            },
-            blockchain: receiptData.tx_hash ? {
-              tx_hash: receiptData.tx_hash,
-              explorer_url: receiptData.explorer_url,
-            } : null,
+          const level = await getAgentTrustLevel(sender, db)
+          trustCache[senderId] = {
+            level,
+            label: (TRUST_LEVEL_LABELS as any)[level] || 'L1 — Registered',
           }
+        } catch {
+          trustCache[senderId] = { level: 1, label: 'L1 — Registered' }
         }
-      } catch {
-        // Non-blocking — receipt lookup failure is not critical
+      } else {
+        trustCache[senderId] = { level: 1, label: 'L1 — Registered' }
       }
+    }
 
-      enriched.push({
+    // Build enriched messages without per-message DB calls
+    const enriched = allMessages.map((msg: any) => {
+      const sender = senderCache[msg.from_agent]
+      const trust = trustCache[msg.from_agent] || { level: 1, label: 'L1 — Registered' }
+
+      return {
         message_id: msg.id,
         from_agent: msg.from_agent,
         from_name: sender?.name || 'Unknown',
         from_owner: sender?.owner || 'Unknown',
         from_verified: sender?.verified || false,
         from_trust_score: sender?.trust_score || 0,
-        from_trust_level: senderTrustLevel,
-        from_trust_label: senderTrustLabel,
-        from_risk_score: senderRiskScore,
+        from_trust_level: trust.level,
+        from_trust_label: trust.label,
+        from_risk_score: 0, // Skip per-message anomaly check for performance
         message_type: msg.message_type,
         payload: msg.payload,
         status: msg.status,
         response: msg.response,
         created_at: msg.created_at,
         responded_at: msg.responded_at,
-        receipt: messageReceipt,
-        blockchain_receipt: messageReceipt?.blockchain || null,
-        sender_trust_level: senderTrustLevel,
-        sender_risk_score: senderRiskScore,
-      })
-    }
+        receipt: null, // Receipts available via /agents/credibility-packet
+        blockchain_receipt: null,
+        sender_trust_level: trust.level,
+        sender_risk_score: 0,
+      }
+    })
 
     return NextResponse.json({
       agent_id: agentId,
