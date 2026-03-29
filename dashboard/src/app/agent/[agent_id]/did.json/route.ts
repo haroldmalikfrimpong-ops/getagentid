@@ -83,6 +83,22 @@ export async function GET(
       description: 'Signed portable trust resume — offline verifiable',
     })
 
+    // Proof history — signed execution receipts for auditors
+    services.push({
+      id: `${did}#proof-history`,
+      type: 'AgentIDProofHistory',
+      serviceEndpoint: `https://getagentid.dev/api/v1/agents/credibility-packet?agent_id=${agent.agent_id}`,
+      description: 'Signed execution receipts, attestation count, negative/resolved signals, scarring score — independently verifiable',
+    })
+
+    // Trust header — short-lived signed JWT for transport-layer trust
+    services.push({
+      id: `${did}#trust-header`,
+      type: 'AgentTrustScore',
+      serviceEndpoint: `https://getagentid.dev/api/v1/agents/trust-header?agent_id=${agent.agent_id}`,
+      description: 'Signed 1-hour JWT for Agent-Trust-Score HTTP header',
+    })
+
     // Agent capabilities as a service
     if (agent.capabilities && agent.capabilities.length > 0) {
       services.push({
