@@ -27,6 +27,7 @@ const SECTIONS = [
   { id: 'api-payment-settings-post', label: 'Payment Settings (POST)' },
   { id: 'api-publish-onchain', label: 'Publish On-Chain' },
   { id: 'api-behaviour', label: 'Behaviour' },
+  { id: 'api-trust-header', label: 'Trust Header' },
   { id: 'api-compliance', label: 'Compliance Report' },
   { id: 'sdks', label: 'SDKs' },
   { id: 'receipts', label: 'Receipts' },
@@ -316,7 +317,8 @@ Content-Type: application/json`}</Code>
                 <code className="text-cyan-300 text-[11px]">GET /agents/discover</code>,&ensp;
                 <code className="text-cyan-300 text-[11px]">GET /agents/trust-level</code>,&ensp;
                 <code className="text-cyan-300 text-[11px]">GET /agents/wallet</code>,&ensp;
-                <code className="text-cyan-300 text-[11px]">GET /agents/balance</code>.
+                <code className="text-cyan-300 text-[11px]">GET /agents/balance</code>,&ensp;
+                <code className="text-cyan-300 text-[11px]">GET /agents/trust-header</code>.
                 Using an API key gives you higher rate limits.
               </p>
             </div>
@@ -1106,6 +1108,45 @@ Content-Type: application/json`}</Code>
   "risk_score": 30
 }`}</Code>
             <p className="text-gray-500 text-xs mt-2 mb-0">Risk score: 0 = clean, 100 = compromised. Severity weights: low = 10, medium = 30, high = 50. Anomalies are also checked during agent-to-agent connections and verifications.</p>
+
+            <Divider />
+
+            {/* ── GET /agents/trust-header ── */}
+            <Endpoint
+              id="api-trust-header"
+              method="GET"
+              path="/agents/trust-header"
+              description="Get a signed Agent-Trust-Score JWT for an agent. The JWT is a short-lived (1 hour) token containing trust level, risk score, attestation count, and scarring score. Attach it as an HTTP header so receiving services can evaluate trust at the transport layer without calling back to AgentID."
+              trustLevel="Public"
+            />
+            <p className="text-gray-500 text-xs mb-1">Query parameters:</p>
+            <Code lang="http">{`GET /agents/trust-header?agent_id=agent_a1b2c3d4e5`}</Code>
+            <p className="text-gray-500 text-xs mb-1">Response:</p>
+            <Code lang="json">{`{
+  "header": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkFnZW50LVRydXN0LVNjb3JlIn0...",
+  "payload": {
+    "trust_level": 3,
+    "attestation_count": 43,
+    "last_verified": "2026-03-29T14:00:00Z",
+    "risk_score": 0,
+    "scarring_score": 2,
+    "negative_signals": 2,
+    "resolved_signals": 2,
+    "agent_id": "agent_a1b2c3d4e5",
+    "did": "did:web:getagentid.dev:agent:agent_a1b2c3d4e5",
+    "provider": "agentid",
+    "iss": "https://getagentid.dev",
+    "iat": 1743260400,
+    "exp": 1743264000
+  },
+  "expires_in": 3600
+}`}</Code>
+            <p className="text-gray-500 text-xs mt-2 mb-0">
+              Use the <code className="text-cyan-300 text-[11px]">header</code> value as the{' '}
+              <code className="text-cyan-300 text-[11px]">Agent-Trust-Score</code> HTTP header when calling other services.
+              The receiving service decodes the JWT to get trust metadata without any API call back to AgentID.
+              See the full spec at <code className="text-cyan-300 text-[11px]">specs/agent-trust-score-header-v0.1.md</code>.
+            </p>
 
             <Divider />
 

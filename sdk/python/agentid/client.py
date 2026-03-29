@@ -229,6 +229,29 @@ class Agents:
         ).json()
         return AgentResult(res)
 
+    def trust_header(self, agent_id: str) -> AgentResult:
+        """Get a signed Agent-Trust-Score JWT header for an agent.
+
+        Public endpoint — returns a short-lived JWT containing trust level,
+        risk score, attestation count, and scarring score. Attach the JWT
+        as an Agent-Trust-Score HTTP header when calling other services.
+
+        Args:
+            agent_id: The agent's unique identifier.
+
+        Returns:
+            AgentResult with header (JWT string), payload (decoded), expires_in.
+        """
+        res = httpx.get(
+            f"{self._client._base_url}/agents/trust-header",
+            params={"agent_id": agent_id},
+            timeout=15,
+            follow_redirects=True,
+        ).json()
+        if "error" in res:
+            raise Exception(res.get("error", "Failed to get trust header"))
+        return AgentResult(res)
+
     def credibility_packet(self, agent_id: str) -> AgentResult:
         """Get a signed credibility packet (trust resume) for an agent.
 

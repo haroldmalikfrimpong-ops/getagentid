@@ -100,6 +100,7 @@ Every agent starts at L1. Levels are based on what security capabilities you set
 | `POST` | `/api/v1/agents/credentials` | Attach verifiable credential |
 | `GET` | `/api/v1/agents/credentials` | List agent credentials (public) |
 | `GET` | `/api/v1/agents/credibility-packet` | Signed portable trust resume (public) |
+| `GET` | `/api/v1/agents/trust-header` | Signed Agent-Trust-Score JWT header (public) |
 | `POST` | `/api/v1/agents/delegate` | Create scoped delegation between agents |
 | `GET` | `/api/v1/agents/delegations` | List active delegations |
 | `POST` | `/api/v1/agents/update-metadata` | Update model version / prompt hash |
@@ -195,6 +196,20 @@ print(packet.scarring_score)      # Permanent trust scars
 ```
 
 An agent with resolved incidents is MORE trustworthy than one with zero history. Silence is suspicious.
+
+## Agent-Trust-Score Header
+
+A short-lived signed JWT that agents attach to HTTP requests so receiving services can evaluate trust at the transport layer — no round-trip to a registry needed.
+
+```python
+header = client.agents.trust_header("agent_abc123")
+requests.get("https://example.com/api", headers={
+    "Agent-Trust-Score": header.header
+})
+# Receiving service decodes the JWT to get trust_level, risk_score, scarring_score, etc.
+```
+
+See the full spec at `specs/agent-trust-score-header-v0.1.md`.
 
 ## Cryptographic Scarring
 
