@@ -7,12 +7,13 @@ export async function GET(req: NextRequest) {
     const capability = searchParams.get('capability')
     const owner = searchParams.get('owner')
     const credential_type = searchParams.get('credential_type')
+    const is_online_filter = searchParams.get('is_online')
     const limit = parseInt(searchParams.get('limit') || '20')
 
     const db = getServiceClient()
     let query = db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, created_at, last_active, ed25519_key, wallet_address, wallet_chain, credentials, social_links')
+      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, created_at, last_active, ed25519_key, wallet_address, wallet_chain, credentials, social_links, limitations')
       .eq('active', true)
       .limit(Math.min(limit, 100))
 
@@ -43,7 +44,13 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    // Add DID and supported_key_types to each agent
+    // Filter by is_online if specified
+    if (is_online_filter === 'true') {
+      const onlineThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      results = results.filter((a: any) => a.last_active && a.last_active >= onlineThreshold)
+    }
+
+    // Add DID, supported_key_types, is_online, and limitations to each agent
     const enrichedResults = results.map((a: any) => {
       const did = `did:web:getagentid.dev:agent:${a.agent_id}`
       const supported_key_types: string[] = ['ecdsa-p256']
@@ -60,6 +67,9 @@ export async function GET(req: NextRequest) {
         }
       }
       const socialLinks = a.social_links as any
+      const is_online = a.last_active
+        ? (Date.now() - new Date(a.last_active).getTime()) < 24 * 60 * 60 * 1000
+        : false
       return {
         agent_id: a.agent_id,
         did,
@@ -67,9 +77,11 @@ export async function GET(req: NextRequest) {
         description: a.description,
         owner: a.owner,
         capabilities: a.capabilities,
+        limitations: a.limitations || [],
         platform: a.platform,
         trust_score: a.trust_score,
         verified: a.verified,
+        is_online,
         created_at: a.created_at,
         last_active: a.last_active,
         credentials: a.credentials || [],

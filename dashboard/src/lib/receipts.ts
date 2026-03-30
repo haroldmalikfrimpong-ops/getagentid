@@ -34,9 +34,18 @@ export interface BlockchainReceipt {
   memo: string
 }
 
+export type AttestationLevel = 'self-issued' | 'domain-attested' | 'third-party-attested'
+
+export interface ArkForgeProof {
+  proof_id: string
+  verification_url: string
+}
+
 export interface DualReceipt {
   hash: HashReceipt
   blockchain: BlockchainReceipt | null  // null if on-chain publish fails (non-blocking)
+  attestation_level: AttestationLevel
+  arkforge: ArkForgeProof | null
 }
 
 export type ReceiptAction =
@@ -187,6 +196,51 @@ async function publishMemoToSolana(
 }
 
 // ---------------------------------------------------------------------------
+// ArkForge External Attestation (best-effort, non-blocking)
+// ---------------------------------------------------------------------------
+
+/**
+ * Submit receipt data to ArkForge for third-party attestation.
+ * Only runs if ARKFORGE_API_KEY is set. Returns proof ID and verification URL.
+ * Non-blocking — errors are swallowed.
+ */
+async function submitToArkForge(
+  receiptData: Record<string, unknown>,
+  endpoint: string
+): Promise<ArkForgeProof | null> {
+  try {
+    const apiKey = process.env.ARKFORGE_API_KEY
+    if (!apiKey) return null
+
+    const res = await fetch('https://trust.arkforge.tech/v1/proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        target: endpoint,
+        payload: receiptData,
+      }),
+    })
+
+    if (!res.ok) {
+      console.warn('[receipts] ArkForge attestation failed:', res.status)
+      return null
+    }
+
+    const data = await res.json()
+    return {
+      proof_id: data.proof_id || data.id || null,
+      verification_url: data.verification_url || data.url || null,
+    }
+  } catch (err: any) {
+    console.warn('[receipts] ArkForge attestation error:', err.message || err)
+    return null
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Dual Receipt (combined)
 // ---------------------------------------------------------------------------
 
@@ -195,7 +249,9 @@ async function publishMemoToSolana(
  *
  * 1. Creates an HMAC-signed hash receipt (always succeeds)
  * 2. Publishes a memo to Solana (best-effort, non-blocking)
- * 3. Stores both in Supabase `action_receipts` table
+ * 3. Submits to ArkForge for third-party attestation (best-effort, non-blocking)
+ * 4. Determines attestation_level based on which proofs succeeded
+ * 5. Stores everything in Supabase `action_receipts` table
  *
  * Returns the dual receipt immediately. The blockchain receipt may be null
  * if on-chain publishing is not configured or fails.
@@ -226,7 +282,29 @@ export async function createDualReceipt(
 
   const blockchainReceipt = await publishMemoToSolana(memoPayload)
 
-  // 3. Store in Supabase
+  // 3. ArkForge external attestation (best-effort, non-blocking)
+  const arkforgeEndpoint = `https://getagentid.dev/api/v1/agents/${action}`
+  const arkforgeProof = await submitToArkForge({
+    protocol: 'agentid',
+    version: 1,
+    receipt_id: hashReceipt.receipt_id,
+    action,
+    agent_id: agentId,
+    data_hash: hashReceipt.data_hash,
+    signature: hashReceipt.signature,
+    timestamp: hashReceipt.timestamp,
+    ...(blockchainReceipt && { tx_hash: blockchainReceipt.tx_hash }),
+  }, arkforgeEndpoint)
+
+  // 4. Determine attestation level
+  let attestation_level: AttestationLevel = 'self-issued'
+  if (arkforgeProof?.proof_id) {
+    attestation_level = 'third-party-attested'
+  } else if (blockchainReceipt?.tx_hash) {
+    attestation_level = 'domain-attested'
+  }
+
+  // 5. Store in Supabase
   try {
     const db = getServiceClient()
     await db.from('action_receipts').insert({
@@ -241,6 +319,9 @@ export async function createDualReceipt(
       explorer_url: blockchainReceipt?.explorer_url || null,
       block_time: blockchainReceipt?.block_time || null,
       memo: blockchainReceipt?.memo || null,
+      attestation_level,
+      arkforge_proof_id: arkforgeProof?.proof_id || null,
+      arkforge_verification_url: arkforgeProof?.verification_url || null,
       raw_data: authContext ? { ...data, auth_context: authContext } : data,
     })
   } catch (err: any) {
@@ -251,5 +332,7 @@ export async function createDualReceipt(
   return {
     hash: hashReceipt,
     blockchain: blockchainReceipt,
+    attestation_level,
+    arkforge: arkforgeProof,
   }
 }

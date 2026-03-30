@@ -264,7 +264,8 @@ Agent A → AgentID API → Verify → Agent B
 | Tier | Price | Agents | Verifications |
 |------|-------|--------|---------------|
 | Free | $0 | 100 | 10,000/month |
-| Pro | $99/mo | 500 | 100,000/month |
+| Starter | $29/mo | 500 | 50,000/month |
+| Pro | $99/mo | 2,000 | 500,000/month |
 | Enterprise | $5,000/mo | Unlimited | Unlimited |
 
 ## Tech Stack

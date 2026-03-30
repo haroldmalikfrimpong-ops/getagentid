@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     // Fetch agent
     const { data: agent, error } = await db
       .from('agents')
-      .select('agent_id, name, owner, description, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, ed25519_key, wallet_address, wallet_chain, solana_address, model_version, prompt_hash')
+      .select('agent_id, name, owner, description, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, ed25519_key, wallet_address, wallet_chain, solana_address, model_version, prompt_hash, limitations')
       .eq('agent_id', agent_id)
       .single()
 
@@ -143,6 +143,7 @@ export async function GET(req: NextRequest) {
         owner: agent.owner,
         description: agent.description,
         platform: agent.platform,
+        limitations: agent.limitations || [],
       },
       trust: {
         trust_level,

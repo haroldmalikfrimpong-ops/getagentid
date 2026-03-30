@@ -30,7 +30,7 @@ export async function GET(
     const db = getServiceClient()
     const { data: agent, error } = await db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, ed25519_key, public_key, wallet_address, wallet_chain, solana_address, active, social_links')
+      .select('agent_id, name, description, owner, capabilities, platform, ed25519_key, public_key, wallet_address, wallet_chain, solana_address, active, social_links, limitations')
       .eq('agent_id', agent_id)
       .eq('active', true)
       .single()
@@ -140,6 +140,7 @@ export async function GET(
         owner: agent.owner,
         platform: agent.platform,
         capabilities: agent.capabilities || [],
+        limitations: agent.limitations || [],
         social_links: agent.social_links || null,
       },
     }

@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const db = getServiceClient()
     const { data: agent, error } = await db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, wallet_address, wallet_chain, wallet_bound_at, solana_address, ed25519_key, model_version, prompt_hash, social_links')
+      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, wallet_address, wallet_chain, wallet_bound_at, solana_address, ed25519_key, model_version, prompt_hash, social_links, limitations')
       .eq('agent_id', agent_id)
       .single()
 
@@ -283,6 +283,11 @@ export async function POST(req: NextRequest) {
       resolved: e.event_type === 'incident_resolved',
     }))
 
+    // Compute is_online: true if last_active within 24 hours
+    const is_online = agent.last_active
+      ? (Date.now() - new Date(agent.last_active).getTime()) < 24 * 60 * 60 * 1000
+      : false
+
     return NextResponse.json({
       verified: certificate_valid && agent.active,
       agent_id: agent.agent_id,
@@ -291,6 +296,7 @@ export async function POST(req: NextRequest) {
       description: agent.description,
       owner: agent.owner,
       capabilities: agent.capabilities,
+      limitations: agent.limitations || [],
       platform: agent.platform,
       // Trust score is INFORMATIONAL — included for reference but does NOT gate anything
       trust_score: agent.trust_score,
@@ -300,6 +306,7 @@ export async function POST(req: NextRequest) {
       spending_limit,
       certificate_valid,
       active: agent.active,
+      is_online,
       created_at: agent.created_at,
       last_active: agent.last_active,
       supported_key_types,

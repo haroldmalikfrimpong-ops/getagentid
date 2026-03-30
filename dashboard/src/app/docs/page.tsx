@@ -29,6 +29,7 @@ const SECTIONS = [
   { id: 'api-behaviour', label: 'Behaviour' },
   { id: 'api-trust-header', label: 'Trust Header' },
   { id: 'api-compliance', label: 'Compliance Report' },
+  { id: 'api-proof', label: 'Proof Verification' },
   { id: 'sdks', label: 'SDKs' },
   { id: 'receipts', label: 'Receipts' },
 ]
@@ -474,9 +475,13 @@ Content-Type: application/json`}</Code>
   "name": "My Trading Bot",
   "description": "Automated gold trading agent",
   "capabilities": ["trading", "gold-signals"],
+  "limitations": ["no-pii-handling", "english-only"],
   "platform": "python",
   "endpoint": "https://mybot.example.com/webhook"
 }`}</Code>
+            <p className="text-gray-500 text-xs mb-1 mt-2">
+              <strong className="text-gray-300">limitations</strong> <span className="text-gray-600">(optional)</span> — Array of known limitation strings describing what the agent cannot or should not do. Included in the DID document, credibility packet, and verification response.
+            </p>
             <p className="text-gray-500 text-xs mb-1">Response (201):</p>
             <Code lang="json">{`{
   "agent_id": "agent_a1b2c3d4e5",
@@ -1202,6 +1207,60 @@ Content-Type: application/json`}</Code>
     "compliant_agents": 7
   }
 }`}</Code>
+
+            <Divider />
+
+            {/* ── GET /proof/:receipt_id ── */}
+            <Endpoint
+              id="api-proof"
+              method="GET"
+              path="/proof/:receipt_id"
+              description="Public proof verification endpoint. Anyone with a receipt_id can independently verify the receipt, including its HMAC signature, blockchain anchor, and ArkForge third-party attestation. No authentication required."
+              trustLevel="Public"
+            />
+            <p className="text-gray-500 text-xs mb-1">Response:</p>
+            <Code lang="json">{`{
+  "verified": true,
+  "protocol": "agentid",
+  "version": 1,
+  "receipt_id": "a1b2c3d4-...",
+  "action": "verification",
+  "agent": {
+    "agent_id": "agent_abc123",
+    "name": "My Trading Bot",
+    "owner": "Acme Corp",
+    "did": "did:web:getagentid.dev:agent:agent_abc123"
+  },
+  "timestamp": "2026-03-28T12:00:00.000Z",
+  "hashes": {
+    "data_hash": "sha256hex...",
+    "signature": "hmacsha256hex..."
+  },
+  "blockchain_anchor": {
+    "chain": "solana",
+    "cluster": "devnet",
+    "tx_hash": "5eykt4UsFv8P8NJdT...",
+    "explorer_url": "https://explorer.solana.com/tx/5eykt4..."
+  },
+  "arkforge_attestation": {
+    "proof_id": "ark_proof_xyz",
+    "verification_url": "https://trust.arkforge.tech/v1/proof/ark_proof_xyz"
+  },
+  "attestation_level": "third-party-attested",
+  "verification": {
+    "method": "HMAC-SHA256",
+    "issuer": "https://getagentid.dev",
+    "issuer_did": "did:web:getagentid.dev"
+  }
+}`}</Code>
+            <div className="glow-border rounded-xl p-5 bg-[#111118] mb-6 mt-4">
+              <div className="text-xs text-gray-300 font-bold mb-2">Attestation Levels</div>
+              <ul className="text-gray-400 text-xs leading-relaxed space-y-1">
+                <li><strong className="text-gray-300">self-issued:</strong> HMAC-SHA256 signed by AgentID platform key only</li>
+                <li><strong className="text-gray-300">domain-attested:</strong> Additionally anchored on Solana blockchain via memo transaction</li>
+                <li><strong className="text-gray-300">third-party-attested:</strong> Independently verified by ArkForge external attestation service</li>
+              </ul>
+            </div>
 
             <Divider />
 

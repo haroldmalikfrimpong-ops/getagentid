@@ -1120,7 +1120,7 @@ export default function LandingPage() {
             <p className="text-xs text-cyan-400/60 mt-2 font-mono tracking-wide">EU AI Act compliance deadline: August 2026 — get audit-ready now</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-start">
             {[
               {
                 tier:      'Free',
@@ -1142,22 +1142,37 @@ export default function LandingPage() {
                 highlight: false,
               },
               {
+                tier:      'Starter',
+                price:     '$29',
+                period:    '/month',
+                tagline:   'For indie builders',
+                features:  [
+                  '500 registered agents',
+                  '50,000 verifications/month',
+                  'Everything in Free, plus:',
+                  'Behavioural fingerprinting',
+                  'Webhook events',
+                  'Audit dashboard',
+                  'Email support',
+                ],
+                cta:       'Start Free Trial',
+                ctaHref:   '/signup',
+                highlight: false,
+              },
+              {
                 tier:      'Pro',
                 price:     '$99',
                 period:    '/month',
                 tagline:   'For growing teams',
                 features:  [
-                  '500 registered agents',
-                  '100,000 verifications/month',
-                  'Everything in Free, plus:',
+                  '2,000 registered agents',
+                  '500,000 verifications/month',
+                  'Everything in Starter, plus:',
                   'Crypto payments (agent-to-agent)',
-                  'Behavioural fingerprinting',
-                  'Audit dashboard',
                   'Compliance reports',
-                  'Webhook events',
                   'Multi-chain wallets (ETH, Polygon)',
                   'Fleet management',
-                  'Email support',
+                  'Priority support',
                 ],
                 cta:       'Start Free Trial',
                 ctaHref:   '/signup',

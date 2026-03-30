@@ -23,7 +23,7 @@ class Agents:
 
     def register(self, name: str, description: str = "", capabilities: list = None,
                  platform: str = None, endpoint: str = None,
-                 social_links: dict = None) -> AgentResult:
+                 social_links: dict = None, limitations: list = None) -> AgentResult:
         """Register a new agent and get its certificate.
 
         Args:
@@ -33,6 +33,7 @@ class Agents:
             platform: Optional platform identifier.
             endpoint: Optional endpoint URL.
             social_links: Optional dict with github, x, and/or website URLs.
+            limitations: Optional list of known limitation strings.
 
         Returns:
             AgentResult with agent_id, certificate, keys, trust info.
@@ -46,6 +47,8 @@ class Agents:
         }
         if social_links is not None:
             data["social_links"] = social_links
+        if limitations is not None:
+            data["limitations"] = limitations
         res = self._client._post("/agents/register", data)
         return AgentResult(res)
 
@@ -179,8 +182,20 @@ class Agents:
         return AgentResult(res)
 
     def discover(self, capability: str = None, owner: str = None,
-                 credential_type: str = None, limit: int = 20) -> list:
-        """Search for agents by capability, owner, or credential type."""
+                 credential_type: str = None, is_online: bool = None,
+                 limit: int = 20) -> list:
+        """Search for agents by capability, owner, credential type, or online status.
+
+        Args:
+            capability: Filter by capability string.
+            owner: Filter by owner name.
+            credential_type: Filter by credential type.
+            is_online: If True, only return agents active in the last 24 hours.
+            limit: Maximum number of results (default 20, max 100).
+
+        Returns:
+            List of AgentResult objects.
+        """
         params = {"limit": limit}
         if capability:
             params["capability"] = capability
@@ -188,6 +203,8 @@ class Agents:
             params["owner"] = owner
         if credential_type:
             params["credential_type"] = credential_type
+        if is_online is not None:
+            params["is_online"] = str(is_online).lower()
         res = httpx.get(
             f"{self._client._base_url}/agents/discover",
             params=params,
@@ -250,6 +267,23 @@ class Agents:
         ).json()
         if "error" in res:
             raise Exception(res.get("error", "Failed to get trust header"))
+        return AgentResult(res)
+
+    def verify_proof(self, receipt_id: str) -> AgentResult:
+        """Verify a receipt proof. Public endpoint — no API key required.
+
+        Args:
+            receipt_id: The unique receipt identifier.
+
+        Returns:
+            AgentResult with verified, receipt_id, action, agent, hashes,
+            blockchain_anchor, attestation_level, verification.
+        """
+        res = httpx.get(
+            f"{self._client._base_url.replace('/api/v1', '')}/proof/{receipt_id}",
+            timeout=15,
+            follow_redirects=True,
+        ).json()
         return AgentResult(res)
 
     def credibility_packet(self, agent_id: str) -> AgentResult:
