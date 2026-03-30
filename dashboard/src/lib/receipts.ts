@@ -206,21 +206,28 @@ async function publishMemoToSolana(
  */
 async function submitToArkForge(
   receiptData: Record<string, unknown>,
-  endpoint: string
+  endpoint: string,
+  agentId?: string
 ): Promise<ArkForgeProof | null> {
   try {
     const apiKey = process.env.ARKFORGE_API_KEY
     if (!apiKey) return null
 
+    const agentDid = agentId ? `did:web:getagentid.dev:agent:${agentId}` : 'did:web:getagentid.dev'
+    const action = (receiptData.action as string) || 'unknown'
+
     const res = await fetch('https://trust.arkforge.tech/v1/proxy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'X-Api-Key': apiKey,
+        'X-Agent-Identity': agentDid,
+        'X-Agent-Version': 'agentid-v1',
       },
       body: JSON.stringify({
         target: endpoint,
         payload: receiptData,
+        description: `AgentID ${action} receipt for ${agentId || 'platform'}`,
       }),
     })
 
@@ -294,7 +301,7 @@ export async function createDualReceipt(
     signature: hashReceipt.signature,
     timestamp: hashReceipt.timestamp,
     ...(blockchainReceipt && { tx_hash: blockchainReceipt.tx_hash }),
-  }, arkforgeEndpoint)
+  }, arkforgeEndpoint, agentId)
 
   // 4. Determine attestation level
   let attestation_level: AttestationLevel = 'self-issued'
