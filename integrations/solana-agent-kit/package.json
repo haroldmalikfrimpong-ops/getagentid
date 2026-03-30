@@ -1,0 +1,48 @@
+{
+  "name": "agentid-solana-identity",
+  "version": "0.1.0",
+  "description": "AgentID identity provider adapter for Solana Agent Kit — verify AI agents by Solana wallet address",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx tests/test.ts",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": [
+    "agentid",
+    "solana",
+    "solana-agent-kit",
+    "identity",
+    "ai-agents",
+    "trust",
+    "verification",
+    "did"
+  ],
+  "homepage": "https://getagentid.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/getagentid/agentid-solana-identity"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.19.15",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "solana-agent-kit": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "solana-agent-kit": {
+      "optional": true
+    }
+  }
+}
