@@ -52,8 +52,8 @@ export async function POST(req: NextRequest) {
             id: body.user_id,
             email,
             plan: 'free',
-            agent_limit: 5,
-            verification_limit: 1000,
+            agent_limit: 100,
+            verification_limit: 10000,
           })
 
           // Only notify for genuinely new users

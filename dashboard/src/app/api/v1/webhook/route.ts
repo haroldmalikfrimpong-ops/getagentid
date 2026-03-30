@@ -8,10 +8,13 @@ function getStripe() {
 }
 
 const PLAN_LIMITS: Record<string, { agent_limit: number; verification_limit: number }> = {
-  startup: { agent_limit: 500, verification_limit: 100000 },
-  pro: { agent_limit: 500, verification_limit: 100000 },
-  business: { agent_limit: 2000, verification_limit: 500000 },
+  free: { agent_limit: 100, verification_limit: 10000 },
+  starter: { agent_limit: 500, verification_limit: 50000 },
+  pro: { agent_limit: 2000, verification_limit: 500000 },
   enterprise: { agent_limit: 999999, verification_limit: 999999 },
+  // Legacy plan names
+  startup: { agent_limit: 500, verification_limit: 50000 },
+  business: { agent_limit: 2000, verification_limit: 500000 },
 }
 
 export async function POST(req: NextRequest) {
@@ -76,8 +79,8 @@ export async function POST(req: NextRequest) {
           await db.from('profiles').upsert({
             id: userId,
             plan: 'free',
-            agent_limit: 5,
-            verification_limit: 1000,
+            agent_limit: 100,
+            verification_limit: 10000,
           })
         }
       }

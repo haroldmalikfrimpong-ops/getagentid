@@ -7,10 +7,12 @@ function getStripe() {
 }
 
 const PRICES: Record<string, string> = {
-  pro: 'price_1TFAVX14BefVjWWDgoK2OTEC',
-  startup: 'price_1TFAVX14BefVjWWDgoK2OTEC', // legacy alias
+  starter: process.env.STRIPE_STARTER_PRICE_ID || '',  // $29/mo — create in Stripe dashboard
+  pro: 'price_1TFAVX14BefVjWWDgoK2OTEC',              // $99/mo
+  enterprise: 'price_1TCUsk14BefVjWWDQwFSTAhr',        // $5,000/mo
+  // Legacy aliases
+  startup: 'price_1TFAVX14BefVjWWDgoK2OTEC',
   business: 'price_1TCUsj14BefVjWWDG9B9NNLM',
-  enterprise: 'price_1TCUsk14BefVjWWDQwFSTAhr',
 }
 
 export async function POST(req: NextRequest) {
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
     const { plan } = body
 
     if (!plan || !PRICES[plan]) {
-      return NextResponse.json({ error: 'Invalid plan. Use: pro, business, enterprise' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid plan. Use: starter, pro, enterprise' }, { status: 400 })
     }
 
     // Create Stripe checkout session
