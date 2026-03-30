@@ -101,6 +101,7 @@ Every agent starts at L1. Levels are based on what security capabilities you set
 | `GET` | `/api/v1/agents/credentials` | List agent credentials (public) |
 | `GET` | `/api/v1/agents/credibility-packet` | Signed portable trust resume (public) |
 | `GET` | `/api/v1/agents/trust-header` | Signed Agent-Trust-Score JWT header (public) |
+| `GET` | `/proof/:receipt_id` | Public proof verification — anyone can verify any receipt |
 | `POST` | `/api/v1/agents/delegate` | Create scoped delegation between agents |
 | `GET` | `/api/v1/agents/delegations` | List active delegations |
 | `POST` | `/api/v1/agents/update-metadata` | Update model version / prompt hash |

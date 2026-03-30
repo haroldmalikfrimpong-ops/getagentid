@@ -23,6 +23,7 @@ export interface HashReceipt {
   timestamp: string
   data_hash: string
   signature: string
+  verification_url: string
 }
 
 export interface BlockchainReceipt {
@@ -114,6 +115,7 @@ export function createHashReceipt(
     timestamp,
     data_hash: dataHash,
     signature,
+    verification_url: `https://getagentid.dev/proof/${receiptId}`,
   }
 }
 
