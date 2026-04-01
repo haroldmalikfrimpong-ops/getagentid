@@ -3,7 +3,7 @@ import { authenticateRequest, getServiceClient } from '@/lib/api-auth'
 import { trackUsage, getUsageCount, trackIpUsage, getIpUsageCount } from '@/lib/usage'
 import { calculateTrustLevel, PERMISSIONS, getSpendingLimit, TRUST_LEVEL_LABELS, levelUpRequirements, type AgentTrustData } from '@/lib/trust-levels'
 import { sendWebhook } from '@/lib/webhooks'
-import { quickAnomalyCheck, calculateRiskScore, type AnomalyAlert } from '@/lib/behaviour'
+import { quickAnomalyCheck, calculateRiskScore, detectContextContinuity, type AnomalyAlert } from '@/lib/behaviour'
 import { createDualReceipt } from '@/lib/receipts'
 
 const IP_RATE_LIMIT = 100 // max 100 verifications per hour for unauthenticated requests
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const db = getServiceClient()
     const { data: agent, error } = await db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, wallet_address, wallet_chain, wallet_bound_at, solana_address, ed25519_key, model_version, prompt_hash, social_links, limitations')
+      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, active, created_at, last_active, certificate, user_id, wallet_address, wallet_chain, wallet_bound_at, solana_address, ed25519_key, model_version, prompt_hash, social_links, limitations, agent_type, heartbeat_interval, autonomy_level, expected_active_hours')
       .eq('agent_id', agent_id)
       .single()
 
@@ -305,6 +305,14 @@ export async function POST(req: NextRequest) {
       ? (Date.now() - new Date(agent.last_active).getTime()) < 24 * 60 * 60 * 1000
       : false
 
+    // Session continuity auto-detection (non-blocking)
+    let context_continuity: { score: number; auto_context_epoch: number; signals: string[] } | null = null
+    try {
+      context_continuity = await detectContextContinuity(agent_id)
+    } catch {
+      // Never block verification on continuity check failure
+    }
+
     return NextResponse.json({
       verified: certificate_valid && agent.active,
       agent_id: agent.agent_id,
@@ -332,6 +340,14 @@ export async function POST(req: NextRequest) {
       scarring_score,
       ...(trust_note && { trust_note }),
       incident_history,
+      agent_type: (agent as any).agent_type || 'interactive',
+      ...((agent as any).agent_type === 'daemon' && {
+        daemon: {
+          heartbeat_interval: (agent as any).heartbeat_interval || null,
+          autonomy_level: (agent as any).autonomy_level || 'supervised',
+          expected_active_hours: (agent as any).expected_active_hours || [0, 23],
+        },
+      }),
       social_links: agent.social_links || null,
       social_verified: {
         github_linked: !!(agent.social_links as any)?.github,
@@ -346,11 +362,25 @@ export async function POST(req: NextRequest) {
         attestation_level: receipt.attestation_level,
         compound_digest: receipt.compound_digest,
         compound_digest_signature: receipt.compound_digest_signature,
+        compound_digest_ed25519_signature: receipt.compound_digest_ed25519_signature,
         policy_hash: receipt.policy_hash,
         previous_policy_hash: receipt.previous_policy_hash,
         action_ref: receipt.action_ref,
         context_epoch: receipt.context_epoch,
       },
+      // Session continuity — auto-detected, not agent-declared
+      ...(context_continuity && {
+        context_continuity: {
+          score: context_continuity.score,
+          auto_context_epoch: context_continuity.auto_context_epoch,
+          signals: context_continuity.signals,
+          note: context_continuity.score < 50
+            ? 'WARNING: Significant context break detected. This agent may have undergone memory consolidation, model swap, or prompt change.'
+            : context_continuity.score < 80
+            ? 'Minor continuity signals detected. Agent behavior has shifted slightly.'
+            : 'Agent context appears continuous.',
+        },
+      }),
       // Always show what to do next
       level_up,
       ...(behaviour_warnings.length > 0 && {

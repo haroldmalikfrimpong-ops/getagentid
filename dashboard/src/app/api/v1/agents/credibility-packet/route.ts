@@ -22,6 +22,26 @@ function hmacSign(data: string): string {
   return crypto.createHmac('sha256', secret).update(data).digest('hex')
 }
 
+// Ed25519 signing for publicly verifiable credibility packets
+const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex')
+let _ed25519Key: crypto.KeyObject | null = null
+
+function ed25519Sign(data: string): string | null {
+  if (!_ed25519Key) {
+    const keyB64 = process.env.AGENTID_ED25519_PRIVATE_KEY
+    if (!keyB64) return null
+    try {
+      const seed = Buffer.from(keyB64, 'base64url')
+      if (seed.length !== 32) return null
+      const der = Buffer.concat([ED25519_PKCS8_PREFIX, seed])
+      _ed25519Key = crypto.createPrivateKey({ key: der, format: 'der', type: 'pkcs8' })
+    } catch { return null }
+  }
+  try {
+    return crypto.sign(null, Buffer.from(data), _ed25519Key).toString('hex')
+  } catch { return null }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -185,13 +205,20 @@ export async function GET(req: NextRequest) {
       generated_at,
     }
 
-    // Sign the entire packet
+    // Sign the entire packet — HMAC for backward compat, Ed25519 for public verification
     const packetJson = JSON.stringify(packetPayload)
     const signature = hmacSign(packetJson)
+    const ed25519_signature = ed25519Sign(packetJson)
 
     return NextResponse.json({
       ...packetPayload,
       signature,
+      ed25519_signature,
+      verification: {
+        hmac: 'Verify with platform JWT_SECRET',
+        ed25519: ed25519_signature ? 'Verify with platform public key at https://getagentid.dev/.well-known/agentid.json' : 'Ed25519 signing not configured',
+        ed25519_public_key: 'xdpmjfq2DX4d6yML7QjaSkYB2h9Dm3phwts5gkAPBp8',
+      },
     })
 
   } catch (e: any) {

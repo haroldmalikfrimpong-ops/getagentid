@@ -52,6 +52,7 @@ export interface DualReceipt {
   attestation_level: AttestationLevel
   compound_digest: string
   compound_digest_signature: string
+  compound_digest_ed25519_signature: string | null
   policy_hash: string
   previous_policy_hash: string | null
   action_ref: string
@@ -103,6 +104,61 @@ function hmacSign(data: string): string {
 
 export function sha256(data: string): string {
   return crypto.createHash('sha256').update(data).digest('hex')
+}
+
+// ---------------------------------------------------------------------------
+// Ed25519 signing — publicly verifiable without platform key
+// ---------------------------------------------------------------------------
+
+// PKCS8 DER prefix for Ed25519 private key (RFC 8410)
+const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex')
+
+let _ed25519PrivateKey: crypto.KeyObject | null = null
+
+/**
+ * Get the platform Ed25519 private key for receipt signing.
+ * The key is loaded from AGENTID_ED25519_PRIVATE_KEY env var
+ * (base64url-encoded 32-byte seed) or from agentid.private.pem content.
+ * Returns null if not configured — Ed25519 signing is optional.
+ */
+function getEd25519PrivateKey(): crypto.KeyObject | null {
+  if (_ed25519PrivateKey) return _ed25519PrivateKey
+
+  const keyB64 = process.env.AGENTID_ED25519_PRIVATE_KEY
+  if (!keyB64) return null
+
+  try {
+    // Decode base64url seed (32 bytes)
+    const seed = Buffer.from(keyB64, 'base64url')
+    if (seed.length !== 32) {
+      console.warn('[receipts] AGENTID_ED25519_PRIVATE_KEY must decode to 32 bytes')
+      return null
+    }
+    // Wrap in PKCS8 DER format for Node.js crypto
+    const der = Buffer.concat([ED25519_PKCS8_PREFIX, seed])
+    _ed25519PrivateKey = crypto.createPrivateKey({ key: der, format: 'der', type: 'pkcs8' })
+    return _ed25519PrivateKey
+  } catch (err: any) {
+    console.warn('[receipts] Failed to load Ed25519 private key:', err.message)
+    return null
+  }
+}
+
+/**
+ * Sign data with the platform Ed25519 key.
+ * Returns hex-encoded 64-byte signature, or null if key not configured.
+ */
+function ed25519Sign(data: string): string | null {
+  const privKey = getEd25519PrivateKey()
+  if (!privKey) return null
+
+  try {
+    const sig = crypto.sign(null, Buffer.from(data), privKey)
+    return sig.toString('hex')
+  } catch (err: any) {
+    console.warn('[receipts] Ed25519 signing failed:', err.message)
+    return null
+  }
 }
 
 function explorerTxUrl(signature: string): string {
@@ -320,6 +376,9 @@ export async function createDualReceipt(
   )
   const compoundDigestSignature = hmacSign(compoundDigest)
 
+  // 3b. Ed25519 signature — publicly verifiable without platform key
+  const compoundDigestEd25519Signature = ed25519Sign(compoundDigest)
+
   // 4. Policy hash chain — detect constraint drift
   const previousPolicyHash = await getPreviousPolicyHash(agentId)
   const policyHash = computePolicyHash(authContext, previousPolicyHash)
@@ -349,6 +408,7 @@ export async function createDualReceipt(
         ...(authContext ? { ...data, auth_context: authContext } : data),
         compound_digest: compoundDigest,
         compound_digest_signature: compoundDigestSignature,
+        compound_digest_ed25519_signature: compoundDigestEd25519Signature,
         policy_hash: policyHash,
         previous_policy_hash: previousPolicyHash,
         action_ref: actionRef,
@@ -365,6 +425,7 @@ export async function createDualReceipt(
     attestation_level,
     compound_digest: compoundDigest,
     compound_digest_signature: compoundDigestSignature,
+    compound_digest_ed25519_signature: compoundDigestEd25519Signature,
     policy_hash: policyHash,
     previous_policy_hash: previousPolicyHash,
     action_ref: actionRef,

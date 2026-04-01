@@ -51,8 +51,9 @@ from .crypto_payments import PaymentClient, PaymentIntent, PaymentRecord, Paymen
 from .challenge import request_challenge, respond_to_challenge
 from .wallet import bind_wallet, get_wallet, build_binding_message
 from .agent_wallet import AgentWallet, ed25519_pub_to_solana_address
+from .daemon import DaemonAgent
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __all__ = [
     "Client",
     "Ed25519Identity",
@@ -105,4 +106,5 @@ __all__ = [
     "build_binding_message",
     "AgentWallet",
     "ed25519_pub_to_solana_address",
+    "DaemonAgent",
 ]

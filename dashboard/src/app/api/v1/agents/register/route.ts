@@ -16,11 +16,20 @@ export async function POST(req: NextRequest) {
 
     // Parse body
     const body = await req.json()
-    const { name, description, capabilities, platform, endpoint, model_version, prompt_hash, social_links, limitations } = body
+    const { name, description, capabilities, platform, endpoint, model_version, prompt_hash, social_links, limitations,
+            agent_type, heartbeat_interval, autonomy_level, expected_active_hours } = body
 
     if (!name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 })
     }
+
+    // Validate agent_type if provided
+    const validAgentTypes = ['interactive', 'daemon', 'heartbeat'] as const
+    const resolvedAgentType = agent_type && validAgentTypes.includes(agent_type) ? agent_type : 'interactive'
+
+    // Validate daemon-specific fields
+    const validAutonomyLevels = ['supervised', 'semi-autonomous', 'fully-autonomous'] as const
+    const resolvedAutonomyLevel = autonomy_level && validAutonomyLevels.includes(autonomy_level) ? autonomy_level : null
 
     // Check agent limit
     const db = getServiceClient()
@@ -70,6 +79,10 @@ export async function POST(req: NextRequest) {
       ...(prompt_hash && { prompt_hash }),
       ...(social_links && { social_links }),
       ...(limitations && { limitations }),
+      ...(resolvedAgentType !== 'interactive' && { agent_type: resolvedAgentType }),
+      ...(heartbeat_interval && typeof heartbeat_interval === 'number' && { heartbeat_interval }),
+      ...(resolvedAutonomyLevel && { autonomy_level: resolvedAutonomyLevel }),
+      ...(expected_active_hours && Array.isArray(expected_active_hours) && { expected_active_hours }),
     })
 
     if (dbError) {
@@ -80,7 +93,7 @@ export async function POST(req: NextRequest) {
     await db.from('agent_events').insert({
       agent_id: agentId,
       event_type: 'registered',
-      data: { name, owner, capabilities },
+      data: { name, owner, capabilities, agent_type: resolvedAgentType },
     })
 
     // Track usage + notify
@@ -119,7 +132,24 @@ export async function POST(req: NextRequest) {
       permissions: PERMISSIONS[initialTrustLevel],
       spending_limit: getSpendingLimit(initialTrustLevel),
       solana_wallet: null,
-      message: 'Your agent is at L1 (Registered). It can connect, message, and verify immediately.',
+      agent_type: resolvedAgentType,
+      ...(resolvedAgentType === 'daemon' && {
+        daemon: {
+          heartbeat_interval: heartbeat_interval || null,
+          autonomy_level: resolvedAutonomyLevel || 'supervised',
+          expected_active_hours: expected_active_hours || [0, 23],
+          note: 'Daemon agents run autonomously. All actions produce receipts for audit. Session continuity is tracked via context_epoch.',
+        },
+      }),
+      ...(resolvedAgentType === 'heartbeat' && {
+        heartbeat: {
+          heartbeat_interval: heartbeat_interval || null,
+          note: 'Heartbeat agents wake on schedule, pull inbox, act, sleep. Use POST /agents/inbox to pull pending messages.',
+        },
+      }),
+      message: resolvedAgentType === 'daemon'
+        ? 'Daemon agent registered at L1. It can connect, message, verify, and operate autonomously. All actions produce verifiable receipts.'
+        : 'Your agent is at L1 (Registered). It can connect, message, and verify immediately.',
       next_step: {
         action: 'Bind an Ed25519 key to reach L2 (Verified)',
         endpoint: 'POST /api/v1/agents/bind-ed25519',

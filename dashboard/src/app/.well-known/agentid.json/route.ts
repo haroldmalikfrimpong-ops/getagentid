@@ -96,11 +96,17 @@ export async function GET(req: NextRequest) {
       // Receipt format
       receipt_format: {
         hash_algorithm: 'HMAC-SHA256',
+        compound_digest_signing: ['HMAC-SHA256', 'Ed25519'],
+        ed25519_verification_key: 'xdpmjfq2DX4d6yML7QjaSkYB2h9Dm3phwts5gkAPBp8',
+        ed25519_note: 'compound_digest_ed25519_signature can be verified with this public key — no platform secret needed',
         blockchain: 'solana',
         compound_digest: 'SHA-256 over hash(HashReceipt) + hash(BlockchainMemo) + action_ref + timestamp',
         policy_hash_chain: 'SHA-256(constraints_at_N + previous_policy_hash)',
         attestation_levels: ['self-issued', 'domain-attested'],
       },
+
+      // Agent types
+      agent_types: ['interactive', 'daemon', 'heartbeat'],
 
       // Interop
       protocols: ['A2A', 'MCP', 'DID:web'],

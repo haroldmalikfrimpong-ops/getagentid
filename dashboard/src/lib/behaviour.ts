@@ -31,12 +31,20 @@ export interface BehaviourProfile {
 
 export interface AnomalyAlert {
   agent_id: string
-  type: 'frequency_spike' | 'unusual_hour' | 'new_action' | 'trust_drop' | 'payload_drift' | 'model_changed'
+  type: 'frequency_spike' | 'unusual_hour' | 'new_action' | 'trust_drop' | 'payload_drift' | 'model_changed' | 'context_break'
   severity: 'low' | 'medium' | 'high'
   description: string
   detected_at: string
   current_value: number
   baseline_value: number
+}
+
+// ── Context continuity score ────────────────────────────────────────────────
+
+export interface ContextContinuityResult {
+  score: number                 // 0-100, where 100 = fully continuous, 0 = total break
+  auto_context_epoch: number    // system-detected epoch (increments on detected breaks)
+  signals: string[]             // what triggered score reduction
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -297,6 +305,24 @@ export async function detectAnomalies(agentId: string): Promise<AnomalyAlert[]> 
     }
   }
 
+  // 7. Context break — session continuity disruption detected
+  try {
+    const continuity = await detectContextContinuity(agentId)
+    if (continuity.score < 50) {
+      alerts.push({
+        agent_id: agentId,
+        type: 'context_break',
+        severity: continuity.score < 25 ? 'high' : 'medium',
+        description: `Context continuity score: ${continuity.score}/100. Signals: ${continuity.signals.join('; ')}`,
+        detected_at: detectedAt,
+        current_value: continuity.score,
+        baseline_value: 100,
+      })
+    }
+  } catch {
+    // Never block on continuity check failure
+  }
+
   return alerts
 }
 
@@ -522,4 +548,123 @@ function isWithinHours(hour: number, start: number, end: number): boolean {
   }
   // Wraps midnight (e.g. 22 to 6)
   return hour >= start || hour <= end
+}
+
+// ── Context Continuity Detection ────────────────────────────────────────────
+//
+// Auto-detects when an agent's context/memory state has likely shifted.
+// Unlike agent-declared context_epoch, this is system-detected and cannot
+// be suppressed by a compromised agent.
+//
+// Signals checked:
+//   1. Activity gap — time since last action exceeds 2x the typical interval
+//   2. Model/prompt change — model_version or prompt_hash changed recently
+//   3. Payload drift — communication fingerprint shifted significantly
+//   4. Declared epoch jump — agent's own context_epoch incremented
+//
+// Each signal reduces the continuity score. Multiple simultaneous signals
+// compound — if an agent goes dark for 48 hours AND comes back with a new
+// model version AND different payload patterns, that's a near-total break.
+
+/**
+ * Detect context continuity for an agent. Returns a score (0-100) and
+ * the system-computed auto_context_epoch.
+ */
+export async function detectContextContinuity(agentId: string): Promise<ContextContinuityResult> {
+  const db = getServiceClient()
+  let score = 100
+  const signals: string[] = []
+
+  // ── 1. Activity gap detection ────────────────────────────────────
+  // Get the last two events to measure the gap
+  const { data: recentEvents } = await db
+    .from('agent_events')
+    .select('created_at, event_type')
+    .eq('agent_id', agentId)
+    .order('created_at', { ascending: false })
+    .limit(2)
+
+  if (recentEvents && recentEvents.length >= 2) {
+    const latest = new Date(recentEvents[0].created_at).getTime()
+    const previous = new Date(recentEvents[1].created_at).getTime()
+    const gapMs = latest - previous
+
+    // Get the agent's typical interval from profile
+    const profile = await buildProfile(agentId)
+    const typicalIntervalMs = profile.avg_api_calls_per_hour > 0
+      ? (60 * 60 * 1000) / profile.avg_api_calls_per_hour
+      : 24 * 60 * 60 * 1000 // default to 24h if no baseline
+
+    // If gap exceeds 2x typical interval, it's a potential context break
+    if (gapMs > typicalIntervalMs * 2 && gapMs > 60 * 60 * 1000) {
+      const gapHours = Math.round(gapMs / (60 * 60 * 1000))
+      const penalty = Math.min(40, Math.round((gapMs / typicalIntervalMs - 2) * 10))
+      score -= penalty
+      signals.push(`activity_gap: ${gapHours}h gap (typical interval: ${Math.round(typicalIntervalMs / (60 * 60 * 1000))}h)`)
+    }
+  } else if (!recentEvents || recentEvents.length === 0) {
+    score -= 20
+    signals.push('no_activity_history: no events found for baseline')
+  }
+
+  // ── 2. Model/prompt change detection ─────────────────────────────
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const { data: changeEvents } = await db
+    .from('agent_events')
+    .select('event_type, data')
+    .eq('agent_id', agentId)
+    .in('event_type', ['model_version_changed', 'prompt_hash_changed'])
+    .gte('created_at', oneDayAgo)
+
+  if (changeEvents && changeEvents.length > 0) {
+    for (const event of changeEvents) {
+      if (event.event_type === 'model_version_changed') {
+        score -= 30
+        const data = event.data as any
+        signals.push(`model_changed: ${data?.previous || '?'} → ${data?.current || '?'}`)
+      }
+      if (event.event_type === 'prompt_hash_changed') {
+        score -= 25
+        const data = event.data as any
+        signals.push(`prompt_changed: ${(data?.previous || '?').slice(0, 12)}... → ${(data?.current || '?').slice(0, 12)}...`)
+      }
+    }
+  }
+
+  // ── 3. Payload drift detection ───────────────────────────────────
+  const profile = await buildProfile(agentId)
+  if (profile.payload_fingerprint.common_keys.length > 0) {
+    const recentPayloadKeys = await getRecentPayloadKeys(agentId)
+    if (recentPayloadKeys.length > 0) {
+      const baselineKeys = new Set(profile.payload_fingerprint.common_keys)
+      const newKeys = recentPayloadKeys.filter((k) => !baselineKeys.has(k))
+      const driftRatio = baselineKeys.size > 0 ? newKeys.length / baselineKeys.size : 0
+
+      if (driftRatio >= 0.3) {
+        const penalty = Math.min(25, Math.round(driftRatio * 30))
+        score -= penalty
+        signals.push(`payload_drift: ${Math.round(driftRatio * 100)}% new keys (${newKeys.slice(0, 3).join(', ')})`)
+      }
+    }
+  }
+
+  // ── 4. Count declared context_epoch jumps ────────────────────────
+  const { count: epochDeclarations } = await db
+    .from('agent_events')
+    .select('*', { count: 'exact', head: true })
+    .eq('agent_id', agentId)
+    .eq('event_type', 'context_epoch_declared')
+
+  // auto_context_epoch = number of system-detected + declared breaks
+  const systemBreaks = signals.length
+  const autoContextEpoch = (epochDeclarations ?? 0) + (systemBreaks > 0 ? 1 : 0)
+
+  // Clamp score to 0-100
+  score = Math.max(0, Math.min(100, score))
+
+  return {
+    score,
+    auto_context_epoch: autoContextEpoch,
+    signals,
+  }
 }

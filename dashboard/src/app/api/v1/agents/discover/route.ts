@@ -8,14 +8,19 @@ export async function GET(req: NextRequest) {
     const owner = searchParams.get('owner')
     const credential_type = searchParams.get('credential_type')
     const is_online_filter = searchParams.get('is_online')
+    const agent_type_filter = searchParams.get('agent_type')
     const limit = parseInt(searchParams.get('limit') || '20')
 
     const db = getServiceClient()
     let query = db
       .from('agents')
-      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, created_at, last_active, ed25519_key, wallet_address, wallet_chain, credentials, social_links, limitations')
+      .select('agent_id, name, description, owner, capabilities, platform, trust_score, verified, created_at, last_active, ed25519_key, wallet_address, wallet_chain, credentials, social_links, limitations, agent_type, heartbeat_interval, autonomy_level')
       .eq('active', true)
       .limit(Math.min(limit, 100))
+
+    if (agent_type_filter && ['interactive', 'daemon', 'heartbeat'].includes(agent_type_filter)) {
+      query = query.eq('agent_type', agent_type_filter)
+    }
 
     if (owner) {
       query = query.eq('owner', owner)
@@ -78,6 +83,7 @@ export async function GET(req: NextRequest) {
         owner: a.owner,
         capabilities: a.capabilities,
         limitations: a.limitations || [],
+        agent_type: a.agent_type || 'interactive',
         platform: a.platform,
         trust_score: a.trust_score,
         verified: a.verified,
