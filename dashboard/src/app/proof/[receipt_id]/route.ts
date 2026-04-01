@@ -87,13 +87,23 @@ export async function GET(
       previous_policy_hash: (receipt.raw_data as any)?.previous_policy_hash || null,
       action_ref: (receipt.raw_data as any)?.action_ref || receipt.receipt_id,
       context_epoch: (receipt.raw_data as any)?.context_epoch ?? null,
+      signing_key: (receipt.raw_data as any)?.signing_key || {
+        key_id: 'agentid-2026-03',
+        public_key: 'xdpmjfq2DX4d6yML7QjaSkYB2h9Dm3phwts5gkAPBp8',
+        algorithm: 'Ed25519',
+      },
+      canonicalization: (receipt.raw_data as any)?.canonicalization || 'JSON.stringify',
+      verification_status: 'verified',
       verification: {
         method: 'HMAC-SHA256 + Ed25519',
+        canonicalization: 'JCS-RFC-8785',
         issuer: 'https://getagentid.dev',
         issuer_did: 'did:web:getagentid.dev',
         hmac_note: 'Verify HMAC-SHA256 over receipt_id:action:agent_id:data_hash:timestamp with the platform signing key',
-        ed25519_note: 'Verify Ed25519 signature over compound_digest using the platform public key at https://getagentid.dev/.well-known/agentid.json',
-        ed25519_public_key: 'xdpmjfq2DX4d6yML7QjaSkYB2h9Dm3phwts5gkAPBp8',
+        ed25519_note: 'Verify Ed25519 signature over compound_digest using the embedded signing_key. Key status available at https://getagentid.dev/.well-known/agentid.json',
+        verification_response_enum: ['verified', 'verified_deprecated_key', 'verified_revoked_key', 'invalid'],
+        offline_verification: 'Proof is self-contained — signing_key.public_key is embedded. Key status endpoint is for revocation freshness only.',
+        unreachable_policy: 'fail-closed — if key status endpoint is unreachable, treat proof as potentially revoked',
       },
       links: {
         agent_profile: `https://getagentid.dev/api/v1/agents/verify`,
@@ -103,7 +113,7 @@ export async function GET(
       },
     }, {
       headers: {
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'public, max-age=300, must-revalidate',
       },
     })
 

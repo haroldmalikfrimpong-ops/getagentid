@@ -5,7 +5,7 @@
   "security_contact": "hello@getagentid.dev",
   "status": "active",
   "added_at": "2026-03-23T18:59:04.823Z",
-  "last_verified": "2026-03-23T18:59:04.823Z",
+  "last_verified": "2026-04-01T12:00:00.000Z",
   "public_keys": [
     {
       "kid": "agentid-2026-03",
@@ -15,9 +15,19 @@
       "issued_at": "2026-03-23T18:59:04.823Z",
       "expires_at": "2027-03-23T18:59:04.823Z",
       "deprecated_at": null,
-      "revoked_at": null
+      "revoked_at": null,
+      "compromised_since": null,
+      "revocation_reason": null
     }
   ],
+  "key_lifecycle": {
+    "revocation_reasons": ["key_rotation", "compromise", "decommission"],
+    "compromise_policy": "All proofs from a compromised key are untrusted regardless of timestamp. revoked_at is detection time, not breach time. compromised_since bounds the actual breach window when known.",
+    "cache_ttl": "MUST be between 60 and 3600 seconds. Verifiers MUST re-fetch on unknown key_id before hard reject.",
+    "unreachable_policy": "fail-closed — treat as potentially revoked when key status endpoint is unreachable"
+  },
+  "verification_response_enum": ["verified", "verified_deprecated_key", "verified_revoked_key", "invalid"],
+  "canonicalization": "JCS-RFC-8785",
   "capabilities": {
     "supervision_model": "tiered",
     "audit_logging": true,

@@ -107,6 +107,44 @@ export function sha256(data: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// JCS RFC 8785 — Deterministic JSON Canonicalization
+// ---------------------------------------------------------------------------
+
+/**
+ * Serialize an object to canonical JSON per RFC 8785 (JCS).
+ * Keys sorted lexicographically at all nesting levels, no whitespace.
+ * This ensures identical objects produce identical byte sequences across
+ * all implementations (Python, Go, Node.js, Rust).
+ */
+export function jcsSerialize(value: unknown): string {
+  if (value === null || value === undefined) return 'null'
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (typeof value === 'number') {
+    if (!isFinite(value)) return 'null'
+    return Object.is(value, -0) ? '0' : String(value)
+  }
+  if (typeof value === 'string') return JSON.stringify(value)
+  if (Array.isArray(value)) {
+    return '[' + value.map(jcsSerialize).join(',') + ']'
+  }
+  if (typeof value === 'object') {
+    const keys = Object.keys(value as Record<string, unknown>).sort()
+    const pairs = keys
+      .filter(k => (value as any)[k] !== undefined)
+      .map(k => JSON.stringify(k) + ':' + jcsSerialize((value as any)[k]))
+    return '{' + pairs.join(',') + '}'
+  }
+  return 'null'
+}
+
+// ---------------------------------------------------------------------------
+// Platform Ed25519 key metadata for proof embedding
+// ---------------------------------------------------------------------------
+
+const PLATFORM_ED25519_KEY_ID = 'agentid-2026-03'
+const PLATFORM_ED25519_PUBLIC_KEY = 'xdpmjfq2DX4d6yML7QjaSkYB2h9Dm3phwts5gkAPBp8'
+
+// ---------------------------------------------------------------------------
 // Ed25519 signing — publicly verifiable without platform key
 // ---------------------------------------------------------------------------
 
@@ -265,7 +303,7 @@ function computePolicyHash(
   authContext: { trust_level?: number; permissions?: string[]; delegation_proof?: string } | undefined,
   previousPolicyHash: string | null
 ): string {
-  const constraints = JSON.stringify({
+  const constraints = jcsSerialize({
     trust_level: authContext?.trust_level ?? 0,
     permissions: authContext?.permissions ?? [],
     has_delegation: !!authContext?.delegation_proof,
@@ -313,7 +351,8 @@ function computeCompoundDigest(
   actionRef: string,
   timestamp: string
 ): string {
-  const hashReceiptDigest = sha256(JSON.stringify(hashReceipt))
+  // JCS RFC 8785: deterministic serialization before hashing
+  const hashReceiptDigest = sha256(jcsSerialize(hashReceipt))
   const blockchainDigest = blockchainMemo ? sha256(blockchainMemo) : sha256('no-blockchain-receipt')
   return sha256(hashReceiptDigest + blockchainDigest + actionRef + timestamp)
 }
@@ -409,6 +448,12 @@ export async function createDualReceipt(
         compound_digest: compoundDigest,
         compound_digest_signature: compoundDigestSignature,
         compound_digest_ed25519_signature: compoundDigestEd25519Signature,
+        signing_key: compoundDigestEd25519Signature ? {
+          key_id: PLATFORM_ED25519_KEY_ID,
+          public_key: PLATFORM_ED25519_PUBLIC_KEY,
+          algorithm: 'Ed25519',
+        } : null,
+        canonicalization: 'JCS-RFC-8785',
         policy_hash: policyHash,
         previous_policy_hash: previousPolicyHash,
         action_ref: actionRef,

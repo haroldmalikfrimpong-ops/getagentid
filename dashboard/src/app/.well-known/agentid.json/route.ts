@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(manifest, {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': 'public, max-age=300, must-revalidate',
         'Access-Control-Allow-Origin': '*',
       },
     })
