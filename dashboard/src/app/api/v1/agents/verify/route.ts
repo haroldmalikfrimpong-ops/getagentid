@@ -11,7 +11,7 @@ const IP_RATE_LIMIT = 100 // max 100 verifications per hour for unauthenticated 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { agent_id } = body
+    const { agent_id, context_epoch, context_hash, action_ref } = body
 
     if (!agent_id) {
       return NextResponse.json({ error: 'agent_id is required' }, { status: 400 })
@@ -220,6 +220,19 @@ export async function POST(req: NextRequest) {
         }
       : null
 
+    // Log context epoch if declared — tracks behavioural continuity
+    if (context_epoch !== undefined) {
+      await db.from('agent_events').insert({
+        agent_id,
+        event_type: 'context_epoch_declared',
+        data: {
+          context_epoch,
+          context_hash: context_hash || null,
+          declared_at: new Date().toISOString(),
+        },
+      })
+    }
+
     // Create dual receipt for this verification
     const receipt = await createDualReceipt('verification', agent.agent_id, {
       verified: certificate_valid && agent.active,
@@ -227,7 +240,11 @@ export async function POST(req: NextRequest) {
       trust_level_label,
       certificate_valid,
       verified_by: userId || 'anonymous',
-    }, { trust_level, permissions })
+      ...(context_epoch !== undefined && { context_epoch, context_hash: context_hash || null }),
+    }, { trust_level, permissions }, {
+      action_ref: action_ref || undefined,
+      context_epoch: context_epoch ?? undefined,
+    })
 
     // Build DID and supported key types
     const did = `did:web:getagentid.dev:agent:${agent.agent_id}`
@@ -323,7 +340,17 @@ export async function POST(req: NextRequest) {
       },
       wallet,
       solana_wallet,
-      receipt,
+      receipt: {
+        hash: receipt.hash,
+        blockchain: receipt.blockchain,
+        attestation_level: receipt.attestation_level,
+        compound_digest: receipt.compound_digest,
+        compound_digest_signature: receipt.compound_digest_signature,
+        policy_hash: receipt.policy_hash,
+        previous_policy_hash: receipt.previous_policy_hash,
+        action_ref: receipt.action_ref,
+        context_epoch: receipt.context_epoch,
+      },
       // Always show what to do next
       level_up,
       ...(behaviour_warnings.length > 0 && {

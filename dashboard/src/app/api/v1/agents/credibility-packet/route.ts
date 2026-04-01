@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/api-auth'
 import { calculateTrustLevel, PERMISSIONS, getSpendingLimit, TRUST_LEVEL_LABELS, type AgentTrustData } from '@/lib/trust-levels'
 import { quickAnomalyCheck, calculateRiskScore } from '@/lib/behaviour'
+import { computeMerkleRoot } from '@/lib/merkle'
 import crypto from 'crypto'
 
 /**
@@ -119,6 +120,19 @@ export async function GET(req: NextRequest) {
       // Non-blocking
     }
 
+    // Merkle root over all receipts
+    let merkle_root = null
+    try {
+      const merkle = await computeMerkleRoot(agent_id)
+      merkle_root = {
+        root: merkle.root,
+        leaf_count: merkle.leaf_count,
+        computed_at: merkle.computed_at,
+      }
+    } catch {
+      // Non-blocking
+    }
+
     // Active delegation count
     const { count: activeDelegationCount } = await db
       .from('agent_messages')
@@ -166,6 +180,7 @@ export async function GET(req: NextRequest) {
       resolved_signals: resolvedSignals ?? 0,
       scarring_score,
       receipts: receipts || [],
+      merkle_root,
       behaviour_risk_score,
       generated_at,
     }

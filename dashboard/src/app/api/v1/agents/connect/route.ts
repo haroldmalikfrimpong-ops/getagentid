@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { from_agent, to_agent, message_type, payload } = body
+    const { from_agent, to_agent, message_type, payload, context_epoch, context_hash, action_ref } = body
 
     if (!from_agent || !to_agent) {
       return NextResponse.json({ error: 'from_agent and to_agent are required' }, { status: 400 })
@@ -218,7 +218,11 @@ export async function POST(req: NextRequest) {
         sender_trust_level: senderTrustLevel,
         receiver_trust_level: receiverTrustLevel,
         both_verified: senderVerified && receiverVerified,
-      }, { trust_level: senderTrustLevel, permissions: PERMISSIONS[senderTrustLevel] })
+        ...(context_epoch !== undefined && { context_epoch, context_hash: context_hash || null }),
+      }, { trust_level: senderTrustLevel, permissions: PERMISSIONS[senderTrustLevel] }, {
+        action_ref: action_ref || undefined,
+        context_epoch: context_epoch ?? undefined,
+      })
     } catch {
       // Never block on receipt creation failure
     }

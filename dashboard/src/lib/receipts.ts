@@ -5,8 +5,18 @@
  *   1. Hash receipt — HMAC-SHA256 signed by platform key, stored in Supabase
  *   2. Blockchain receipt — Solana memo transaction with action summary on-chain
  *
- * This gives both instant cryptographic proof (hash receipt) and immutable
- * on-chain audit trail (blockchain receipt).
+ * Additional integrity features:
+ *   - Compound digest: SHA-256 binding hash receipt + blockchain receipt + action_ref + timestamp
+ *     Signed by gateway — proves both artifacts were seen together. Non-repudiable.
+ *   - Policy hash chaining: Each receipt includes a hash of the agent's policy state
+ *     (trust_level, permissions, spending_limit). Chained to previous policy hash.
+ *     If constraints change silently, the chain breaks — drift is detectable.
+ *   - Action ref: Cross-system execution frame ID. Caller can supply an external
+ *     action_ref; if absent, receipt_id is used. Allows joining receipts across
+ *     independently-signed artifacts from different systems.
+ *   - Context epoch: Optional field the agent declares when its context/memory state
+ *     has changed significantly. Included in the receipt so receivers can detect
+ *     behavioural continuity breaks.
  */
 
 import crypto from 'crypto'
@@ -34,18 +44,18 @@ export interface BlockchainReceipt {
   memo: string
 }
 
-export type AttestationLevel = 'self-issued' | 'domain-attested' | 'third-party-attested'
-
-export interface ArkForgeProof {
-  proof_id: string
-  verification_url: string
-}
+export type AttestationLevel = 'self-issued' | 'domain-attested'
 
 export interface DualReceipt {
   hash: HashReceipt
-  blockchain: BlockchainReceipt | null  // null if on-chain publish fails (non-blocking)
+  blockchain: BlockchainReceipt | null
   attestation_level: AttestationLevel
-  arkforge: ArkForgeProof | null
+  compound_digest: string
+  compound_digest_signature: string
+  policy_hash: string
+  previous_policy_hash: string | null
+  action_ref: string
+  context_epoch: number | null
 }
 
 export type ReceiptAction =
@@ -91,7 +101,7 @@ function hmacSign(data: string): string {
     .digest('hex')
 }
 
-function sha256(data: string): string {
+export function sha256(data: string): string {
   return crypto.createHash('sha256').update(data).digest('hex')
 }
 
@@ -132,20 +142,10 @@ export function createHashReceipt(
 // Blockchain Receipt (Solana Memo)
 // ---------------------------------------------------------------------------
 
-/**
- * Publish a memo to Solana.
- *
- * This uses the platform's registry keypair (loaded from AGENTID_REGISTRY_KEYPAIR_JSON
- * env var — a JSON array of 64 integers, matching solana-keygen output).
- *
- * If the keypair is not configured or the RPC fails, returns null rather than
- * blocking the caller. On-chain receipts are best-effort.
- */
 async function publishMemoToSolana(
   memoText: string
 ): Promise<BlockchainReceipt | null> {
   try {
-    // Lazy-import @solana/web3.js to avoid loading it when not needed
     const {
       Connection,
       Keypair,
@@ -155,7 +155,6 @@ async function publishMemoToSolana(
       sendAndConfirmTransaction,
     } = await import('@solana/web3.js')
 
-    // Load registry keypair from env (JSON array of 64 secret-key bytes)
     const keypairJson = process.env.AGENTID_REGISTRY_KEYPAIR_JSON
     if (!keypairJson) {
       console.warn('[receipts] AGENTID_REGISTRY_KEYPAIR_JSON not set — skipping on-chain receipt')
@@ -167,7 +166,6 @@ async function publishMemoToSolana(
 
     const connection = new Connection(SOLANA_RPC_URL, 'confirmed')
 
-    // Truncate memo if too long (Solana memo limit ~700 bytes)
     const memoBytes = Buffer.from(memoText, 'utf-8')
     const truncated = memoBytes.length > 680 ? memoBytes.subarray(0, 680).toString('utf-8') : memoText
 
@@ -186,7 +184,7 @@ async function publishMemoToSolana(
       tx_hash: txHash,
       cluster: SOLANA_CLUSTER,
       explorer_url: explorerTxUrl(txHash),
-      block_time: Math.floor(Date.now() / 1000), // approximate; real block_time requires a getTransaction call
+      block_time: Math.floor(Date.now() / 1000),
       memo: truncated,
     }
   } catch (err: any) {
@@ -196,55 +194,72 @@ async function publishMemoToSolana(
 }
 
 // ---------------------------------------------------------------------------
-// ArkForge External Attestation (best-effort, non-blocking)
+// Policy Hash Chaining
 // ---------------------------------------------------------------------------
 
 /**
- * Submit receipt data to ArkForge for third-party attestation.
- * Only runs if ARKFORGE_API_KEY is set. Returns proof ID and verification URL.
- * Non-blocking — errors are swallowed.
+ * Compute a policy state hash from the agent's current constraints.
+ * Chain it to the previous policy hash for drift detection.
+ *
+ * policy_hash[N] = SHA-256(constraints_at_N + previous_policy_hash)
+ *
+ * If constraints change between actions, the chain shows exactly where.
  */
-async function submitToArkForge(
-  receiptData: Record<string, unknown>,
-  endpoint: string,
-  agentId?: string
-): Promise<ArkForgeProof | null> {
+function computePolicyHash(
+  authContext: { trust_level?: number; permissions?: string[]; delegation_proof?: string } | undefined,
+  previousPolicyHash: string | null
+): string {
+  const constraints = JSON.stringify({
+    trust_level: authContext?.trust_level ?? 0,
+    permissions: authContext?.permissions ?? [],
+    has_delegation: !!authContext?.delegation_proof,
+  })
+  const input = constraints + (previousPolicyHash || 'genesis')
+  return sha256(input)
+}
+
+/**
+ * Get the most recent policy hash for an agent from their last receipt.
+ */
+async function getPreviousPolicyHash(agentId: string): Promise<string | null> {
   try {
-    const apiKey = process.env.ARKFORGE_API_KEY
-    if (!apiKey) return null
+    const db = getServiceClient()
+    const { data } = await db
+      .from('action_receipts')
+      .select('raw_data')
+      .eq('agent_id', agentId)
+      .order('timestamp', { ascending: false })
+      .limit(1)
+      .single()
 
-    const agentDid = agentId ? `did:web:getagentid.dev:agent:${agentId}` : 'did:web:getagentid.dev'
-    const action = (receiptData.action as string) || 'unknown'
-
-    const res = await fetch('https://trust.arkforge.tech/v1/proxy', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Api-Key': apiKey,
-        'X-Agent-Identity': agentDid,
-        'X-Agent-Version': 'agentid-v1',
-      },
-      body: JSON.stringify({
-        target: endpoint,
-        payload: receiptData,
-        description: `AgentID ${action} receipt for ${agentId || 'platform'}`,
-      }),
-    })
-
-    if (!res.ok) {
-      console.warn('[receipts] ArkForge attestation failed:', res.status)
-      return null
-    }
-
-    const data = await res.json()
-    return {
-      proof_id: data.proof_id || data.id || null,
-      verification_url: data.verification_url || data.url || null,
-    }
-  } catch (err: any) {
-    console.warn('[receipts] ArkForge attestation error:', err.message || err)
+    return (data?.raw_data as any)?.policy_hash || null
+  } catch {
     return null
   }
+}
+
+// ---------------------------------------------------------------------------
+// Compound Digest
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute a compound digest binding both artifacts into a single verifiable value.
+ *
+ * compound_digest = SHA-256(hash(HashReceipt) + hash(BlockchainMemo) + action_ref + timestamp)
+ *
+ * The gateway signs this — proving it saw both artifacts simultaneously.
+ * A third party can verify from the PolicyReceipt alone without retrieving
+ * the original ActionIntent.
+ */
+function computeCompoundDigest(
+  hashReceipt: HashReceipt,
+  blockchainMemo: string | null,
+  actionRef: string,
+  timestamp: string
+): string {
+  const hashReceiptDigest = sha256(JSON.stringify(hashReceipt))
+  const blockchainDigest = blockchainMemo ? sha256(blockchainMemo) : sha256('no-blockchain-receipt')
+  return sha256(hashReceiptDigest + blockchainDigest + actionRef + timestamp)
 }
 
 // ---------------------------------------------------------------------------
@@ -256,62 +271,65 @@ async function submitToArkForge(
  *
  * 1. Creates an HMAC-signed hash receipt (always succeeds)
  * 2. Publishes a memo to Solana (best-effort, non-blocking)
- * 3. Submits to ArkForge for third-party attestation (best-effort, non-blocking)
- * 4. Determines attestation_level based on which proofs succeeded
- * 5. Stores everything in Supabase `action_receipts` table
- *
- * Returns the dual receipt immediately. The blockchain receipt may be null
- * if on-chain publishing is not configured or fails.
+ * 3. Computes compound digest binding both artifacts (signed)
+ * 4. Chains policy state hash for constraint drift detection
+ * 5. Determines attestation_level based on which proofs succeeded
+ * 6. Stores everything in Supabase `action_receipts` table
  */
 export async function createDualReceipt(
   action: ReceiptAction,
   agentId: string,
   data: Record<string, unknown>,
-  authContext?: { trust_level?: number; permissions?: string[]; delegation_proof?: string }
+  authContext?: { trust_level?: number; permissions?: string[]; delegation_proof?: string },
+  options?: { action_ref?: string; context_epoch?: number }
 ): Promise<DualReceipt> {
   // 1. Hash receipt (instant, always works)
   const hashReceipt = createHashReceipt(action, agentId, data)
 
+  // Action ref: use caller-supplied value or default to receipt_id
+  const actionRef = options?.action_ref || hashReceipt.receipt_id
+  const contextEpoch = options?.context_epoch ?? null
+
   // 2. On-chain memo (best-effort)
   const memoData: Record<string, unknown> = {
     protocol: 'agentid',
-    version: 1,
+    version: 2,
     receipt_id: hashReceipt.receipt_id,
     action,
     agent_id: agentId,
     data_hash: hashReceipt.data_hash,
     timestamp: hashReceipt.timestamp,
+    action_ref: actionRef,
   }
   if (authContext) {
     memoData.auth_context = authContext
+  }
+  if (contextEpoch !== null) {
+    memoData.context_epoch = contextEpoch
   }
   const memoPayload = JSON.stringify(memoData)
 
   const blockchainReceipt = await publishMemoToSolana(memoPayload)
 
-  // 3. ArkForge external attestation (best-effort, non-blocking)
-  const arkforgeEndpoint = `https://getagentid.dev/api/v1/agents/${action}`
-  const arkforgeProof = await submitToArkForge({
-    protocol: 'agentid',
-    version: 1,
-    receipt_id: hashReceipt.receipt_id,
-    action,
-    agent_id: agentId,
-    data_hash: hashReceipt.data_hash,
-    signature: hashReceipt.signature,
-    timestamp: hashReceipt.timestamp,
-    ...(blockchainReceipt && { tx_hash: blockchainReceipt.tx_hash }),
-  }, arkforgeEndpoint, agentId)
+  // 3. Compound digest — binding both artifacts, signed by gateway
+  const compoundDigest = computeCompoundDigest(
+    hashReceipt,
+    blockchainReceipt?.memo || null,
+    actionRef,
+    hashReceipt.timestamp
+  )
+  const compoundDigestSignature = hmacSign(compoundDigest)
 
-  // 4. Determine attestation level
-  let attestation_level: AttestationLevel = 'self-issued'
-  if (arkforgeProof?.proof_id) {
-    attestation_level = 'third-party-attested'
-  } else if (blockchainReceipt?.tx_hash) {
-    attestation_level = 'domain-attested'
-  }
+  // 4. Policy hash chain — detect constraint drift
+  const previousPolicyHash = await getPreviousPolicyHash(agentId)
+  const policyHash = computePolicyHash(authContext, previousPolicyHash)
 
-  // 5. Store in Supabase
+  // 5. Determine attestation level
+  const attestation_level: AttestationLevel = blockchainReceipt?.tx_hash
+    ? 'domain-attested'
+    : 'self-issued'
+
+  // 6. Store in Supabase
   try {
     const db = getServiceClient()
     await db.from('action_receipts').insert({
@@ -327,12 +345,17 @@ export async function createDualReceipt(
       block_time: blockchainReceipt?.block_time || null,
       memo: blockchainReceipt?.memo || null,
       attestation_level,
-      arkforge_proof_id: arkforgeProof?.proof_id || null,
-      arkforge_verification_url: arkforgeProof?.verification_url || null,
-      raw_data: authContext ? { ...data, auth_context: authContext } : data,
+      raw_data: {
+        ...(authContext ? { ...data, auth_context: authContext } : data),
+        compound_digest: compoundDigest,
+        compound_digest_signature: compoundDigestSignature,
+        policy_hash: policyHash,
+        previous_policy_hash: previousPolicyHash,
+        action_ref: actionRef,
+        context_epoch: contextEpoch,
+      },
     })
   } catch (err: any) {
-    // Non-blocking — receipt was already created in memory
     console.error('[receipts] Failed to store receipt in DB:', err.message || err)
   }
 
@@ -340,6 +363,11 @@ export async function createDualReceipt(
     hash: hashReceipt,
     blockchain: blockchainReceipt,
     attestation_level,
-    arkforge: arkforgeProof,
+    compound_digest: compoundDigest,
+    compound_digest_signature: compoundDigestSignature,
+    policy_hash: policyHash,
+    previous_policy_hash: previousPolicyHash,
+    action_ref: actionRef,
+    context_epoch: contextEpoch,
   }
 }

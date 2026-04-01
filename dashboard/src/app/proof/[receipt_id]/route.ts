@@ -58,8 +58,7 @@ export async function GET(
     // Determine attestation level — prefer stored value, fall back to computed
     let attestation_level = receipt.attestation_level || 'self-issued'
     if (!receipt.attestation_level) {
-      if (receipt.arkforge_proof_id) attestation_level = 'third-party-attested'
-      else if (receipt.tx_hash) attestation_level = 'domain-attested'
+      if (receipt.tx_hash) attestation_level = 'domain-attested'
     }
 
     return NextResponse.json({
@@ -80,11 +79,13 @@ export async function GET(
         signature: receipt.signature,
       },
       blockchain_anchor,
-      arkforge_attestation: receipt.arkforge_proof_id ? {
-        proof_id: receipt.arkforge_proof_id,
-        verification_url: receipt.arkforge_verification_url,
-      } : null,
       attestation_level,
+      compound_digest: (receipt.raw_data as any)?.compound_digest || null,
+      compound_digest_signature: (receipt.raw_data as any)?.compound_digest_signature || null,
+      policy_hash: (receipt.raw_data as any)?.policy_hash || null,
+      previous_policy_hash: (receipt.raw_data as any)?.previous_policy_hash || null,
+      action_ref: (receipt.raw_data as any)?.action_ref || receipt.receipt_id,
+      context_epoch: (receipt.raw_data as any)?.context_epoch ?? null,
       verification: {
         method: 'HMAC-SHA256',
         issuer: 'https://getagentid.dev',

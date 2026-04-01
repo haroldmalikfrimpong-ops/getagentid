@@ -99,6 +99,14 @@ export async function GET(
       description: 'Signed 1-hour JWT for Agent-Trust-Score HTTP header',
     })
 
+    // Merkle root — batch receipt verification
+    services.push({
+      id: `${did}#merkle-root`,
+      type: 'AgentIDMerkleRoot',
+      serviceEndpoint: `https://getagentid.dev/api/v1/agents/merkle-root?agent_id=${agent.agent_id}`,
+      description: 'Merkle root over all receipts — supports O(log n) inclusion proofs',
+    })
+
     // Agent capabilities as a service
     if (agent.capabilities && agent.capabilities.length > 0) {
       services.push({
