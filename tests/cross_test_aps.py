@@ -50,6 +50,25 @@ def sha256(data: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
 
+def jcs_serialize(obj) -> str:
+    """JCS RFC 8785 — deterministic JSON serialization (sorted keys, no whitespace)."""
+    if obj is None:
+        return "null"
+    if isinstance(obj, bool):
+        return "true" if obj else "false"
+    if isinstance(obj, (int, float)):
+        return json.dumps(obj)
+    if isinstance(obj, str):
+        return json.dumps(obj)
+    if isinstance(obj, list):
+        return "[" + ",".join(jcs_serialize(v) for v in obj) + "]"
+    if isinstance(obj, dict):
+        keys = sorted(obj.keys())
+        pairs = [json.dumps(k) + ":" + jcs_serialize(obj[k]) for k in keys if obj[k] is not None]
+        return "{" + ",".join(pairs) + "}"
+    return "null"
+
+
 def ts():
     return datetime.now(timezone.utc).isoformat()
 
@@ -96,7 +115,7 @@ def test_digest_parity():
     hash_receipt = receipt.get("hash", {})
     blockchain = receipt.get("blockchain")
 
-    hash_receipt_digest = sha256(json.dumps(hash_receipt, separators=(",", ":")))
+    hash_receipt_digest = sha256(jcs_serialize(hash_receipt))
     blockchain_memo = blockchain.get("memo") if blockchain else None
     blockchain_digest = sha256(blockchain_memo) if blockchain_memo else sha256("no-blockchain-receipt")
 

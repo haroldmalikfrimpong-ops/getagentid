@@ -1,43 +1,48 @@
 {
   "title": "AgentID x APS Cross-System Interop Test",
-  "generated_at": "2026-04-01T08:45:58.085653+00:00",
+  "generated_at": "2026-04-01T23:52:48.138437+00:00",
   "agentid_base": "https://www.getagentid.dev/api/v1",
   "agent_id": "agent_c5460451b4344268",
   "results": [
     {
       "name": "Digest parity",
       "passed": true,
-      "details": "compound_digest: 126949369e9ecbe96703fabcd0a623e3...\naction_ref: cross-test-1775033110\nvalid SHA-256: True\nindependently reconstructed: True\nAPS computeCompoundDigest() uses same construction: SHA-256(hash(intent) + hash(receipt) + frameId + timestamp)"
+      "details": "compound_digest: 55800c11324520d666ce6cce8557ba34...\naction_ref: cross-test-1775087497\nvalid SHA-256: True\nindependently reconstructed: True\nAPS computeCompoundDigest() uses same construction: SHA-256(hash(intent) + hash(receipt) + frameId + timestamp)"
     },
     {
       "name": "action_ref correlation",
       "passed": true,
-      "details": "Sent action_ref: aps-frame-1775033123\nReceipt echoed: aps-frame-1775033123 (match: True)\nProof endpoint echoed: aps-frame-1775033123 (match: True)\nAPS executionFrameId correlation: VERIFIED\nA third-party auditor can JOIN both receipts on this shared key"
+      "details": "Sent action_ref: aps-frame-1775087507\nReceipt echoed: aps-frame-1775087507 (match: True)\nProof endpoint echoed: aps-frame-1775087507 (match: True)\nAPS executionFrameId correlation: VERIFIED\nA third-party auditor can JOIN both receipts on this shared key"
     },
     {
       "name": "Constraint mapping",
       "passed": true,
-      "details": "AgentID L3 constraints mapped to APS dimensions:\n  Structurally equivalent: 5/7\n  Semantically different: 2/7\n  Policy hash: c733b70c1f7535f00ddf3a28c29a824c...\n  = identity: certificate_valid = DID + certificate verification\n  = delegation: permissions = delegation_scope\n  ~ reputation: trust_level (L1-L4) + trust_score ~ passport_grade (0-3)\n  ~ behavioral: behaviour.risk_score + policy_hash chain ~ behavioral_sequence + workspace_manifest\n  = scope: spending_limit = effective_spending_limit\n  = audit: receipts (dual: hash + Solana) = PolicyReceipt (Ed25519 signed)\n  = revocation: scarring_score + negative_signals = demotion history + threshold elevation\n"
+      "details": "AgentID L3 constraints mapped to APS dimensions:\n  Structurally equivalent: 5/7\n  Semantically different: 2/7\n  Policy hash: 74c82b7e358a939326aa398df757e5ad...\n  = identity: certificate_valid = DID + certificate verification\n  = delegation: permissions = delegation_scope\n  ~ reputation: trust_level (L1-L4) + trust_score ~ passport_grade (0-3)\n  ~ behavioral: behaviour.risk_score + policy_hash chain ~ behavioral_sequence + workspace_manifest\n  = scope: spending_limit = effective_spending_limit\n  = audit: receipts (dual: hash + Solana) = PolicyReceipt (Ed25519 signed)\n  = revocation: scarring_score + negative_signals = demotion history + threshold elevation\n"
     },
     {
       "name": "Receipt format interop",
       "passed": true,
-      "details": "Shared action_ref: interop-test-1775033137\nAgentID action_ref: interop-test-1775033137 (match: True)\nAPS executionFrameId: interop-test-1775033137 (match: True)\nBoth joinable on shared key: True\n\nAgentID receipt fields:\n  compound_digest: e9670150c333d6bd42fb3c1c7f6d9ec4... (True)\n  compound_digest_signature: cb52535440b0f5229b457591... (HMAC-signed)\n  policy_hash: 3215eb69bc8b3eef29fab0cb93963b20... (True)\n  previous_policy_hash: c733b70c1f7535f00ddf3a28c29a824c74cca6521852318761437eba7dd2d5ad\n  context_epoch: 1 (True)\n  attestation_level: domain-attested\n\nMerkle inclusion proof:\n  type: merkle-inclusion-proof\n  root: ad1d91bbdfd5ed6885a5317ca6d93a5b...\n  leaf_index: 22/23\n  self_verified: False\n\nInterop verdict: A third-party auditor holding both receipts can:\n  1. Join on action_ref/executionFrameId: True\n  2. Verify AgentID receipt independently via compound_digest: True\n  3. Verify constraint continuity via policy_hash chain: True\n  4. Verify receipt inclusion in Merkle tree: False\n  5. Check context continuity via context_epoch: True\n\nNOTE: APS receipt is simulated. Real interop requires calling gateway.aeoess.com.\nHMAC vs Ed25519: AgentID compound digest is HMAC-signed (verifiable with platform key).\nAPS compound digest is Ed25519-signed (verifiable with public key at jwks.json).\nBoth are non-repudiable within their trust model."
+      "details": "Shared action_ref: interop-test-1775087525\nAgentID action_ref: interop-test-1775087525 (match: True)\nAPS executionFrameId: interop-test-1775087525 (match: True)\nBoth joinable on shared key: True\n\nAgentID receipt fields:\n  compound_digest: adefa0d74a261db5d24c719c10989db2... (True)\n  compound_digest_signature: 081872145e7ae7ee9ba33a2f... (HMAC-signed)\n  policy_hash: 79bacba98fd7a434048d3490452553a8... (True)\n  previous_policy_hash: 74c82b7e358a939326aa398df757e5adacf305f7ee2d00e2c0069bf522d98377\n  context_epoch: 1 (True)\n  attestation_level: domain-attested\n\nMerkle inclusion proof:\n  type: merkle-inclusion-proof\n  root: 3c83ca70fe71255a663c2e8d108aa651...\n  leaf_index: 44/45\n  self_verified: False\n\nInterop verdict: A third-party auditor holding both receipts can:\n  1. Join on action_ref/executionFrameId: True\n  2. Verify AgentID receipt independently via compound_digest: True\n  3. Verify constraint continuity via policy_hash chain: True\n  4. Verify receipt inclusion in Merkle tree: False\n  5. Check context continuity via context_epoch: True\n\nNOTE: APS receipt is simulated. Real interop requires calling gateway.aeoess.com.\nHMAC vs Ed25519: AgentID compound digest is HMAC-signed (verifiable with platform key).\nAPS compound digest is Ed25519-signed (verifiable with public key at jwks.json).\nBoth are non-repudiable within their trust model."
     },
     {
       "name": "Ed25519 compound digest",
       "passed": true,
-      "details": "compound_digest: ca796b74563483d0fb3fa932575c5e44...\nHMAC signature: 7c8a837756e879460e6d30cb... (present: True)\nEd25519 signature: ... (present: False)\nEd25519 format valid: True\nDual signing: HMAC for backward compat + Ed25519 for public verification\nAny system can verify Ed25519 sig with public key from .well-known/agentid.json"
+      "details": "compound_digest: 646b4d54eab3ebe9e9be4ce46d846b91...\nHMAC signature: 3ba85b3b6bf5681a79cc23e8... (present: True)\nEd25519 signature: 1c3e633cc88a29d6c4cbb9c6... (present: True)\nEd25519 format valid: True\nDual signing: HMAC for backward compat + Ed25519 for public verification\nAny system can verify Ed25519 sig with public key from .well-known/agentid.json"
     },
     {
       "name": "Context continuity auto-detection",
-      "passed": false,
-      "details": "context_continuity not present in response (may be a new feature)"
+      "passed": true,
+      "details": "Continuity score: 100/100\nAuto context epoch: 14\nSignals: []\nNote: Agent context appears continuous.\nScore range valid: True"
     },
     {
       "name": "Daemon agent type",
-      "passed": false,
-      "details": "agent_type: None\nValid type: False\nSupported types: interactive, daemon, heartbeat\nDaemon agents declare heartbeat_interval, autonomy_level, expected_active_hours"
+      "passed": true,
+      "details": "agent_type: interactive\nValid type: True\nSupported types: interactive, daemon, heartbeat\nDaemon agents declare heartbeat_interval, autonomy_level, expected_active_hours"
+    },
+    {
+      "name": "Negative test vectors",
+      "passed": true,
+      "details": "Negative vector checks: 4/4\n  1. Flipped byte detected: True\n  2. Tampered chain detected: True\n  3. JCS canonicalization deterministic: True\n  4. Proof embeds signing key + verification status: True\n  Canonicalization: JCS-RFC-8785\n  Key lifecycle: revocation_reason enum (key_rotation/compromise/decommission)"
     }
   ]
 }
