@@ -86,6 +86,14 @@ Requires: sender must be L3+ (wallet bound)
 GET /reports/compliance
 Returns: EU AI Act readiness score, agent inventory, risk flags
 
+11. CREDIBILITY PACKET
+GET /agents/credibility-packet?agent_id=agent_xxx
+Returns: signed portable trust resume (Ed25519 + HMAC dual-signed, offline verifiable)
+
+12. DAEMON AGENT REGISTRATION
+POST /agents/register with agent_type: "daemon", heartbeat_interval: 300, autonomy_level: "semi-autonomous"
+For always-on background agents. Also supports "heartbeat" (wake-on-schedule).
+
 TRUST LEVELS:
 - L1 (Registered): Can connect, message, verify. Default on registration.
 - L2 (Verified): Ed25519 key bound. Can do challenge-response.
@@ -97,10 +105,14 @@ To level up an agent:
 - L2 to L3: POST /agents/bind-wallet with { "agent_id": "xxx", "wallet_address": "solana-address", "chain": "solana", "signature": "hex" }
 
 IMPORTANT RULES:
-- Every write action (connect, message, pay) generates a dual receipt: hash + blockchain (Solana)
+- Every write action generates dual-signed receipts: HMAC-SHA256 + Ed25519, blockchain anchor on Solana
+- All receipts use JCS RFC 8785 canonicalization for cross-implementation compatibility
 - Trust levels are based on what security features are set up, not time
 - Spending limits are defaults the user can lower, not restrictions
-- The agent IS the wallet — its Ed25519 key derives a Solana address`
+- The agent IS the wallet — its Ed25519 key derives a Solana address
+- Session continuity is auto-detected: context_continuity_score (0-100) on every verify
+- Agent types: interactive (default), daemon (always-on), heartbeat (wake-on-schedule)
+- Python SDK: pip install getagentid (v0.5.0, includes DaemonAgent class)`
 
   const cursorPrompt = `# AgentID Setup for Cursor/Windsurf/Bolt
 

@@ -30,6 +30,9 @@ const SECTIONS = [
   { id: 'api-trust-header', label: 'Trust Header' },
   { id: 'api-compliance', label: 'Compliance Report' },
   { id: 'api-proof', label: 'Proof Verification' },
+  { id: 'api-credibility-packet', label: 'Credibility Packet' },
+  { id: 'daemon-agents', label: 'Daemon Agents' },
+  { id: 'session-continuity', label: 'Session Continuity' },
   { id: 'sdks', label: 'SDKs' },
   { id: 'receipts', label: 'Receipts' },
 ]
@@ -477,8 +480,20 @@ Content-Type: application/json`}</Code>
   "capabilities": ["trading", "gold-signals"],
   "limitations": ["no-pii-handling", "english-only"],
   "platform": "python",
-  "endpoint": "https://mybot.example.com/webhook"
+  "endpoint": "https://mybot.example.com/webhook",
+  "agent_type": "interactive",
+  "heartbeat_interval": 300,
+  "autonomy_level": "supervised"
 }`}</Code>
+            <p className="text-gray-500 text-xs mb-1 mt-2">
+              <strong className="text-gray-300">agent_type</strong> <span className="text-gray-600">(optional)</span> — <code className="text-cyan-300 text-[11px]">interactive</code> (default), <code className="text-cyan-300 text-[11px]">daemon</code> (always-on background agent), or <code className="text-cyan-300 text-[11px]">heartbeat</code> (wake-on-schedule agent).
+            </p>
+            <p className="text-gray-500 text-xs mb-1">
+              <strong className="text-gray-300">heartbeat_interval</strong> <span className="text-gray-600">(optional)</span> — Expected seconds between check-ins. For daemon/heartbeat agents.
+            </p>
+            <p className="text-gray-500 text-xs mb-1">
+              <strong className="text-gray-300">autonomy_level</strong> <span className="text-gray-600">(optional)</span> — <code className="text-cyan-300 text-[11px]">supervised</code>, <code className="text-cyan-300 text-[11px]">semi-autonomous</code>, or <code className="text-cyan-300 text-[11px]">fully-autonomous</code>.
+            </p>
             <p className="text-gray-500 text-xs mb-1 mt-2">
               <strong className="text-gray-300">limitations</strong> <span className="text-gray-600">(optional)</span> — Array of known limitation strings describing what the agent cannot or should not do. Included in the DID document, credibility packet, and verification response.
             </p>
@@ -526,6 +541,7 @@ Content-Type: application/json`}</Code>
   "name": "My Trading Bot",
   "owner": "Acme Corp",
   "capabilities": ["trading", "gold-signals"],
+  "agent_type": "interactive",
   "trust_score": 42,
   "trust_level": 2,
   "trust_level_label": "L2 — Verified",
@@ -533,15 +549,19 @@ Content-Type: application/json`}</Code>
   "spending_limit": 0,
   "certificate_valid": true,
   "active": true,
-  "wallet": null,
-  "solana_wallet": {
-    "solana_address": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
-    "cluster": "devnet",
-    "explorer_url": "https://explorer.solana.com/address/7xKX...?cluster=devnet"
+  "is_online": true,
+  "context_continuity": {
+    "score": 95,
+    "auto_context_epoch": 2,
+    "signals": [],
+    "note": "Agent context appears continuous."
   },
   "receipt": {
     "hash": { "receipt_id": "rcpt_abc123", "data_hash": "a1b2c3...", "signature": "d4e5f6..." },
-    "blockchain": { "tx_hash": "5eykt4...", "explorer_url": "https://explorer.solana.com/tx/5eykt4..." }
+    "blockchain": { "tx_hash": "5eykt4...", "explorer_url": "https://explorer.solana.com/tx/5eykt4..." },
+    "compound_digest": "sha256hex...",
+    "compound_digest_signature": "hmacsha256hex...",
+    "compound_digest_ed25519_signature": "ed25519hex..."
   },
   "level_up": {
     "current": "L2 — Verified",
@@ -1215,7 +1235,7 @@ Content-Type: application/json`}</Code>
               id="api-proof"
               method="GET"
               path="/proof/:receipt_id"
-              description="Public proof verification endpoint. Anyone with a receipt_id can independently verify the receipt, including its HMAC signature, blockchain anchor, and ArkForge third-party attestation. No authentication required."
+              description="Public proof verification endpoint. Anyone with a receipt_id can independently verify the receipt using the embedded Ed25519 public key — no API call needed. Includes HMAC signature, blockchain anchor, and verification status enum."
               trustLevel="Public"
             />
             <p className="text-gray-500 text-xs mb-1">Response:</p>
@@ -1236,31 +1256,170 @@ Content-Type: application/json`}</Code>
     "data_hash": "sha256hex...",
     "signature": "hmacsha256hex..."
   },
+  "compound_digest": "sha256hex...",
+  "compound_digest_signature": "hmacsha256hex...",
+  "compound_digest_ed25519_signature": "ed25519hex...",
+  "signing_key": {
+    "key_id": "agentid-2026-03",
+    "public_key": "xdpmjfq2DX4d6yML7QjaSkYB2h9Dm3phwts5gkAPBp8",
+    "algorithm": "Ed25519"
+  },
+  "canonicalization": "JCS-RFC-8785",
+  "verification_status": "verified",
   "blockchain_anchor": {
     "chain": "solana",
     "cluster": "devnet",
     "tx_hash": "5eykt4UsFv8P8NJdT...",
     "explorer_url": "https://explorer.solana.com/tx/5eykt4..."
   },
-  "arkforge_attestation": {
-    "proof_id": "ark_proof_xyz",
-    "verification_url": "https://trust.arkforge.tech/v1/proof/ark_proof_xyz"
-  },
-  "attestation_level": "third-party-attested",
+  "attestation_level": "domain-attested",
   "verification": {
-    "method": "HMAC-SHA256",
+    "method": "HMAC-SHA256 + Ed25519",
+    "canonicalization": "JCS-RFC-8785",
     "issuer": "https://getagentid.dev",
-    "issuer_did": "did:web:getagentid.dev"
+    "issuer_did": "did:web:getagentid.dev",
+    "offline_verification": "Proof is self-contained — signing_key.public_key is embedded"
   }
 }`}</Code>
             <div className="glow-border rounded-xl p-5 bg-[#111118] mb-6 mt-4">
               <div className="text-xs text-gray-300 font-bold mb-2">Attestation Levels</div>
               <ul className="text-gray-400 text-xs leading-relaxed space-y-1">
-                <li><strong className="text-gray-300">self-issued:</strong> HMAC-SHA256 signed by AgentID platform key only</li>
+                <li><strong className="text-gray-300">self-issued:</strong> Dual-signed (HMAC-SHA256 + Ed25519) by AgentID platform</li>
                 <li><strong className="text-gray-300">domain-attested:</strong> Additionally anchored on Solana blockchain via memo transaction</li>
-                <li><strong className="text-gray-300">third-party-attested:</strong> Independently verified by ArkForge external attestation service</li>
+              </ul>
+              <div className="text-xs text-gray-300 font-bold mt-4 mb-2">Verification Status Enum</div>
+              <ul className="text-gray-400 text-xs leading-relaxed space-y-1">
+                <li><strong className="text-cyan-300">verified:</strong> Valid signature, active key</li>
+                <li><strong className="text-yellow-300">verified_deprecated_key:</strong> Valid signature, key has been rotated (routine, no trust impact)</li>
+                <li><strong className="text-red-300">verified_revoked_key:</strong> Valid signature, key was compromised (flag for policy decision)</li>
+                <li><strong className="text-gray-500">invalid:</strong> Signature does not verify</li>
               </ul>
             </div>
+
+            <Divider />
+
+            {/* ════════════════════════════════════════════════════════════════════
+                CREDIBILITY PACKET
+            ════════════════════════════════════════════════════════════════════ */}
+
+            <Endpoint
+              id="api-credibility-packet"
+              method="GET"
+              path="/agents/credibility-packet"
+              description="Get a signed, portable trust resume for an agent. The packet is dual-signed (HMAC + Ed25519) and can be verified offline using the embedded public key. Includes identity, trust level, verification count, receipts, Merkle root, and behavioural risk score."
+              trustLevel="Public"
+            />
+            <Code lang="http">{`GET /agents/credibility-packet?agent_id=agent_a1b2c3d4e5`}</Code>
+            <p className="text-gray-500 text-xs mb-1">Response includes:</p>
+            <Code lang="json">{`{
+  "protocol": "agentid",
+  "type": "credibility-packet",
+  "identity": { "agent_id": "agent_abc", "did": "did:web:getagentid.dev:agent:agent_abc", "name": "...", "owner": "..." },
+  "trust": { "trust_level": 3, "permissions": [...], "spending_limit": 10000, "certificate_valid": true },
+  "verification_count": 156,
+  "negative_signals": 2,
+  "resolved_signals": 2,
+  "scarring_score": 2,
+  "receipts": [...],
+  "merkle_root": { "root": "sha256hex...", "leaf_count": 45 },
+  "behaviour_risk_score": 0,
+  "signature": "hmacsha256hex...",
+  "ed25519_signature": "ed25519hex...",
+  "verification": {
+    "ed25519": "Verify with platform public key at /.well-known/agentid.json",
+    "ed25519_public_key": "xdpmjfq2DX4d6yML7QjaSkYB2h9Dm3phwts5gkAPBp8"
+  }
+}`}</Code>
+
+            <Divider />
+
+            {/* ════════════════════════════════════════════════════════════════════
+                DAEMON AGENTS
+            ════════════════════════════════════════════════════════════════════ */}
+
+            <SectionHeading id="daemon-agents">Daemon Agents</SectionHeading>
+
+            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+              Daemon agents are always-on background agents that run autonomously. They check in periodically, act on their own, and need verifiable identity for every action they take while the operator is away.
+            </p>
+
+            <div className="glow-border rounded-xl p-5 bg-[#111118] mb-6">
+              <div className="text-xs text-gray-300 font-bold mb-2">Agent Types</div>
+              <ul className="text-gray-400 text-xs leading-relaxed space-y-2">
+                <li><strong className="text-cyan-300">interactive</strong> (default) — Standard agents that respond to user requests</li>
+                <li><strong className="text-purple-300">daemon</strong> — Always-on agents that act autonomously. Declare heartbeat interval, autonomy level, and expected active hours.</li>
+                <li><strong className="text-green-300">heartbeat</strong> — Wake-on-schedule agents that pull inbox, act, sleep. Native inbox polling via <code className="text-cyan-300 text-[11px]">GET /agents/inbox</code>.</li>
+              </ul>
+            </div>
+
+            <p className="text-gray-500 text-xs mb-2">Register a daemon agent:</p>
+            <Code lang="json">{`{
+  "name": "My Background Agent",
+  "agent_type": "daemon",
+  "autonomy_level": "semi-autonomous",
+  "heartbeat_interval": 300,
+  "expected_active_hours": [0, 23],
+  "capabilities": ["monitor", "act", "report"]
+}`}</Code>
+
+            <p className="text-gray-500 text-xs mb-2 mt-4">Python SDK (pip install getagentid):</p>
+            <Code lang="python">{`from agentid.daemon import DaemonAgent
+
+daemon = DaemonAgent.register(
+    api_key="agentid_sk_...",
+    name="My Background Agent",
+    autonomy_level="semi-autonomous",
+    heartbeat_interval=300,
+)
+
+# Every action gets a verifiable receipt (HMAC + Ed25519)
+receipt = daemon.sign_action("processed 15 new records")
+
+# Attach trust headers to outbound HTTP requests
+headers = daemon.trust_headers()  # Agent-Trust-Score JWT
+
+# Report context shifts (after memory consolidation, model swap)
+daemon.report_context_shift(reason="memory_consolidation")
+
+# Periodic heartbeat to prove liveness
+daemon.heartbeat()`}</Code>
+
+            <Divider />
+
+            {/* ════════════════════════════════════════════════════════════════════
+                SESSION CONTINUITY
+            ════════════════════════════════════════════════════════════════════ */}
+
+            <SectionHeading id="session-continuity">Session Continuity</SectionHeading>
+
+            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+              AgentID automatically detects when an agent{"'"}s context or memory state has changed — without relying on the agent to self-report. A compromised agent can{"'"}t suppress this detection.
+            </p>
+
+            <div className="glow-border rounded-xl p-5 bg-[#111118] mb-6">
+              <div className="text-xs text-gray-300 font-bold mb-2">context_continuity_score (0-100)</div>
+              <p className="text-gray-400 text-xs leading-relaxed mb-3">
+                Returned on every verification. Computed server-side from the agent{"'"}s behavioral baseline.
+              </p>
+              <div className="text-xs text-gray-300 font-bold mb-2">Signals monitored:</div>
+              <ul className="text-gray-400 text-xs leading-relaxed space-y-1">
+                <li><strong className="text-cyan-300">Activity gap:</strong> Time between actions exceeds 2x the typical interval</li>
+                <li><strong className="text-cyan-300">Model change:</strong> model_version changed in the last 24 hours</li>
+                <li><strong className="text-cyan-300">Prompt change:</strong> prompt_hash changed in the last 24 hours</li>
+                <li><strong className="text-cyan-300">Payload drift:</strong> Communication fingerprint shifted significantly</li>
+              </ul>
+              <p className="text-gray-400 text-xs mt-3">
+                Score {"<"} 50 triggers a <code className="text-red-300 text-[11px]">context_break</code> anomaly alert. Multiple signals compound.
+              </p>
+            </div>
+
+            <Code lang="json">{`// In verify response:
+"context_continuity": {
+  "score": 45,
+  "auto_context_epoch": 3,
+  "signals": ["model_changed: gpt-4 → gpt-4o", "activity_gap: 12h"],
+  "note": "WARNING: Significant context break detected."
+}`}</Code>
 
             <Divider />
 
@@ -1272,9 +1431,10 @@ Content-Type: application/json`}</Code>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <div className="glow-border rounded-xl p-5 bg-[#111118]">
-                <div className="text-white font-bold text-sm mb-2">Python</div>
+                <div className="text-white font-bold text-sm mb-2">Python SDK v0.5.0</div>
                 <Code lang="bash">{`pip install getagentid`}</Code>
-                <a href="https://pypi.org/project/getagentid/"
+                <p className="text-gray-400 text-xs mb-2">Includes: DaemonAgent, Ed25519Identity, DID resolution, APS bridge, agent wallet, trust headers, challenge-response.</p>
+                <a href="https://pypi.org/project/getagentid/0.5.0/"
                   className="text-cyan-400 text-xs hover:text-cyan-300 underline" target="_blank" rel="noopener noreferrer">
                   View on PyPI
                 </a>
@@ -1319,13 +1479,14 @@ Content-Type: application/json`}</Code>
             <p className="text-gray-400 text-sm mb-6 leading-relaxed">
               Every write action (connect, message, pay, bind key, verify) generates a <strong className="text-white">dual receipt</strong>:
               a cryptographic hash stored in the database, and an immutable record on the Solana blockchain.
+              All receipts are <strong className="text-white">dual-signed</strong> (HMAC-SHA256 + Ed25519) and use <strong className="text-white">JCS RFC 8785</strong> deterministic serialization for cross-implementation compatibility.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="glow-border rounded-xl p-5 bg-[#111118]">
                 <div className="text-cyan-400 font-bold text-sm mb-3">Hash Receipt</div>
                 <p className="text-gray-400 text-xs leading-relaxed mb-3">
-                  A SHA-256 hash of the action data, signed by the AgentID server. Stored in the database with a unique receipt ID.
+                  A SHA-256 hash of the action data, dual-signed by the AgentID server (HMAC-SHA256 + Ed25519). The Ed25519 signature is publicly verifiable. JCS RFC 8785 canonicalization ensures cross-implementation compatibility.
                 </p>
                 <Code lang="json">{`{
   "receipt_id": "rcpt_abc123",
