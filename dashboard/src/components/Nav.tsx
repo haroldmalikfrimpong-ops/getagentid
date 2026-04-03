@@ -35,6 +35,7 @@ export default function Nav() {
     { href: '/registry',              label: 'Registry' },
     { href: '/setup',                 label: 'Setup' },
     { href: '/docs',                  label: 'Docs' },
+    { href: '/build',                 label: 'Build' },
   ]
 
   // Only shown when logged in
@@ -44,7 +45,7 @@ export default function Nav() {
 
   function handleNavClick(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
     // Public routes don't need auth
-    if (href === '/registry' || href === '/docs' || href === '/setup') return
+    if (href === '/registry' || href === '/docs' || href === '/setup' || href === '/build') return
     // If not logged in, redirect to login
     if (!user) {
       e.preventDefault()
