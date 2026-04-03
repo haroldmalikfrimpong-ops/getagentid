@@ -15,9 +15,37 @@ import crypto from 'crypto'
  * It is valid for 1 hour (per the Agent-Trust-Score spec v0.1).
  */
 
+// Ed25519 signing for publicly verifiable trust headers
+const ED25519_PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex')
+let _ed25519Key: crypto.KeyObject | null = null
+
+function getEd25519Key(): crypto.KeyObject | null {
+  if (_ed25519Key) return _ed25519Key
+  const keyB64 = process.env.AGENTID_ED25519_PRIVATE_KEY
+  if (!keyB64) return null
+  try {
+    const seed = Buffer.from(keyB64, 'base64url')
+    if (seed.length !== 32) return null
+    const der = Buffer.concat([ED25519_PKCS8_PREFIX, seed])
+    _ed25519Key = crypto.createPrivateKey({ key: der, format: 'der', type: 'pkcs8' })
+    return _ed25519Key
+  } catch { return null }
+}
+
 function buildJwt(payload: Record<string, unknown>): string {
+  const ed25519Key = getEd25519Key()
+
+  if (ed25519Key) {
+    // Ed25519 signed — publicly verifiable with platform public key
+    const header = Buffer.from(JSON.stringify({ alg: 'EdDSA', typ: 'Agent-Trust-Score', kid: 'agentid-2026-03' })).toString('base64url')
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
+    const signature = crypto.sign(null, Buffer.from(`${header}.${body}`), ed25519Key).toString('base64url')
+    return `${header}.${body}.${signature}`
+  }
+
+  // Fallback to HMAC if Ed25519 key not configured
   const secret = process.env.JWT_SECRET
-  if (!secret) throw new Error('JWT_SECRET is required for JWT signing')
+  if (!secret) throw new Error('JWT_SECRET or AGENTID_ED25519_PRIVATE_KEY is required for JWT signing')
 
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'Agent-Trust-Score' })).toString('base64url')
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
