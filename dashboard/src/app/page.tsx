@@ -105,6 +105,9 @@ export default function LandingPage() {
           <a href="/docs" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
             Docs
           </a>
+          <a href="/build" className="hidden sm:block text-xs text-cyan-400 hover:text-cyan-300 transition-colors px-3 py-2 font-bold">
+            Build an Agent
+          </a>
           <a href="#pricing" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
             Pricing
           </a>
@@ -1095,6 +1098,70 @@ export default function LandingPage() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* ── We Build Agents ── */}
+      <section className="py-28 px-6" style={{ background: '#070711' }}>
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="text-[11px] font-mono text-cyan-400/50 tracking-[0.3em] uppercase mb-3">
+              Agent Building Service
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black mb-4">
+              <span className="holo-gradient">We Build Your Agent</span>
+            </h2>
+            <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed">
+              Tell us what you need. We design, build, and deploy a custom AI agent for your business.
+              Every agent gets a verified identity, cryptographic receipts, and behavioral monitoring from day one.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+            {[
+              { icon: '🎯', title: 'Sales & Outreach', desc: 'Find leads, generate proposals, cold emails' },
+              { icon: '📊', title: 'Data & Monitoring', desc: 'Track prices, scrape data, alert on changes' },
+              { icon: '💬', title: 'Customer Support', desc: 'Answer questions, route tickets, handle complaints' },
+              { icon: '⚙️', title: 'Operations', desc: 'Process orders, automate workflows' },
+              { icon: '💰', title: 'Finance', desc: 'Track spending, generate reports, flag anomalies' },
+              { icon: '🔧', title: 'Custom', desc: 'Something else — tell us what you need' },
+            ].map((uc, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="rounded-xl p-5"
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <div className="text-2xl mb-2">{uc.icon}</div>
+                <div className="text-sm font-bold text-white mb-1">{uc.title}</div>
+                <div className="text-xs text-gray-500">{uc.desc}</div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <a href="/build"
+              className="inline-block px-8 py-4 rounded-full text-white text-sm font-bold transition-all hover:opacity-90 hover:shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, #00d4ff, #7b2fff)',
+                boxShadow: '0 4px 20px rgba(0,212,255,0.2)',
+              }}>
+              Get Your Agent Built
+            </a>
+            <p className="text-gray-600 text-xs mt-4">
+              We respond within 24 hours
+            </p>
           </div>
         </div>
       </section>
