@@ -64,9 +64,9 @@ export default function LandingPage() {
       setChecking(false)
       clearTimeout(timeout)
     })
-    fetch('/api/v1/agents/discover?limit=100')
+    fetch('/.well-known/agentid.json')
       .then(r => r.json())
-      .then(data => setAgentCount(data.count || 0))
+      .then(data => setAgentCount(data.stats?.total_agents || 0))
       .catch(() => {})
   }, [])
 
