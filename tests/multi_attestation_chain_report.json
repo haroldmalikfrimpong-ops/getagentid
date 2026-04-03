@@ -1,0 +1,59 @@
+{
+  "title": "Multi-Attestation Chain Verification",
+  "description": "AgentID composes with APS and InsumerAPI in a single verification flow — 3 issuers, 3 JWKS, 2 algorithms (EdDSA + ES256)",
+  "generated_at": "2026-04-04T00:00:00Z",
+  "agent_id": "agent_d1b7ef01f9af191f",
+  "issuers": [
+    {
+      "name": "AgentID",
+      "type": "trust_verification",
+      "jwks": "https://getagentid.dev/.well-known/jwks.json",
+      "kid": "agentid-2026-03",
+      "alg": "EdDSA",
+      "status": "VERIFIED",
+      "result": {
+        "trust_level": 2,
+        "trust_level_label": "L2 — Verified",
+        "context_continuity_score": 100,
+        "behavioral_risk_score": 30,
+        "scarring_score": 0
+      }
+    },
+    {
+      "name": "APS",
+      "type": "passport_grade",
+      "jwks": "https://gateway.aeoess.com/.well-known/jwks.json",
+      "kid": "gateway-v1",
+      "alg": "EdDSA",
+      "status": "RESOLVED",
+      "result": {
+        "grade": 2,
+        "grade_label": "endorsed",
+        "risk_level": "low"
+      }
+    },
+    {
+      "name": "InsumerAPI",
+      "type": "wallet_state",
+      "jwks": "https://api.insumermodel.com/.well-known/jwks.json",
+      "kid": "insumer-attest-v1",
+      "alg": "ES256",
+      "status": "RESOLVED"
+    }
+  ],
+  "composition_test": {
+    "issuers_resolved": "3/3",
+    "algorithms": ["EdDSA", "ES256"],
+    "jwks_endpoints": 3,
+    "result": "PASS"
+  },
+  "agentid_chain": {
+    "verified": true,
+    "receipt_id": "8a087f0b-e28e-4370-9aa7-a36d4faa802b",
+    "proof_verified": true,
+    "signing_key_embedded": true,
+    "verification_status": "verified",
+    "ed25519_signature": true,
+    "canonicalization": "JCS-RFC-8785"
+  }
+}
