@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/api-auth'
 import { calculateTrustLevel, type AgentTrustData } from '@/lib/trust-levels'
-import { quickAnomalyCheck, calculateRiskScore } from '@/lib/behaviour'
+import { quickAnomalyCheck, calculateRiskScore, detectContextContinuity } from '@/lib/behaviour'
 import crypto from 'crypto'
 
 /**
@@ -150,17 +150,34 @@ export async function GET(req: NextRequest) {
     const now = Math.floor(Date.now() / 1000)
     const exp = now + 3600 // 1 hour
 
-    // Build JWT payload per Agent-Trust-Score spec v0.1
+    // Context continuity (non-blocking)
+    let context_continuity_score = 100
+    try {
+      const continuity = await detectContextContinuity(agent_id)
+      context_continuity_score = continuity.score
+    } catch {}
+
+    // Trust level labels
+    const LABELS: Record<number, string> = {
+      1: 'L1 — Registered',
+      2: 'L2 — Verified',
+      3: 'L3 — Secured',
+      4: 'L4 — Certified',
+    }
+
+    // Build JWT payload — matches the multi-attestation spec entry
     const jwtPayload = {
+      agent_id,
       trust_level,
-      attestation_count: attestationCount ?? 0,
-      last_verified: new Date().toISOString(),
-      risk_score,
+      trust_level_label: LABELS[trust_level] || `L${trust_level}`,
+      context_continuity_score,
+      behavioral_risk_score: risk_score,
       scarring_score,
       negative_signals: negativeSignals ?? 0,
       resolved_signals: resolvedSignals ?? 0,
-      agent_id,
+      attestation_count: attestationCount ?? 0,
       did,
+      evaluatedAt: new Date().toISOString(),
       provider: 'agentid',
       iss: 'https://getagentid.dev',
       iat: now,
