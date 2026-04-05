@@ -108,6 +108,9 @@ export default function LandingPage() {
           <a href="/build" className="hidden sm:block text-xs text-cyan-400 hover:text-cyan-300 transition-colors px-3 py-2 font-bold">
             Build an Agent
           </a>
+          <a href="/cross-tests" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
+            Showcase
+          </a>
           <a href="#pricing" className="hidden sm:block text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-2">
             Pricing
           </a>
